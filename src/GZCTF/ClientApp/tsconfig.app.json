@@ -15,7 +15,7 @@
       "@Hooks/*": ["./src/hooks/*"],
       "@Pages/*": ["./src/pages/*"],
       "@Resources/*": ["./src/resources/*"],
-      "@Styles/*": ["./src/styles/components/*", "./src/styles/shared/*", "./src/styles/pages/*"],
+      "@Styles/*": ["./src/styles/*", "./src/styles/components/*", "./src/styles/shared/*", "./src/styles/pages/*"],
       "@Utils/*": ["./src/utils/*"]
     },
     "skipLibCheck": true,

@@ -26,6 +26,7 @@ export const useLivePresentation = (
   const initialized = useRef(false)
   const previousRound = useRef<string | undefined>(undefined)
   const previousScores = useRef(new Map<number, number>())
+  const previousRanks = useRef(new Map<number, number>())
   const processedEvents = useRef(new Set<string>())
   const reminderKeys = useRef(new Set<string>())
   const previousRemaining = useRef<{ roundKey: string; value: number } | undefined>(undefined)
@@ -34,6 +35,8 @@ export const useLivePresentation = (
   const [spinPhase, setSpinPhase] = useState<LiveSpinPhase>('idle')
   const [changedTeams, setChangedTeams] = useState(new Set<number>())
   const [bloodAttackTeams, setBloodAttackTeams] = useState(new Set<number>())
+  const [scoreDeltas, setScoreDeltas] = useState(new Map<number, number>())
+  const [rankChanges, setRankChanges] = useState(new Map<number, { from: number; to: number }>())
 
   useEffect(() => {
     if (!injectedAnnouncement) return
@@ -48,6 +51,9 @@ export const useLivePresentation = (
       markSeen(eventIds)
       eventIds.forEach((id) => processedEvents.current.add(id))
       state.topTeams?.forEach((team) => previousScores.current.set(team.id!, team.score ?? 0))
+      state.topTeams?.forEach((team) => {
+        if (team.id !== undefined && team.rank !== undefined) previousRanks.current.set(team.id, team.rank)
+      })
       previousRound.current = fingerprint
       setSpinPhase(round?.status === SpeedrunRoundStatus.Ready ? 'revealed' : 'idle')
       initialized.current = true
@@ -179,23 +185,34 @@ export const useLivePresentation = (
     }
 
     const scoreChangedTeamIds: number[] = []
+    const nextScoreDeltas = new Map<number, number>()
+    const nextRankChanges = new Map<number, { from: number; to: number }>()
     for (const team of state.topTeams ?? []) {
       const oldScore = previousScores.current.get(team.id!)
       if (oldScore !== undefined && (team.score ?? 0) > oldScore) {
         scoreChangedTeamIds.push(team.id!)
+        nextScoreDeltas.set(team.id!, (team.score ?? 0) - oldScore)
         if (!freshBloodTeamIds.has(team.id!)) play('correctSubmit')
       }
+      const oldRank = previousRanks.current.get(team.id!)
+      if (oldRank !== undefined && team.rank !== undefined && oldRank !== team.rank)
+        nextRankChanges.set(team.id!, { from: oldRank, to: team.rank })
       previousScores.current.set(team.id!, team.score ?? 0)
+      if (team.id !== undefined && team.rank !== undefined) previousRanks.current.set(team.id, team.rank)
     }
-    if (scoreChangedTeamIds.length) {
+    if (scoreChangedTeamIds.length || nextRankChanges.size) {
       const ordinaryChanges = new Set(withoutBloodScoreChanges(scoreChangedTeamIds, freshBloodTeamIds))
       const bloodChanges = new Set(scoreChangedTeamIds.filter((teamId) => freshBloodTeamIds.has(teamId)))
       setChangedTeams(ordinaryChanges)
       setBloodAttackTeams(bloodChanges)
+      setScoreDeltas(nextScoreDeltas)
+      setRankChanges(nextRankChanges)
       window.clearTimeout(attackTimer.current)
       attackTimer.current = window.setTimeout(() => {
         setChangedTeams(new Set())
         setBloodAttackTeams(new Set())
+        setScoreDeltas(new Map())
+        setRankChanges(new Map())
       }, 3200)
     }
   }, [enqueue, markSeen, play, round, state])
@@ -242,5 +259,7 @@ export const useLivePresentation = (
     spinPhase,
     changedTeams,
     bloodAttackTeams,
+    scoreDeltas,
+    rankChanges,
   }
 }

@@ -1,7 +1,7 @@
 import { CSSProperties, FC } from 'react'
 import { ChallengeCategory, SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import { useChallengeCategoryLabelMap } from '@Utils/Shared'
-import classes from '@Styles/LiveScoreboard.module.css'
+import classes from '@Styles/CyberpunkBossRaid.module.css'
 
 const CategoryList: FC<{ values: ChallengeCategory[]; className: string; limit: number }> = ({ values, className, limit }) => {
   const categoryMap = useChallengeCategoryLabelMap()
@@ -31,14 +31,14 @@ export const LiveCategoryPool: FC<{
   used: ChallengeCategory[]
   concealActive?: boolean
 }> = ({ round, available, used, concealActive }) => <footer className={classes.categoryPool}>
-  <div className={`${classes.poolGroup} ${classes.currentPool}`}><b>Current category</b>
+  <div className={`${classes.poolGroup} ${classes.currentPool}`}><b>Current target</b>
     <CategoryList values={!concealActive && round?.category ? [round.category] : []}
       className={round?.status === SpeedrunRoundStatus.Ready ? classes.selectedPill : classes.activePill} limit={1} />
   </div>
-  <div className={`${classes.poolGroup} ${classes.availablePool}`}><b>Remaining</b>
+  <div className={`${classes.poolGroup} ${classes.availablePool}`}><b>Unraided sectors</b>
     <CategoryList values={available} className={classes.availablePill} limit={6} />
   </div>
-  <div className={`${classes.poolGroup} ${classes.usedPool}`}><b>Completed</b>
+  <div className={`${classes.poolGroup} ${classes.usedPool}`}><b>Cleared sectors</b>
     <CategoryList values={used} className={classes.usedPill} limit={4} />
   </div>
 </footer>

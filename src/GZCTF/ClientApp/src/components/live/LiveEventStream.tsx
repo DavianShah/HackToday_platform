@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { LiveScoreboardEventModel, NoticeType } from '@Api'
-import classes from '@Styles/LiveScoreboard.module.css'
+import classes from '@Styles/CyberpunkBossRaid.module.css'
 
 const eventMeta = (event: LiveScoreboardEventModel) => {
   if (event.type === NoticeType.FirstBlood) return ['First Blood', classes.bloodEvent]
@@ -14,7 +14,7 @@ const eventMeta = (event: LiveScoreboardEventModel) => {
 }
 
 export const LiveEventStream: FC<{ events: LiveScoreboardEventModel[] }> = ({ events }) => <aside className={`${classes.waterPanel} ${classes.eventPanel}`}>
-  <header className={classes.panelHead}><div><span>Latest from the game</span><h2>Recent events</h2></div><i aria-hidden /></header>
+  <header className={classes.panelHead}><div><span>Raid telemetry</span><h2>Mission feed</h2></div><i aria-hidden /></header>
   <div className={classes.eventRows}>{events.slice(0, 8).map((event, index) => {
     const [label, color] = eventMeta(event)
     return <article className={`${classes.eventRow} ${color}`} key={event.id}>

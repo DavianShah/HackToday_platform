@@ -4,17 +4,13 @@ import { LiveAnnouncement } from '@Components/live/types'
 import { LiveAnnouncementOverlay } from '@Components/live/LiveAnnouncementOverlay'
 import { LiveCategoryPool } from '@Components/live/LiveCategoryPool'
 import { LiveCenterArena } from '@Components/live/LiveCenterArena'
-import { LiveColosseumWorld } from '@Components/live/LiveColosseumWorld'
 import { LiveEventStream } from '@Components/live/LiveEventStream'
-import { LiveOceanBackground } from '@Components/live/LiveOceanBackground'
 import { LiveScoreboardPanel } from '@Components/live/LiveScoreboardPanel'
 import { LiveTopHud } from '@Components/live/LiveTopHud'
 import { useLivePresentation } from '@Hooks/useLivePresentation'
-import classes from '@Styles/LiveScoreboard.module.css'
+import classes from '@Styles/CyberpunkBossRaid.module.css'
 
 const Fallback: FC<{ title: string; text: string }> = ({ title, text }) => <main className={classes.fallback}>
-  <LiveOceanBackground />
-  <div className={classes.fallbackPearl} aria-hidden />
   <div className={classes.fallbackBrand}>ITFest</div>
   <h1>{title}</h1>
   <p>{text}</p>
@@ -35,29 +31,16 @@ export const LiveScoreboardStage: FC<{
 
   const overtime = round?.status === SpeedrunRoundStatus.Overtime
   const remainingCategories = state.speedrunState?.remainingCategories ?? []
-  const ordinaryCorrectTeamId = [...presentation.changedTeams]
-    .filter(teamId => !presentation.bloodAttackTeams.has(teamId))
-    .sort((left, right) => left - right)[0]
-  const announcementTeamId = presentation.announcement?.teamId
-    ?? (presentation.announcement?.teamName
-      ? state.topTeams?.find(team => team.name === presentation.announcement?.teamName)?.id
-      : undefined)
-  const sceneKind = presentation.announcement?.sceneKind ?? (ordinaryCorrectTeamId !== undefined ? 'correct' : undefined)
-  const sceneTeamId = announcementTeamId ?? ordinaryCorrectTeamId
-  return <main className={`${classes.stage} ${overtime ? classes.stageOvertime : ''} ${state.config?.visualIntensity === 'Hype' ? classes.stageHype : ''}`}>
-    <LiveOceanBackground />
-    <LiveColosseumWorld teams={state.topTeams ?? []} attackingTeams={presentation.changedTeams}
-      bloodTeams={presentation.bloodAttackTeams} sceneKind={sceneKind}
-      sceneTeamId={sceneTeamId} spinPhase={presentation.spinPhase} selected={round?.category}
-      categories={remainingCategories} intensity={state.config?.visualIntensity} frozen={state.scoreboardFrozen} />
+  return <main className={`${classes.stage} ${overtime ? classes.stageOvertime : ''}`}>
     <LiveTopHud title={state.config?.title ?? state.gameTitle ?? 'ITFest Live Scoreboard'} subtitle={state.config?.subtitle}
       round={round} remainingSeconds={remainingSeconds} concealCategory={presentation.spinPhase === 'spinning'} />
     <div className={classes.mainGrid}>
       <LiveEventStream events={state.recentEvents ?? []} />
-      <LiveCenterArena round={round} remaining={remainingCategories}
+      <LiveCenterArena round={round} remaining={remainingCategories} used={state.speedrunState?.usedCategories ?? []}
         spinPhase={presentation.spinPhase} teams={state.topTeams ?? []} attackingTeams={presentation.changedTeams}
-        bloodTeams={presentation.bloodAttackTeams} frozen={state.scoreboardFrozen} />
+        bloodTeams={presentation.bloodAttackTeams} scoreDeltas={presentation.scoreDeltas} frozen={state.scoreboardFrozen} />
       <LiveScoreboardPanel teams={state.topTeams ?? []} changedTeams={presentation.changedTeams}
+        bloodTeams={presentation.bloodAttackTeams} scoreDeltas={presentation.scoreDeltas} rankChanges={presentation.rankChanges}
         frozen={state.scoreboardFrozen} />
     </div>
     <LiveCategoryPool round={round} available={state.speedrunState?.remainingCategories ?? []}

@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { LiveAnnouncement } from '@Components/live/types'
-import classes from '@Styles/LiveScoreboard.module.css'
+import classes from '@Styles/CyberpunkBossRaid.module.css'
 
 const announcementClasses: Partial<Record<LiveAnnouncement['kind'], string>> = {
   firstBlood: classes.announcement_firstBlood,

@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import { formatDurationSeconds } from '@Utils/Shared'
-import classes from '@Styles/LiveScoreboard.module.css'
+import classes from '@Styles/CyberpunkBossRaid.module.css'
 
 export const LiveTopHud: FC<{
   title: string
@@ -31,11 +31,11 @@ export const LiveTopHud: FC<{
       <div className={classes.eventIdentity}><strong>{title}</strong>{subtitle && <span>{subtitle}</span>}</div>
     </div>
     <div className={classes.clockModule}>
-      <span>Round time</span>
+      <span>Raid timer</span>
       <strong className={`${urgent ? classes.urgent : ''} ${critical ? classes.critical : ''}`}>{timer}</strong>
     </div>
     <div className={classes.liveSummary}>
-      <div className={classes.liveFlag}><i /><b>Live</b></div>
+      <div className={classes.liveFlag}><i /><b>Live raid</b></div>
       <div className={classes.roundSummary}><span>{status}</span><strong>{category}</strong></div>
     </div>
   </header>

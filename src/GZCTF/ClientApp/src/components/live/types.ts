@@ -36,4 +36,6 @@ export interface LivePresentationState {
   spinPhase: LiveSpinPhase
   changedTeams: Set<number>
   bloodAttackTeams: Set<number>
+  scoreDeltas: Map<number, number>
+  rankChanges: Map<number, { from: number; to: number }>
 }
