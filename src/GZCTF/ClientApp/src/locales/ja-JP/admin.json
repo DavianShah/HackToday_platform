@@ -413,7 +413,7 @@
           "label": "プラットフォームアイコン"
         },
         "name": {
-          "description": "「::CTF」はプラットフォーム名に付かされて表示されます。",
+          "description": "プラットフォーム名として表示されます。",
           "label": "プラットフォーム名"
         },
         "slogan": {
@@ -581,7 +581,7 @@
       "footer": "`テスト` <mbr/> [某大学ホームページ](...)",
       "logo": {
         "custom": "アイコンをカスタマイズします。",
-        "default": "GZCTFのアイコンを使用"
+        "default": "HackTodayのアイコンを使用"
       }
     },
     "teams": {

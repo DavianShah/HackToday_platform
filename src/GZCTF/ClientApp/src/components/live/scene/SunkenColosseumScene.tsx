@@ -39,11 +39,11 @@ interface SunkenColosseumSceneProps {
   frozen?: boolean
 }
 
-const stone = '#183a42'
-const stoneDark = '#0a2029'
-const aqua = '#66eadb'
-const pearl = '#edfffa'
-const coral = '#ff5964'
+const stone = '#181942'
+const stoneDark = '#0a0b29'
+const aqua = '#8b8dd8'
+const pearl = '#edeeff'
+const coral = '#e83380'
 interface TeamOrbitSlot {
   angle: number
   radiusX: number
@@ -171,7 +171,7 @@ const Sediment: FC<{ reducedMotion: boolean; hype: boolean }> = ({ reducedMotion
 
   return <instancedMesh ref={mesh} args={[undefined, undefined, particles.length]} frustumCulled={false}>
     <sphereGeometry args={[1, 5, 5]} />
-    <meshBasicMaterial color="#b8eee6" transparent opacity={.28} depthWrite={false} />
+    <meshBasicMaterial color="#b8baee" transparent opacity={.28} depthWrite={false} />
   </instancedMesh>
 }
 
@@ -183,7 +183,7 @@ const Seagrass: FC<{ position: [number, number, number]; scale?: number; phase?:
   return <group ref={grass} position={position} scale={scale}>
     {[-.22, 0, .23].map((x, index) => <mesh key={x} position={[x, .48 + index * .08, 0]} rotation={[0, 0, x * .8]}>
       <capsuleGeometry args={[.035, .85 + index * .15, 4, 7]} />
-      <meshStandardMaterial color={index === 1 ? '#1f766d' : '#175650'} roughness={1} />
+      <meshStandardMaterial color={index === 1 ? '#1f2276' : '#171956'} roughness={1} />
     </mesh>)}
   </group>
 }
@@ -210,36 +210,36 @@ const Colosseum: FC = () => {
     </mesh>
     {[5.2, 6.4, 7.5].map((radius, index) => <mesh key={radius} position={[0, -1.92 + index * .18, 0]} rotation={[Math.PI / 2, 0, 0]}>
       <torusGeometry args={[radius, .18 + index * .05, 8, 64]} />
-      <meshStandardMaterial color={index === 0 ? '#214950' : stone} roughness={.9} />
+      <meshStandardMaterial color={index === 0 ? '#212350' : stone} roughness={.9} />
     </mesh>)}
     <mesh position={[0, -1.98, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
       <circleGeometry args={[5.25, 64]} />
-      <meshStandardMaterial color="#12343d" roughness={1} />
+      <meshStandardMaterial color="#12133d" roughness={1} />
     </mesh>
     <mesh position={[0, -1.955, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[2.8, 3.6, 64]} />
-      <meshStandardMaterial color="#1d4d52" emissive="#123b40" emissiveIntensity={.25} roughness={.84} />
+      <meshStandardMaterial color="#1d1f52" emissive="#121440" emissiveIntensity={.25} roughness={.84} />
     </mesh>
     {columns.map((column, index) => <group key={index} position={column.position} rotation={[0, 0, column.lean]}>
-      <mesh position={[0, column.height / 2, 0]}><cylinderGeometry args={[.27, .36, column.height, 10]} /><meshStandardMaterial color={index % 3 ? stone : '#21464a'} roughness={.93} /></mesh>
-      <mesh position={[0, column.height + .08, 0]} rotation={[0, index * .4, index % 4 === 0 ? .22 : 0]}><cylinderGeometry args={[.42, .34, .2, 10]} /><meshStandardMaterial color="#20434a" roughness={.95} /></mesh>
-      <mesh position={[0, .1, 0]}><cylinderGeometry args={[.48, .56, .22, 10]} /><meshStandardMaterial color="#17383f" roughness={1} /></mesh>
+      <mesh position={[0, column.height / 2, 0]}><cylinderGeometry args={[.27, .36, column.height, 10]} /><meshStandardMaterial color={index % 3 ? stone : '#21224a'} roughness={.93} /></mesh>
+      <mesh position={[0, column.height + .08, 0]} rotation={[0, index * .4, index % 4 === 0 ? .22 : 0]}><cylinderGeometry args={[.42, .34, .2, 10]} /><meshStandardMaterial color="#20214a" roughness={.95} /></mesh>
+      <mesh position={[0, .1, 0]}><cylinderGeometry args={[.48, .56, .22, 10]} /><meshStandardMaterial color="#17183f" roughness={1} /></mesh>
     </group>)}
-    {rocks.map((position, index) => <mesh key={index} position={position} rotation={[index * .17, index * .39, index * .09]} scale={[.5 + index % 4 * .13, .26 + index % 3 * .13, .42 + index % 5 * .09]}><dodecahedronGeometry args={[1, 0]} /><meshStandardMaterial color={index % 3 ? '#0d2931' : '#174047'} roughness={1} /></mesh>)}
+    {rocks.map((position, index) => <mesh key={index} position={position} rotation={[index * .17, index * .39, index * .09]} scale={[.5 + index % 4 * .13, .26 + index % 3 * .13, .42 + index % 5 * .09]}><dodecahedronGeometry args={[1, 0]} /><meshStandardMaterial color={index % 3 ? '#0d0e31' : '#171947'} roughness={1} /></mesh>)}
     {Array.from({ length: 12 }, (_, index) => {
       const angle = index / 12 * Math.PI * 2
       const radius = 5.6 + index % 3 * .75
       return <Seagrass key={index} position={[Math.cos(angle) * radius, -1.7, Math.sin(angle) * radius]} scale={.55 + index % 4 * .13} phase={index} />
     })}
     {[-1, 1].map(side => <group key={side} position={[side * 5.8, -1.45, -.3]} scale={side < 0 ? [-1, 1, 1] : 1}>
-      <mesh rotation={[0, 0, -.32]} position={[0, .6, 0]}><cylinderGeometry args={[.07, .18, 1.55, 7]} /><meshStandardMaterial color="#a75d58" emissive="#4b2026" emissiveIntensity={.2} roughness={.9} /></mesh>
-      {[0, 1, 2].map(branch => <mesh key={branch} position={[.22 + branch * .15, .85 + branch * .25, 0]} rotation={[0, 0, .7 - branch * .22]}><capsuleGeometry args={[.045, .55 - branch * .08, 3, 6]} /><meshStandardMaterial color="#cf7770" roughness={.9} /></mesh>)}
+      <mesh rotation={[0, 0, -.32]} position={[0, .6, 0]}><cylinderGeometry args={[.07, .18, 1.55, 7]} /><meshStandardMaterial color="#a75879" emissive="#4b2032" emissiveIntensity={.2} roughness={.9} /></mesh>
+      {[0, 1, 2].map(branch => <mesh key={branch} position={[.22 + branch * .15, .85 + branch * .25, 0]} rotation={[0, 0, .7 - branch * .22]}><capsuleGeometry args={[.045, .55 - branch * .08, 3, 6]} /><meshStandardMaterial color="#cf7098" roughness={.9} /></mesh>)}
     </group>)}
   </group>
 }
 
 const GodRays: FC<{ blood: boolean; firstBlood: boolean }> = ({ blood, firstBlood }) => <group position={[0, 6, -2]}>
-  {[-4.2, -1.7, 1.3, 4].map((x, index) => <mesh key={x} position={[x, 0, index % 2 ? -1 : 1]} rotation={[0, 0, x * -.012]}><coneGeometry args={[1.15 + index % 2 * .4, 13, 20, 1, true]} /><meshBasicMaterial color={blood ? '#ff9c92' : '#8ef4e5'} transparent opacity={firstBlood ? .07 : blood ? .04 : .032} blending={AdditiveBlending} depthWrite={false} side={2} /></mesh>)}
+  {[-4.2, -1.7, 1.3, 4].map((x, index) => <mesh key={x} position={[x, 0, index % 2 ? -1 : 1]} rotation={[0, 0, x * -.012]}><coneGeometry args={[1.15 + index % 2 * .4, 13, 20, 1, true]} /><meshBasicMaterial color={blood ? '#ff92bf' : '#8e91f4'} transparent opacity={firstBlood ? .07 : blood ? .04 : .032} blending={AdditiveBlending} depthWrite={false} side={2} /></mesh>)}
 </group>
 
 const TidalImpact: FC<{ color: string; reducedMotion: boolean }> = ({ color, reducedMotion }) => {
@@ -259,7 +259,7 @@ const TidalImpact: FC<{ color: string; reducedMotion: boolean }> = ({ color, red
   })
   return <group ref={group} position={[0, -.48, .05]} scale={.01}>
     <mesh rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[.72, .055, 8, 96]} /><meshBasicMaterial color={color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>
-    <mesh position={[0, 1.7, -.2]}><coneGeometry args={[.48, 7.4, 32, 1, true]} /><meshBasicMaterial color="#fff4e8" transparent opacity={0} blending={AdditiveBlending} depthWrite={false} side={2} /></mesh>
+    <mesh position={[0, 1.7, -.2]}><coneGeometry args={[.48, 7.4, 32, 1, true]} /><meshBasicMaterial color="#fffae8" transparent opacity={0} blending={AdditiveBlending} depthWrite={false} side={2} /></mesh>
   </group>
 }
 
@@ -276,7 +276,7 @@ const OracleIllumination: FC<{ active: boolean; color: string; reducedMotion: bo
     })
   })
   return <group ref={group} position={[0, 2.8, 0]} scale={.001}>
-    <mesh position={[0, 1.4, 0]}><coneGeometry args={[1.5, 7.8, 48, 1, true]} /><meshBasicMaterial color="#fff1b5" transparent opacity={0} blending={AdditiveBlending} depthWrite={false} side={2} /></mesh>
+    <mesh position={[0, 1.4, 0]}><coneGeometry args={[1.5, 7.8, 48, 1, true]} /><meshBasicMaterial color="#ffefb5" transparent opacity={0} blending={AdditiveBlending} depthWrite={false} side={2} /></mesh>
     <mesh position={[0, -2.8, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[1.05, .045, 8, 96]} /><meshBasicMaterial color={color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>
     <pointLight position={[0, -2.1, 0]} color="#fff1bf" intensity={active ? 16 : 0} distance={9} decay={2} />
   </group>
@@ -310,7 +310,7 @@ const AbyssalConvergence: FC<{ active: boolean; color: string }> = ({ active, co
   })
 
   return <group ref={group} scale={.001}>
-    {curves.map((curve, index) => <mesh key={index}><tubeGeometry args={[curve, 72, .085 + index % 2 * .03, 7, false]} /><meshBasicMaterial color={index % 2 ? '#fff2dc' : color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>)}
+    {curves.map((curve, index) => <mesh key={index}><tubeGeometry args={[curve, 72, .085 + index % 2 * .03, 7, false]} /><meshBasicMaterial color={index % 2 ? '#fff7dc' : color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>)}
   </group>
 }
 
@@ -356,7 +356,7 @@ const PearlAltar: FC<{
 
   const style = category ? { '--category-color': category.color, '--category-glow': category.glow } as CSSProperties : undefined
   return <group position={[0, -.9, 0]}>
-    {[1.38, 1.05, .73].map((radius, index) => <mesh key={radius} position={[0, -.7 + index * .24, 0]}><cylinderGeometry args={[radius - .16, radius, .35, 12]} /><meshStandardMaterial color={index === 2 ? '#2b5555' : stone} roughness={.78} metalness={.12} /></mesh>)}
+    {[1.38, 1.05, .73].map((radius, index) => <mesh key={radius} position={[0, -.7 + index * .24, 0]}><cylinderGeometry args={[radius - .16, radius, .35, 12]} /><meshStandardMaterial color={index === 2 ? '#2b2c55' : stone} roughness={.78} metalness={.12} /></mesh>)}
     <mesh ref={halo} position={[0, .2, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[firstBlood ? 1.24 : 1.05, firstBlood ? .05 : .025, 8, 80]} /><meshBasicMaterial color={blood ? coral : category?.glow ?? aqua} transparent opacity={firstBlood ? .9 : attacking ? .74 : .3} blending={AdditiveBlending} /></mesh>
     <mesh ref={pearlMesh} position={[0, .47, 0]}>
       <sphereGeometry args={[.76, 48, 48]} />
@@ -385,8 +385,8 @@ const TeamAscension: FC<{ color: string; reducedMotion: boolean }> = ({ color, r
     })
   })
   return <group ref={group}>
-    {[.28, .42, .58].map((radius, index) => <mesh key={radius} rotation={[Math.PI / 2 + index * .32, index * .48, 0]}><torusGeometry args={[radius, .026 + index * .008, 8, 64]} /><meshBasicMaterial color={index % 2 ? '#fff4e8' : color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>)}
-    <mesh position={[0, 2.6, 0]}><coneGeometry args={[.62, 6.4, 32, 1, true]} /><meshBasicMaterial color="#fff4e8" transparent opacity={0} blending={AdditiveBlending} depthWrite={false} side={2} /></mesh>
+    {[.28, .42, .58].map((radius, index) => <mesh key={radius} rotation={[Math.PI / 2 + index * .32, index * .48, 0]}><torusGeometry args={[radius, .026 + index * .008, 8, 64]} /><meshBasicMaterial color={index % 2 ? '#fffae8' : color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>)}
+    <mesh position={[0, 2.6, 0]}><coneGeometry args={[.62, 6.4, 32, 1, true]} /><meshBasicMaterial color="#fffae8" transparent opacity={0} blending={AdditiveBlending} depthWrite={false} side={2} /></mesh>
     <pointLight color={color} intensity={16} distance={7} decay={2} />
   </group>
 }
@@ -427,7 +427,7 @@ const RejectedTether: FC<{
     })
   })
 
-  return <group>{[-1, 0, 1].map((strand, index) => <mesh key={strand} ref={mesh => { meshes.current[index] = mesh }}><tubeGeometry args={[new CatmullRomCurve3([new Vector3(), new Vector3(0, .1, 0)]), 2, .02, 5, false]} /><meshBasicMaterial color={strand === 0 ? '#d3ebe9' : color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>)}</group>
+  return <group>{[-1, 0, 1].map((strand, index) => <mesh key={strand} ref={mesh => { meshes.current[index] = mesh }}><tubeGeometry args={[new CatmullRomCurve3([new Vector3(), new Vector3(0, .1, 0)]), 2, .02, 5, false]} /><meshBasicMaterial color={strand === 0 ? '#d3d4eb' : color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>)}</group>
 }
 
 const SuccessfulTether: FC<{
@@ -473,9 +473,9 @@ const SuccessfulTether: FC<{
   })
 
   return <group>
-    {[0, 1].map(strand => <mesh key={strand} ref={mesh => { meshes.current[strand] = mesh }}><tubeGeometry args={[new CatmullRomCurve3([new Vector3(), new Vector3(0, .1, 0)]), 2, .02, 5, false]} /><meshBasicMaterial color={strand ? '#e9fffb' : color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>)}
+    {[0, 1].map(strand => <mesh key={strand} ref={mesh => { meshes.current[strand] = mesh }}><tubeGeometry args={[new CatmullRomCurve3([new Vector3(), new Vector3(0, .1, 0)]), 2, .02, 5, false]} /><meshBasicMaterial color={strand ? '#e9eaff' : color} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} /></mesh>)}
     <group ref={collar} position={[0, -.45, 0]} scale={.001}>
-      {[0, 1, 2].map(index => <mesh key={index} rotation={[Math.PI / 2 + index * .45, index * .7, 0]}><torusGeometry args={[.68 + index * .11, strong ? .03 : .018, 7, 64]} /><meshBasicMaterial color={index % 2 ? '#e8fffa' : color} transparent opacity={strong ? .82 : .64} blending={AdditiveBlending} depthWrite={false} /></mesh>)}
+      {[0, 1, 2].map(index => <mesh key={index} rotation={[Math.PI / 2 + index * .45, index * .7, 0]}><torusGeometry args={[.68 + index * .11, strong ? .03 : .018, 7, 64]} /><meshBasicMaterial color={index % 2 ? '#e8e9ff' : color} transparent opacity={strong ? .82 : .64} blending={AdditiveBlending} depthWrite={false} /></mesh>)}
       <pointLight color={color} intensity={strong ? 19 : 12} distance={strong ? 7 : 5} decay={2} />
     </group>
   </group>
@@ -503,7 +503,7 @@ const TeamLantern: FC<{
   const cinematicStarted = useRef<number | undefined>(undefined)
   const wasFirstBlood = useRef(firstBlood)
   const accent = teamColor(team.id ?? index + 1)
-  const podium = team.rank === 1 ? '#ffd889' : team.rank === 2 ? '#d5eced' : team.rank === 3 ? '#d49b78' : '#8b7254'
+  const podium = team.rank === 1 ? '#ffe589' : team.rank === 2 ? '#d5d6ed' : team.rank === 3 ? '#d4c078' : '#8b7f54'
 
   useFrame(({ clock }, delta) => {
     if (!beacon.current) return
@@ -539,9 +539,9 @@ const TeamLantern: FC<{
   const labelStyle = { '--team-color': accent } as CSSProperties
   return <>
     <group ref={beacon} position={[Math.cos(slot.angle) * slot.radiusX, slot.height, Math.sin(slot.angle) * slot.radiusZ]}>
-      <mesh rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[firstBlood ? .38 : .28, firstBlood ? .065 : .044, 8, 36]} /><meshStandardMaterial color={podium} metalness={.72} roughness={.34} emissive={firstBlood ? '#ffd6a0' : accent} emissiveIntensity={firstBlood ? 2.1 : attacking ? 1.15 : .22} /></mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[firstBlood ? .38 : .28, firstBlood ? .065 : .044, 8, 36]} /><meshStandardMaterial color={podium} metalness={.72} roughness={.34} emissive={firstBlood ? '#ffeaa0' : accent} emissiveIntensity={firstBlood ? 2.1 : attacking ? 1.15 : .22} /></mesh>
       <mesh><sphereGeometry args={[.2, labelled ? 28 : 16, labelled ? 28 : 16]} /><meshPhysicalMaterial color={accent} emissive={blood ? coral : accent} emissiveIntensity={firstBlood ? 3.2 : attacking ? 3 : wrong ? 1.8 : .85} roughness={.14} clearcoat={1} iridescence={.75} /></mesh>
-      {labelled && <pointLight color={firstBlood ? '#ffd6a0' : blood ? coral : accent} intensity={firstBlood ? 11 : attacking ? 6 : wrong ? 3.2 : 1.1} distance={firstBlood ? 5.4 : attacking ? 2.8 : 2.4} decay={2} />}
+      {labelled && <pointLight color={firstBlood ? '#ffeaa0' : blood ? coral : accent} intensity={firstBlood ? 11 : attacking ? 6 : wrong ? 3.2 : 1.1} distance={firstBlood ? 5.4 : attacking ? 2.8 : 2.4} decay={2} />}
       {attacking && <mesh rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[.28, .018, 7, 48]} /><meshBasicMaterial color={blood ? coral : accent} transparent opacity={.72} blending={AdditiveBlending} depthWrite={false} /></mesh>}
       {wrong && <mesh rotation={[Math.PI / 2, .4, 0]}><torusGeometry args={[.31, .02, 6, 36]} /><meshBasicMaterial color={accent} transparent opacity={.45} blending={AdditiveBlending} depthWrite={false} /></mesh>}
       {firstBlood && <TeamAscension color={coral} reducedMotion={reducedMotion} />}
@@ -649,7 +649,7 @@ const FlowingVortexCurrent: FC<{ curve: CatmullRomCurve3; index: number; reduced
       mesh.current.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.2 + index) * .025)
     }
   })
-  return <mesh ref={mesh}><tubeGeometry args={[curve, 96, .042 + index * .012, 7, false]} /><shaderMaterial ref={material} vertexShader={flowVertex} fragmentShader={flowFragment} uniforms={{ uTime: { value: 0 }, uColor: { value: new Color(index === 1 ? '#c6fff7' : aqua) }, uPhase: { value: index * .31 } }} transparent blending={AdditiveBlending} depthWrite={false} /></mesh>
+  return <mesh ref={mesh}><tubeGeometry args={[curve, 96, .042 + index * .012, 7, false]} /><shaderMaterial ref={material} vertexShader={flowVertex} fragmentShader={flowFragment} uniforms={{ uTime: { value: 0 }, uColor: { value: new Color(index === 1 ? '#c6c8ff' : aqua) }, uPhase: { value: index * .31 } }} transparent blending={AdditiveBlending} depthWrite={false} /></mesh>
 }
 
 const VortexFlowRings: FC<{ reducedMotion: boolean }> = ({ reducedMotion }) => {
@@ -664,7 +664,7 @@ const VortexFlowRings: FC<{ reducedMotion: boolean }> = ({ reducedMotion }) => {
       material.opacity = .24 + Math.sin(clock.elapsedTime * 2 + index) * .12
     })
   })
-  return <group ref={group}>{[.75, 1.25, 1.75, 2.25].map((radius, index) => <mesh key={radius} rotation={[Math.PI / 2, index * .35, 0]}><torusGeometry args={[radius, .022 + index * .007, 6, 72]} /><meshBasicMaterial color="#8affef" transparent opacity={.32} blending={AdditiveBlending} depthWrite={false} /></mesh>)}</group>
+  return <group ref={group}>{[.75, 1.25, 1.75, 2.25].map((radius, index) => <mesh key={radius} rotation={[Math.PI / 2, index * .35, 0]}><torusGeometry args={[radius, .022 + index * .007, 6, 72]} /><meshBasicMaterial color="#8a8eff" transparent opacity={.32} blending={AdditiveBlending} depthWrite={false} /></mesh>)}</group>
 }
 
 const Vortex: FC<{ categories: ChallengeCategory[]; selected?: ChallengeCategory; phase: LiveSpinPhase; reducedMotion: boolean; visuals: LiveCategoryVisual[] }> = ({ categories, selected, phase, reducedMotion, visuals }) => {
@@ -679,7 +679,7 @@ const Vortex: FC<{ categories: ChallengeCategory[]; selected?: ChallengeCategory
   } else if (!labelsRef.current.length && selected) labelsRef.current = [selected]
   const labels = labelsRef.current
   const visualMap = useMemo(() => new Map(visuals.map(visual => [visual.category, visual])), [visuals])
-  const fallbackVisual: LiveCategoryVisual = { category: ChallengeCategory.Misc, icon: '', color: '#2e7777', glow: aqua }
+  const fallbackVisual: LiveCategoryVisual = { category: ChallengeCategory.Misc, icon: '', color: '#2e3077', glow: aqua }
   const curves = useMemo(() => [0, 1, 2].map(index => new CatmullRomCurve3(Array.from({ length: 18 }, (_, point) => {
     const progress = point / 17
     const angle = progress * Math.PI * (4.1 + index * .45) + index * Math.PI * .66
@@ -721,7 +721,7 @@ const TidalAtmosphere: FC<{ active: boolean }> = ({ active }) => {
       child.rotation.z = Math.cos(clock.elapsedTime * .27 + index) * .14
     })
   })
-  return <group ref={group} position={[0, -.2, -1.7]} scale={.001}>{[0, 1, 2, 3].map(index => <mesh key={index} position={[(index - 1.5) * .9, index % 2 * .5, -index * .2]} scale={[1.7 + index * .2, .75 + index % 2 * .2, .7]}><sphereGeometry args={[1.2, 20, 16]} /><meshBasicMaterial color={index % 2 ? '#9f1932' : '#d33c4a'} transparent opacity={.035 + index * .008} blending={AdditiveBlending} depthWrite={false} /></mesh>)}</group>
+  return <group ref={group} position={[0, -.2, -1.7]} scale={.001}>{[0, 1, 2, 3].map(index => <mesh key={index} position={[(index - 1.5) * .9, index % 2 * .5, -index * .2]} scale={[1.7 + index * .2, .75 + index % 2 * .2, .7]}><sphereGeometry args={[1.2, 20, 16]} /><meshBasicMaterial color={index % 2 ? '#9f1951' : '#d33c7b'} transparent opacity={.035 + index * .008} blending={AdditiveBlending} depthWrite={false} /></mesh>)}</group>
 }
 
 const FishSchool: FC<{ reducedMotion: boolean }> = ({ reducedMotion }) => {
@@ -731,7 +731,7 @@ const FishSchool: FC<{ reducedMotion: boolean }> = ({ reducedMotion }) => {
     school.current.position.x = -7 + clock.elapsedTime * .22 % 14
     school.current.position.y = 3.2 + Math.sin(clock.elapsedTime * .35) * .35
   })
-  return <group ref={school} position={[-6, 3.2, -3.5]}>{Array.from({ length: 9 }, (_, index) => <group key={index} position={[(index % 3) * -.55, (index % 4 - 1.5) * .24, -index % 3 * .35]} scale={.32 + index % 3 * .08}><mesh scale={[1.6, .55, .4]}><sphereGeometry args={[.22, 10, 7]} /><meshStandardMaterial color="#4f8586" roughness={.8} /></mesh><mesh position={[-.38, 0, 0]} rotation={[0, 0, -Math.PI / 2]}><coneGeometry args={[.18, .34, 5]} /><meshStandardMaterial color="#416f73" /></mesh></group>)}</group>
+  return <group ref={school} position={[-6, 3.2, -3.5]}>{Array.from({ length: 9 }, (_, index) => <group key={index} position={[(index % 3) * -.55, (index % 4 - 1.5) * .24, -index % 3 * .35]} scale={.32 + index % 3 * .08}><mesh scale={[1.6, .55, .4]}><sphereGeometry args={[.22, 10, 7]} /><meshStandardMaterial color="#4f5186" roughness={.8} /></mesh><mesh position={[-.38, 0, 0]} rotation={[0, 0, -Math.PI / 2]}><coneGeometry args={[.18, .34, 5]} /><meshStandardMaterial color="#414373" /></mesh></group>)}</group>
 }
 
 const Scene: FC<SunkenColosseumSceneProps> = props => {
@@ -748,11 +748,11 @@ const Scene: FC<SunkenColosseumSceneProps> = props => {
   const focusPosition = useRef(new Vector3())
 
   return <>
-    <color attach="background" args={['#020b12']} />
-    <fog attach="fog" args={['#03141c', 8, 25]} />
-    <ambientLight intensity={firstBlood ? .16 : hint ? .3 : .42} color="#79b9b2" />
-    <hemisphereLight args={['#8aefe2', '#041015', firstBlood ? .46 : hint ? .78 : 1.05]} />
-    <directionalLight position={[-4, 9, 5]} color={blood ? '#ffc2b7' : hint ? '#fff0bc' : '#b8fff3'} intensity={firstBlood ? 3.8 : hint ? 3.1 : blood ? 2.6 : 2.15} castShadow />
+    <color attach="background" args={['#020312']} />
+    <fog attach="fog" args={['#03041c', 8, 25]} />
+    <ambientLight intensity={firstBlood ? .16 : hint ? .3 : .42} color="#797bb9" />
+    <hemisphereLight args={['#8a8def', '#040515', firstBlood ? .46 : hint ? .78 : 1.05]} />
+    <directionalLight position={[-4, 9, 5]} color={blood ? '#ffb7d5' : hint ? '#fff0bc' : '#b8baff'} intensity={firstBlood ? 3.8 : hint ? 3.1 : blood ? 2.6 : 2.15} castShadow />
     <OrbitClock angle={orbitAngle} paused={orbitPaused} reducedMotion={props.reducedMotion} />
     <CameraRig spinPhase={props.spinPhase} sceneKind={props.sceneKind} focusPosition={focusPosition} reducedMotion={props.reducedMotion} />
     <GodRays blood={blood} firstBlood={firstBlood} />

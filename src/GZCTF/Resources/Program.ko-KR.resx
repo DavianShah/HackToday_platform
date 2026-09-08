@@ -729,7 +729,7 @@
     <value>An open-source CTF platform</value>
   </data>
   <data name="Init_PostTitle" xml:space="preserve">
-    <value>Welcome to GZ::CTF!</value>
+    <value>Welcome to HackToday!</value>
   </data>
   <data name="Init_XorKeyNotSet" xml:space="preserve">
     <value>XorKey 필드가 구성되지 않았습니다. 플랫폼 시작 구성을 확인하세요</value>

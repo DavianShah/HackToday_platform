@@ -244,7 +244,7 @@ const GlobalOnboardingPage: FC = () => {
 
         <Alert color="blue" title="Alur anggota tim tidak berubah">
           Captain membuat akun dari link email. Anggota lain tetap register secara normal, lalu memakai invite
-          code tim bawaan GZCTF. Untuk warm-up dan final terpisah, pilih kedua game di bawah.
+          code tim bawaan HackToday. Untuk warm-up dan final terpisah, pilih kedua game di bawah.
         </Alert>
 
         <SimpleGrid cols={{ base: 2, sm: 3, lg: 5 }}>

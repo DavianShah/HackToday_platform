@@ -5,7 +5,7 @@ import { useChallengeCategoryLabelMap } from '@Utils/Shared'
 import classes from '@Styles/CyberpunkBossRaid.module.css'
 
 const unitTypes = ['ASSAULT MECH', 'COMBAT DRONE', 'HOVERCRAFT']
-const unitColors = ['#66f4e1', '#ffcf6e', '#b69bff', '#ff747d', '#72cde0', '#f6a66e']
+const unitColors = ['#8b8dd8', '#ffcd2a', '#b4b6e7', '#e83380', '#5355c4', '#f4a5c8']
 
 const bossState = (integrity: number) => {
   if (integrity <= 0) return ['defeated', 'DEFEATED'] as const

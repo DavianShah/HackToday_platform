@@ -38,7 +38,7 @@ export const useConfig = () => {
   const [clientConfig, setClientConfig] = useLocalStorage<ClientConfig>({
     key: 'client-config',
     defaultValue: {
-      title: 'GZ',
+      title: 'HackToday',
       slogan: 'Hack for fun not for profit',
       portMapping: ContainerPortMappingType.Default,
       footerInfo: null,
@@ -89,8 +89,8 @@ const showBanner = () => {
   const { sha, rawTag: tag, buildTime, repo, valid } = ValidatedRepoMeta()
   const padding = ' '.repeat(45)
 
-  const bannerClr = ['color: #4ccaaa', 'color: unset']
-  const textClr = ['font-weight: bold', 'font-weight: bold; color: #4ccaaa']
+  const bannerClr = ['color: #4043bf', 'color: unset']
+  const textClr = ['font-weight: bold', 'font-weight: bold; color: #4043bf']
   const badClr = ['font-weight: bold', 'font-weight: bold; color: #fe3030']
 
   // GZCTF Banner Block

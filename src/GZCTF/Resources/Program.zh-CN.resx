@@ -729,7 +729,7 @@
     <value>一个开源的CTF比赛平台</value>
   </data>
   <data name="Init_PostTitle" xml:space="preserve">
-    <value>欢迎使用 GZ::CTF</value>
+    <value>欢迎使用 HackToday</value>
   </data>
   <data name="Init_XorKeyNotSet" xml:space="preserve">
     <value>XorKey 字段没有被设定，请检查平台启动配置</value>

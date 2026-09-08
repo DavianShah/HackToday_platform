@@ -230,14 +230,14 @@ public class GlobalConfig
     /// <summary>
     /// Default site description
     /// </summary>
-    public const string DefaultDescription = "GZ::CTF is an open source CTF platform";
+    public const string DefaultDescription = "HackToday is a CTF platform";
 
     /// <summary>
     /// Platform prefix name
     /// </summary>
     [CacheFlush(CacheKey.Index)]
     [CacheFlush(CacheKey.ClientConfig)]
-    public string Title { get; set; } = "GZ";
+    public string Title { get; set; } = "HackToday";
 
     /// <summary>
     /// Platform slogan
@@ -288,7 +288,7 @@ public class GlobalConfig
     /// Platform name, used for email and homepage rendering
     /// </summary>
     [JsonIgnore]
-    public string Platform => string.IsNullOrEmpty(Title) ? "GZ::CTF" : $"{Title}::CTF";
+    public string Platform => string.IsNullOrEmpty(Title) ? "HackToday" : Title;
 }
 
 /// <summary>
@@ -300,7 +300,7 @@ public partial class ClientConfig
     /// <summary>
     /// Platform prefix name
     /// </summary>
-    public string Title { get; set; } = "GZ";
+    public string Title { get; set; } = "HackToday";
 
     /// <summary>
     /// Platform slogan

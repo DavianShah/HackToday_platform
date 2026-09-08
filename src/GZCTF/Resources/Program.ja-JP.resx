@@ -729,7 +729,7 @@
     <value>オープンソース CTF プラットフォーム</value>
   </data>
   <data name="Init_PostTitle" xml:space="preserve">
-    <value>GZ::CTF へようこそ！</value>
+    <value>HackToday へようこそ！</value>
   </data>
   <data name="Init_XorKeyNotSet" xml:space="preserve">
     <value>XorKey フィールドが設定されていません。プラットフォームの起動設定を確認してください</value>

@@ -729,7 +729,7 @@
     <value>Sebuah platform CTF open source</value>
   </data>
   <data name="Init_PostTitle" xml:space="preserve">
-    <value>Selamat datang di GZ::CTF!</value>
+    <value>Selamat datang di HackToday!</value>
   </data>
   <data name="Init_XorKeyNotSet" xml:space="preserve">
     <value>Bidang XorKey belum dikonfigurasi, silakan periksa konfigurasi startup platform</value>

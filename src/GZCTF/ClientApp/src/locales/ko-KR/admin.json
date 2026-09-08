@@ -413,7 +413,7 @@
           "label": "플랫폼 로고"
         },
         "name": {
-          "description": "플랫폼 이름에 ::CTF 가 함께 표시될 것입니다.",
+          "description": "플랫폼 이름이 사이트 브랜드로 표시됩니다.",
           "label": "플랫폼 이름"
         },
         "slogan": {
@@ -581,7 +581,7 @@
       "footer": "`Test` <mbr/> 중...",
       "logo": {
         "custom": "커스텀 로고",
-        "default": "GZCTF 아이콘 사용하기"
+        "default": "HackToday 아이콘 사용하기"
       }
     },
     "teams": {

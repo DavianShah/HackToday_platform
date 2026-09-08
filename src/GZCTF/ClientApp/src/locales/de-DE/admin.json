@@ -413,7 +413,7 @@
           "label": "Plattform-Logo"
         },
         "name": {
-          "description": "Der Plattformname wird mit ::CTF angezeigt",
+          "description": "Der Plattformname wird als Sitename angezeigt",
           "label": "Plattformname"
         },
         "slogan": {
@@ -581,7 +581,7 @@
       "footer": "`Test` <mbr/> Etwas...",
       "logo": {
         "custom": "Benutzerdefiniertes Logo",
-        "default": "GZCTF-Icon verwenden"
+        "default": "HackToday-Icon verwenden"
       }
     },
     "teams": {

@@ -413,7 +413,7 @@
           "label": "Logo platform"
         },
         "name": {
-          "description": "Nama platform akan ditampilkan dengan ::CTF",
+          "description": "Nama platform akan ditampilkan sebagai nama situs",
           "label": "Nama platform"
         },
         "slogan": {
@@ -581,7 +581,7 @@
       "footer": "`Test` <mbr/> Sesuatu...",
       "logo": {
         "custom": "Kustom logo",
-        "default": "Gunakan GZCTF icon"
+        "default": "Gunakan HackToday icon"
       }
     },
     "teams": {

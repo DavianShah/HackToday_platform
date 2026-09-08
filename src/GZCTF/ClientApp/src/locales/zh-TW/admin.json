@@ -413,7 +413,7 @@
           "label": "平臺 Logo"
         },
         "name": {
-          "description": "後跟 ::CTF 欄位進行展示",
+          "description": "將作為平台名稱進行展示",
           "label": "平臺名稱"
         },
         "slogan": {
@@ -581,7 +581,7 @@
       "footer": "`Test` <mbr/> [某 IPC 備 XXXXXXXX 號-X](http://beian.miit.gov.cn/)",
       "logo": {
         "custom": "自定義 Logo",
-        "default": "使用 GZCTF 圖標"
+        "default": "使用 HackToday 圖標"
       }
     },
     "teams": {

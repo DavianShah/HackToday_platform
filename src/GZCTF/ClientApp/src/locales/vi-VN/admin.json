@@ -413,7 +413,7 @@
           "label": "Logo nền tảng."
         },
         "name": {
-          "description": "Tên nền tảng sẽ được hiển thị với ::CTF.",
+          "description": "Tên nền tảng sẽ được hiển thị dưới dạng tên trang.",
           "label": "Tên nền tảng."
         },
         "slogan": {
@@ -581,7 +581,7 @@
       "footer": "`Kiểm tra` <mbr/> Một cái gì đó...",
       "logo": {
         "custom": "Logo tùy chỉnh",
-        "default": "Sử dụng biểu tượng GZCTF"
+        "default": "Sử dụng biểu tượng HackToday"
       }
     },
     "teams": {

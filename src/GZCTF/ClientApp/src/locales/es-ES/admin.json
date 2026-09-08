@@ -413,7 +413,7 @@
           "label": "Logo de la Plataforma"
         },
         "name": {
-          "description": "El nombre de la plataforma se mostrará con ::CTF",
+          "description": "El nombre de la plataforma se mostrará como marca del sitio",
           "label": "Nombre de la Plataforma"
         },
         "slogan": {
@@ -581,7 +581,7 @@
       "footer": "`Test` <mbr/> Algo...",
       "logo": {
         "custom": "Logo personalizado",
-        "default": "Usar icono GZCTF"
+        "default": "Usar icono HackToday"
       }
     },
     "teams": {

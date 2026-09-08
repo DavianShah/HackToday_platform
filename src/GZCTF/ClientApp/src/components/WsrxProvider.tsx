@@ -16,7 +16,7 @@ interface CustomWsrxOptions {
 
 export const DefaultWsrxOptions: CustomWsrxOptions = {
   api: 'http://127.0.0.1:3307',
-  name: 'GZ::CTF',
+  name: 'HackToday',
   allowLan: false,
 }
 
@@ -119,7 +119,7 @@ export const WsrxProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   useEffect(() => {
     if (platformConfig?.config.title) {
-      const newName = platformConfig.config.title + '::CTF'
+      const newName = platformConfig.config.title
       setWsrxOptions((prevOptions) => {
         if (prevOptions.name === newName) return prevOptions
         return {

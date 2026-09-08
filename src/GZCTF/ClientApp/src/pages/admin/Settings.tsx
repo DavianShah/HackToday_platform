@@ -192,7 +192,7 @@ const Configs: FC = () => {
               <TextInput
                 label={t('admin.content.settings.platform.description.label')}
                 description={t('admin.content.settings.platform.description.description')}
-                placeholder="GZ::CTF is an open source CTF platform"
+                placeholder="HackToday is a CTF platform"
                 disabled={disabled}
                 value={globalConfig?.description ?? ''}
                 onChange={(e) => {

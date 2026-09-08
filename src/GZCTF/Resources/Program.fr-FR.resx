@@ -742,7 +742,7 @@
     <value>Une plateforme CTF open source</value>
   </data>
   <data name="Init_PostTitle" xml:space="preserve">
-    <value>Bienvenue sur GZ::CTF !</value>
+    <value>Bienvenue sur HackToday !</value>
   </data>
   <data name="Init_XorKeyNotSet" xml:space="preserve">
     <value>Le champ XorKey n'est pas configuré, veuillez vérifier la configuration de démarrage de la plateforme</value>
