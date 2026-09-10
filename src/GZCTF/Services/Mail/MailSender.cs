@@ -12,6 +12,8 @@ namespace GZCTF.Services.Mail;
 
 public sealed class MailSender : IMailSender, IDisposable
 {
+    private const string CaptainOnboardingLogoContentId = "hacktoday-logo@hacktoday.web.id";
+    private const string CaptainOnboardingLogoResourceName = "GZCTF.Resources.HackTodayLogo.png";
     private readonly CancellationToken _cancellationToken;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ILogger<MailSender> _logger;
@@ -113,7 +115,7 @@ public sealed class MailSender : IMailSender, IDisposable
 
         var to = new MailboxAddress(content.UserName, content.Email);
 
-        if (!await SendEmailAsync(title, emailContent, from, to))
+        if (!await SendEmailAsync(title, emailContent, from, to, content.Type == MailType.CaptainOnboarding))
             _logger.SystemLog(StaticLocalizer[nameof(Resources.Program.MailSender_MailSendFailed)],
                 TaskStatus.Failed);
     }
@@ -136,7 +138,8 @@ public sealed class MailSender : IMailSender, IDisposable
         EnqueueMailTask(teamName, email, onboardingLink, MailType.CaptainOnboarding, localizer, options,
             gameTitles, expiresAtUtc);
 
-    private async Task<bool> SendEmailAsync(string subject, string content, MailboxAddress from, MailboxAddress to)
+    private async Task<bool> SendEmailAsync(string subject, string content, MailboxAddress from, MailboxAddress to,
+        bool includeCaptainOnboardingLogo)
     {
         if (_smtpClient is null)
             return false;
@@ -145,10 +148,30 @@ public sealed class MailSender : IMailSender, IDisposable
         msg.From.Add(from);
         msg.To.Add(to);
         msg.Subject = subject;
-        msg.Body = new TextPart(TextFormat.Html) { Text = content };
 
         try
         {
+            if (includeCaptainOnboardingLogo)
+            {
+                await using var logoStream = typeof(MailSender).Assembly
+                    .GetManifestResourceStream(CaptainOnboardingLogoResourceName);
+
+                if (logoStream is null)
+                    throw new InvalidOperationException("The embedded HackToday email logo was not found.");
+
+                using var logoBuffer = new MemoryStream();
+                await logoStream.CopyToAsync(logoBuffer, _cancellationToken);
+
+                var bodyBuilder = new BodyBuilder { HtmlBody = content };
+                var logo = bodyBuilder.LinkedResources.Add("hacktoday-logo.png", logoBuffer.ToArray());
+                logo.ContentId = CaptainOnboardingLogoContentId;
+                msg.Body = bodyBuilder.ToMessageBody();
+            }
+            else
+            {
+                msg.Body = new TextPart(TextFormat.Html) { Text = content };
+            }
+
             await _smtpClient.SendAsync(msg, _cancellationToken);
 
             _logger.SystemLog(StaticLocalizer[nameof(Resources.Program.MailSender_SendMail), to],
@@ -277,87 +300,226 @@ public class MailContent(
         """
         <!doctype html>
         <html lang="id">
-        <body style="margin:0;padding:0;background-color:#F4F4FF;font-family:Arial,Helvetica,sans-serif;color:#201D70;">
-          <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-            Aktivasi akun captain tim untuk HackToday 2026.
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <meta name="x-apple-disable-message-reformatting">
+          <title>HackToday IT TODAY 2026</title>
+          <style>
+            @media only screen and (max-width:640px) {
+              .email-shell { width:100% !important; }
+              .mobile-pad { padding-left:20px !important; padding-right:20px !important; }
+              .hero-title { font-size:30px !important; line-height:38px !important; }
+              .step-number { width:48px !important; }
+            }
+          </style>
+        </head>
+        <body style="margin:0;padding:0;background-color:#F4F4FF;font-family:Arial,Helvetica,sans-serif;color:#171631;">
+          <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">
+            Kredensial dan akses tim CTF HackToday IT TODAY 2026 siap digunakan.
           </div>
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#F4F4FF"
                  style="width:100%;background-color:#F4F4FF;">
             <tr>
-              <td align="center" style="padding:40px 12px;">
-                <table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0"
-                       style="width:100%;max-width:620px;background-color:#ffffff;border:1px solid #d9d8f4;border-radius:18px;overflow:hidden;">
+              <td align="center" style="padding:32px 12px;">
+                <!--[if mso]><table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
+                <table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" class="email-shell"
+                       style="width:100%;max-width:620px;background-color:#ffffff;border:1px solid #dcdaf6;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(32,29,112,.10);">
                   <tr>
-                    <td height="6" style="height:6px;background-color:#635FC9;font-size:0;line-height:0;">&nbsp;</td>
+                    <td height="6" bgcolor="#635FC9" style="height:6px;background-color:#635FC9;font-size:0;line-height:0;">&nbsp;</td>
                   </tr>
                   <tr>
-                    <td align="center" style="padding:32px 28px 20px;text-align:center;">
-                      <p style="margin:0 0 14px;color:#635FC9;font-size:12px;font-weight:700;line-height:18px;letter-spacing:2px;text-transform:uppercase;">
-                        HackToday 2026 &bull; Captain Onboarding
+                    <td align="center" bgcolor="#201D70" class="mobile-pad"
+                        style="padding:38px 44px 42px;background-color:#201D70;text-align:center;">
+                      <img src="cid:hacktoday-logo@hacktoday.web.id" width="88" height="88" alt="Logo HackToday"
+                           style="display:block;width:88px;height:88px;margin:0 auto 20px;border:0;outline:none;text-decoration:none;">
+                      <p style="margin:0 0 12px;color:#d9d8ff;font-size:12px;font-weight:700;line-height:18px;letter-spacing:2.2px;text-transform:uppercase;">
+                        HackToday IT TODAY 2026
                       </p>
-                      <h1 style="margin:0 0 10px;color:#201D70;font-size:30px;line-height:38px;font-weight:700;">
-                        Selamat datang, Captain.
-                      </h1>
-                      <p style="margin:0;color:#201D70;font-size:15px;line-height:24px;">
-                        Tim kamu telah terdaftar. Aktifkan akun captain untuk menyiapkan akses kompetisi HackToday 2026.
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 28px 12px;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
-                             style="width:100%;background-color:#F4F4FF;border:1px solid #d9d8f4;border-radius:12px;">
+                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto 20px;">
                         <tr>
-                          <td style="padding:20px 22px;">
-                            <p style="margin:0;color:#635FC9;font-size:11px;font-weight:700;line-height:17px;letter-spacing:1.4px;text-transform:uppercase;">Nama tim</p>
-                            <p style="margin:4px 0 0;color:#201D70;font-size:22px;font-weight:700;line-height:30px;">{teamNameHtml}</p>
-                            <p style="margin:7px 0 0;color:#201D70;font-size:13px;line-height:20px;">Captain: {emailHtml}</p>
+                          <td bgcolor="#635FC9" style="padding:7px 13px;background-color:#635FC9;border:1px solid #7d79dd;border-radius:999px;">
+                            <span style="color:#ffffff;font-size:10px;font-weight:700;line-height:14px;letter-spacing:1.6px;text-transform:uppercase;">CTF Team Access</span>
                           </td>
                         </tr>
                       </table>
+                      <h1 class="hero-title" style="margin:0;color:#ffffff;font-size:36px;line-height:44px;font-weight:700;letter-spacing:-.5px;">
+                        Tim kamu sudah siap untuk berkompetisi.
+                      </h1>
+                      <p style="margin:16px 0 0;color:#d9d8ff;font-size:15px;line-height:24px;">
+                        Akses resmi menuju arena CTF HackToday telah disiapkan untuk tim kamu.
+                      </p>
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding:10px 28px 4px;">
-                      <p style="margin:0 0 10px;color:#635FC9;font-size:11px;font-weight:700;line-height:17px;letter-spacing:1.4px;text-transform:uppercase;">
-                        Akses kompetisi
+                    <td class="mobile-pad" style="padding:38px 44px 10px;">
+                      <p style="margin:0 0 10px;color:#201D70;font-size:19px;font-weight:700;line-height:28px;">
+                        Halo, Peserta HackToday IT TODAY 2026!
                       </p>
+                      <p style="margin:0;color:#4c4a68;font-size:15px;line-height:25px;">
+                        Tim kamu telah disiapkan oleh panitia di platform CTF. Aktifkan akun captain untuk membuat tim dan mendapatkan kode bergabung yang dapat digunakan oleh seluruh anggota.
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="mobile-pad" style="padding:30px 44px 12px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="padding:0 0 12px;">
+                            <span style="color:#635FC9;font-size:11px;font-weight:700;line-height:16px;letter-spacing:1.7px;text-transform:uppercase;">Kredensial Tim</span>
+                          </td>
+                          <td align="right" style="padding:0 0 12px;">
+                            <span style="color:#7774a3;font-size:11px;line-height:16px;">Akses resmi</span>
+                          </td>
+                        </tr>
+                      </table>
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#F4F4FF"
+                             style="width:100%;background-color:#F4F4FF;border:1px solid #d9d8f4;border-radius:14px;">
+                        <tr>
+                          <td style="padding:23px 24px 18px;">
+                            <p style="margin:0;color:#635FC9;font-size:10px;font-weight:700;line-height:15px;letter-spacing:1.4px;text-transform:uppercase;">Nama Tim</p>
+                            <p style="margin:5px 0 0;color:#201D70;font-size:23px;font-weight:700;line-height:31px;">{teamNameHtml}</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0 24px;">
+                            <div style="height:1px;background-color:#d9d8f4;font-size:0;line-height:0;">&nbsp;</div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:17px 24px;">
+                            <p style="margin:0 0 4px;color:#635FC9;font-size:10px;font-weight:700;line-height:15px;letter-spacing:1.3px;text-transform:uppercase;">Email Captain</p>
+                            <p style="margin:0;color:#201D70;font-size:14px;font-weight:700;line-height:22px;word-break:break-word;">{emailHtml}</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0 24px;">
+                            <div style="height:1px;background-color:#d9d8f4;font-size:0;line-height:0;">&nbsp;</div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:17px 24px 8px;">
+                            <p style="margin:0 0 4px;color:#635FC9;font-size:10px;font-weight:700;line-height:15px;letter-spacing:1.3px;text-transform:uppercase;">Kode Tim</p>
+                            <p style="margin:0;color:#201D70;font-size:14px;font-weight:700;line-height:22px;">Diterbitkan setelah aktivasi captain</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:8px 24px 23px;">
+                            <p style="margin:0 0 4px;color:#635FC9;font-size:10px;font-weight:700;line-height:15px;letter-spacing:1.3px;text-transform:uppercase;">Password Tim</p>
+                            <p style="margin:0;color:#4c4a68;font-size:13px;line-height:21px;">Tidak digunakan. Setiap peserta membuat password akun masing-masing.</p>
+                          </td>
+                        </tr>
+                      </table>
+                      <p style="margin:14px 0 8px;color:#7774a3;font-size:11px;font-weight:700;line-height:17px;letter-spacing:1.3px;text-transform:uppercase;">Kompetisi yang ditugaskan</p>
                       <div style="line-height:28px;">{gamesHtml}</div>
                     </td>
                   </tr>
                   <tr>
-                    <td align="center" style="padding:24px 28px 14px;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <td class="mobile-pad" style="padding:22px 44px 34px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#171546"
+                             style="width:100%;background-color:#171546;border-radius:14px;">
                         <tr>
-                          <td align="center" bgcolor="#635FC9" style="background-color:#635FC9;border-radius:9px;">
-                            <a href="{urlHtml}"
-                               style="display:block;padding:15px 20px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;line-height:20px;letter-spacing:.5px;">
-                              AKTIVASI AKUN CAPTAIN
-                            </a>
+                          <td align="center" style="padding:24px 24px 9px;text-align:center;">
+                            <p style="margin:0 0 4px;color:#ffffff;font-size:16px;font-weight:700;line-height:24px;">Platform CTF</p>
+                            <a href="https://ctf.hacktoday.web.id/" style="color:#b9b6ff;font-size:13px;line-height:20px;text-decoration:none;">https://ctf.hacktoday.web.id/</a>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td align="center" style="padding:10px 24px 14px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                              <tr>
+                                <td align="center" bgcolor="#635FC9" style="background-color:#635FC9;border-radius:9px;">
+                                  <a href="{urlHtml}" style="display:block;padding:15px 20px;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;line-height:20px;letter-spacing:.8px;">
+                                    BUKA PLATFORM CTF
+                                  </a>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td align="center" style="padding:0 24px 22px;text-align:center;">
+                            <p style="margin:0;color:#c8c6ee;font-size:11px;line-height:18px;">
+                              Link aktivasi berlaku hingga <strong style="color:#ffffff;">{expiresHtml}</strong> dan hanya dapat digunakan satu kali.
+                            </p>
                           </td>
                         </tr>
                       </table>
-                      <p style="margin:13px 0 0;color:#201D70;font-size:12px;line-height:19px;">
-                        Link aktivasi berlaku sampai <strong>{expiresHtml}</strong> dan hanya dapat digunakan satu kali.
-                      </p>
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding:14px 28px 28px;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
-                             style="width:100%;border-top:1px solid #d9d8f4;">
+                    <td bgcolor="#FAFAFF" class="mobile-pad" style="padding:34px 44px;background-color:#FAFAFF;border-top:1px solid #ebeafd;border-bottom:1px solid #ebeafd;">
+                      <p style="margin:0 0 20px;color:#201D70;font-size:18px;font-weight:700;line-height:26px;">Cara Masuk</p>
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                         <tr>
-                          <td align="center" style="padding:22px 0 0;">
-                            <p style="margin:0 0 14px;color:#201D70;font-size:13px;line-height:21px;">
-                              Bergabunglah ke Discord untuk informasi teknis, pengumuman, dan komunikasi selama kompetisi.
-                            </p>
+                          <td width="58" valign="top" class="step-number" style="width:58px;padding:0 0 18px;vertical-align:top;">
+                            <table role="presentation" width="40" cellspacing="0" cellpadding="0" border="0">
+                              <tr><td align="center" bgcolor="#635FC9" style="width:40px;height:40px;background-color:#635FC9;border-radius:10px;color:#ffffff;font-size:12px;font-weight:700;line-height:40px;">01</td></tr>
+                            </table>
+                          </td>
+                          <td valign="top" style="padding:0 0 18px;vertical-align:top;">
+                            <p style="margin:0 0 3px;color:#201D70;font-size:14px;font-weight:700;line-height:21px;">Daftar Akun</p>
+                            <p style="margin:0;color:#5c5a76;font-size:13px;line-height:21px;">Setiap peserta mendaftarkan akun baru pada platform CTF.</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="58" valign="top" class="step-number" style="width:58px;padding:0 0 18px;vertical-align:top;">
+                            <table role="presentation" width="40" cellspacing="0" cellpadding="0" border="0">
+                              <tr><td align="center" bgcolor="#4d49a9" style="width:40px;height:40px;background-color:#4d49a9;border-radius:10px;color:#ffffff;font-size:12px;font-weight:700;line-height:40px;">02</td></tr>
+                            </table>
+                          </td>
+                          <td valign="top" style="padding:0 0 18px;vertical-align:top;">
+                            <p style="margin:0 0 3px;color:#201D70;font-size:14px;font-weight:700;line-height:21px;">Login</p>
+                            <p style="margin:0;color:#5c5a76;font-size:13px;line-height:21px;">Setiap peserta login menggunakan akun yang telah didaftarkan.</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="58" valign="top" class="step-number" style="width:58px;vertical-align:top;">
+                            <table role="presentation" width="40" cellspacing="0" cellpadding="0" border="0">
+                              <tr><td align="center" bgcolor="#201D70" style="width:40px;height:40px;background-color:#201D70;border-radius:10px;color:#ffffff;font-size:12px;font-weight:700;line-height:40px;">03</td></tr>
+                            </table>
+                          </td>
+                          <td valign="top" style="vertical-align:top;">
+                            <p style="margin:0 0 3px;color:#201D70;font-size:14px;font-weight:700;line-height:21px;">Join Tim</p>
+                            <p style="margin:0;color:#5c5a76;font-size:13px;line-height:21px;">Join tim menggunakan kode tim yang diberikan oleh captain setelah aktivasi.</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="mobile-pad" style="padding:34px 44px 12px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#EEF7FF"
+                             style="width:100%;background-color:#EEF7FF;border-left:4px solid #4ca7d9;border-radius:10px;">
+                        <tr>
+                          <td width="48" valign="top" style="width:48px;padding:19px 0 19px 18px;vertical-align:top;">
+                            <span style="color:#201D70;font-size:20px;line-height:24px;">&#128274;</span>
+                          </td>
+                          <td style="padding:18px 18px 18px 10px;">
+                            <p style="margin:0 0 4px;color:#201D70;font-size:12px;font-weight:700;line-height:18px;letter-spacing:.8px;text-transform:uppercase;">Security Notice</p>
+                            <p style="margin:0;color:#41405d;font-size:12px;line-height:20px;">Kredensial tim bersifat rahasia dan hanya digunakan oleh anggota tim yang terdaftar. Mohon untuk tidak membagikan kredensial kepada pihak lain.</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="mobile-pad" style="padding:22px 44px 10px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#F4F4FF"
+                             style="width:100%;background-color:#F4F4FF;border:1px solid #dfdef7;border-radius:14px;">
+                        <tr>
+                          <td align="center" style="padding:25px 24px 12px;text-align:center;">
+                            <span style="display:inline-block;margin:0 0 10px;padding:5px 10px;background-color:#e1e0ff;border-radius:999px;color:#4d49a9;font-size:10px;font-weight:700;line-height:14px;letter-spacing:1px;text-transform:uppercase;">Komunikasi Resmi</span>
+                            <p style="margin:0 0 7px;color:#201D70;font-size:17px;font-weight:700;line-height:25px;">Bergabung ke Discord HackToday IT TODAY 2026</p>
+                            <p style="margin:0;color:#55536f;font-size:13px;line-height:21px;">Seluruh peserta diwajibkan bergabung ke server Discord resmi. Informasi Warm-Up dan babak penyisihan akan disampaikan melalui Discord.</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td align="center" style="padding:5px 24px 24px;">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                               <tr>
-                                <td align="center" style="border:1px solid #635FC9;border-radius:9px;">
-                                  <a href="https://discord.gg/UYMjSBgB8"
-                                     style="display:block;padding:13px 20px;color:#635FC9;text-decoration:none;font-size:14px;font-weight:700;line-height:20px;letter-spacing:.5px;">
-                                    JOIN DISCORD
-                                  </a>
+                                <td align="center" bgcolor="#635FC9" style="background-color:#635FC9;border-radius:9px;">
+                                  <a href="https://discord.gg/4hhvCARdWC" style="display:block;padding:14px 20px;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;line-height:20px;letter-spacing:.8px;">JOIN DISCORD</a>
                                 </td>
                               </tr>
                             </table>
@@ -367,16 +529,43 @@ public class MailContent(
                     </td>
                   </tr>
                   <tr>
-                    <td align="center" bgcolor="#201D70" style="padding:20px 28px;background-color:#201D70;">
-                      <p style="margin:0;color:#F4F4FF;font-size:11px;line-height:18px;">
-                        Dikirim oleh {platformHtml} &bull; HackToday 2026
-                      </p>
-                      <p style="margin:5px 0 0;color:#F4F4FF;font-size:11px;line-height:18px;">
-                        Jika kamu tidak merasa mendaftarkan tim ini, abaikan email dan hubungi panitia.
-                      </p>
+                    <td class="mobile-pad" style="padding:12px 44px 34px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #dfdef7;border-radius:14px;">
+                        <tr>
+                          <td align="center" style="padding:24px 24px 12px;text-align:center;">
+                            <p style="margin:0 0 6px;color:#201D70;font-size:16px;font-weight:700;line-height:24px;">Guidebook Kompetisi</p>
+                            <p style="margin:0;color:#5c5a76;font-size:13px;line-height:21px;">Pastikan peserta telah membaca guidebook resmi sebelum kompetisi.</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td align="center" style="padding:5px 24px 24px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                              <tr>
+                                <td align="center" style="border:1px solid #635FC9;border-radius:9px;">
+                                  <a href="https://ipb.link/guidebook-hacktoday2026-revised" style="display:block;padding:13px 20px;color:#4d49a9;text-decoration:none;font-size:13px;font-weight:700;line-height:20px;letter-spacing:.8px;">BUKA GUIDEBOOK</a>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" class="mobile-pad" style="padding:0 44px 36px;text-align:center;">
+                      <div style="height:1px;background-color:#ebeafd;font-size:0;line-height:0;">&nbsp;</div>
+                      <p style="margin:27px 0 7px;color:#201D70;font-size:16px;font-weight:700;line-height:24px;">Sampai jumpa di kompetisi, dan selamat berkompetisi!</p>
+                      <p style="margin:0;color:#635FC9;font-size:13px;font-weight:700;line-height:21px;">Panitia HackToday IT TODAY 2026</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" bgcolor="#12112F" class="mobile-pad" style="padding:24px 44px;background-color:#12112F;text-align:center;">
+                      <p style="margin:0 0 5px;color:#ffffff;font-size:12px;font-weight:700;line-height:19px;letter-spacing:.7px;">HackToday IT TODAY 2026</p>
+                      <p style="margin:0;color:#a9a7ce;font-size:11px;line-height:18px;">{platformHtml}</p>
                     </td>
                   </tr>
                 </table>
+                <!--[if mso]></td></tr></table><![endif]-->
               </td>
             </tr>
           </table>
@@ -401,8 +590,7 @@ public class MailContent(
         MailType.ConfirmEmail => localizer[nameof(Resources.Program.MailSender_VerifyEmailTitle)],
         MailType.ChangeEmail => localizer[nameof(Resources.Program.MailSender_ChangeEmailTitle)],
         MailType.ResetPassword => localizer[nameof(Resources.Program.MailSender_ResetPasswordTitle)],
-        MailType.CaptainOnboarding =>
-            $"HackToday 2026 - Aktivasi Captain Tim {userName.Replace('\r', ' ').Replace('\n', ' ')}",
+        MailType.CaptainOnboarding => "Kredensial Tim CTF HackToday IT TODAY 2026",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
 
@@ -415,7 +603,7 @@ public class MailContent(
         MailType.ChangeEmail => localizer[nameof(Resources.Program.MailSender_ChangeEmailContent)],
         MailType.ResetPassword => localizer[nameof(Resources.Program.MailSender_ResetPasswordContent)],
         MailType.CaptainOnboarding =>
-            $"Your paid team registration for <strong>{System.Net.WebUtility.HtmlEncode(userName)}</strong> is ready. Use the secure link below to create the captain account.",
+            $"Akses tim <strong>{System.Net.WebUtility.HtmlEncode(userName)}</strong> siap diaktifkan oleh captain.",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
 
@@ -427,7 +615,7 @@ public class MailContent(
         MailType.ConfirmEmail => localizer[nameof(Resources.Program.MailSender_VerifyEmailButton)],
         MailType.ChangeEmail => localizer[nameof(Resources.Program.MailSender_ChangeEmailButton)],
         MailType.ResetPassword => localizer[nameof(Resources.Program.MailSender_ResetPasswordButton)],
-        MailType.CaptainOnboarding => "Create Captain Account",
+        MailType.CaptainOnboarding => "Buka Platform CTF",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
 
@@ -470,7 +658,7 @@ public class MailContent(
             $"<span style=\"display:inline-block;margin:0 6px 8px 0;padding:7px 11px;border-radius:999px;" +
             "background:#F4F4FF;border:1px solid #635FC9;color:#201D70;font-size:12px;font-weight:700;\">" +
             $"{System.Net.WebUtility.HtmlEncode(title)}</span>"))
-        : "<span style=\"color:#201D70;font-size:13px;\">Akses kompetisi HackToday 2026</span>";
+        : "<span style=\"color:#201D70;font-size:13px;\">Akses kompetisi HackToday IT TODAY 2026</span>";
 
     public string ExpiresHtml { get; } = expiresAtUtc.HasValue
         ? expiresAtUtc.Value.ToOffset(TimeSpan.FromHours(7)).ToString("dd MMM yyyy HH:mm 'WIB'")
