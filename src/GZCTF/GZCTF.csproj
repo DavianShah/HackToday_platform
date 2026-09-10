@@ -107,6 +107,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\favicon.webp"/>
+    <EmbeddedResource Include="ClientApp\src\assets\logo.png"
+                      LogicalName="GZCTF.Resources.HackTodayLogo.png"/>
     <EmbeddedResource Update="Resources\Program.resx">
       <PublicClass>true</PublicClass>
       <CustomToolNamespace>GZCTF.Resources</CustomToolNamespace>
