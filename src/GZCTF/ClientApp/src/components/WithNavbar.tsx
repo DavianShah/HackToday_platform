@@ -1,15 +1,13 @@
-import { AppShell, Box, LoadingOverlay, Stack, useMantineColorScheme, useMantineTheme } from '@mantine/core'
+import { AppShell, Box, LoadingOverlay, Stack } from '@mantine/core'
 import React, { FC, useState } from 'react'
 import { AppFooter } from '@Components/AppFooter'
 import { AppHeader } from '@Components/AppHeader'
 import { AppNavbar } from '@Components/AppNavbar'
 import { CustomColorModal } from '@Components/CustomColorModal'
 import { IconHeader } from '@Components/IconHeader'
-import { Watermark } from '@Components/Watermark'
 import { WithWiderScreen } from '@Components/WithWiderScreen'
 import { DEFAULT_LOADING_OVERLAY } from '@Utils/Shared'
 import { useIsMobile } from '@Utils/ThemeOverride'
-import { useUser } from '@Hooks/useUser'
 import classes from '@Styles/AppNavbar.module.css'
 
 interface WithNavBarProps extends React.PropsWithChildren {
@@ -34,9 +32,6 @@ export const WithNavBar: FC<WithNavBarProps> = ({
   withHeader,
   stickyHeader = false,
 }) => {
-  const theme = useMantineTheme()
-  const { colorScheme } = useMantineColorScheme()
-  const { user } = useUser()
   const isMobile = useIsMobile()
   const [colorModalOpened, setColorModalOpened] = useState(false)
 
@@ -44,14 +39,7 @@ export const WithNavBar: FC<WithNavBarProps> = ({
 
   return (
     <WithWiderScreen minWidth={minWidth}>
-      <Watermark
-        text={user?.userId ?? ''}
-        textColor={colorScheme === 'dark' ? theme.colors.gray[3] : theme.colors.gray[7]}
-        rotate={-12}
-        textSize={14}
-        gutter={22}
-        opacity={colorScheme === 'dark' ? 0.018 : 0.025}
-      >
+      <div style={{ position: 'relative' }}>
         <AppShell
           p={0}
           header={{ height: 60, collapsed: !isMobile }}
@@ -82,7 +70,7 @@ export const WithNavBar: FC<WithNavBarProps> = ({
             {withFooter && <AppFooter />}
           </AppShell.Main>
         </AppShell>
-      </Watermark>
+      </div>
     </WithWiderScreen>
   )
 }
