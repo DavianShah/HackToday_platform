@@ -1,27 +1,19 @@
 import { CSSProperties, FC } from 'react'
 import { ChallengeCategory, SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import { useChallengeCategoryLabelMap } from '@Utils/Shared'
-import classes from '@Styles/CyberpunkBossRaid.module.css'
+import sectorMarker from '../../assets/live-galactic/sector-marker.svg'
+import classes from '@Styles/GalacticCommand.module.css'
 
-const CategoryList: FC<{ values: ChallengeCategory[]; className: string; limit: number }> = ({ values, className, limit }) => {
+const CategoryList: FC<{ values: ChallengeCategory[]; className: string }> = ({ values, className }) => {
   const categoryMap = useChallengeCategoryLabelMap()
-
   return <div className={classes.poolValues}>
-    {values.length ? <>
-      {values.slice(0, limit).map(value => {
-        const visual = categoryMap.get(value)
-        const style = visual ? {
-          '--category-color': visual.colors[6],
-          '--category-glow': visual.colors[4],
-        } as CSSProperties : undefined
-
-        return <span className={`${classes.categoryPill} ${className}`} style={style} key={value}>
-          {visual && <svg viewBox="0 0 24 24" aria-hidden><path d={visual.icon} /></svg>}
-          {value}
-        </span>
-      })}
-      {values.length > limit && <span className={classes.morePill}>+{values.length - limit} more</span>}
-    </> : <span className={classes.emptyPill}>None</span>}
+    {values.length ? values.map(value => {
+      const visual = categoryMap.get(value)
+      const style = visual ? { '--category-color': visual.colors[4] } as CSSProperties : undefined
+      return <span className={`${classes.categoryPill} ${className}`} style={style} key={value} title={visual?.name ?? String(value)}>
+        <img src={sectorMarker} alt="" aria-hidden />{visual?.name ?? value}
+      </span>
+    }) : <span className={classes.emptyPill}>None</span>}
   </div>
 }
 
@@ -31,14 +23,14 @@ export const LiveCategoryPool: FC<{
   used: ChallengeCategory[]
   concealActive?: boolean
 }> = ({ round, available, used, concealActive }) => <footer className={classes.categoryPool}>
-  <div className={`${classes.poolGroup} ${classes.currentPool}`}><b>Current target</b>
+  <div className={classes.poolGroup}><b className={classes.poolLabel}>Current sector</b>
     <CategoryList values={!concealActive && round?.category ? [round.category] : []}
-      className={round?.status === SpeedrunRoundStatus.Ready ? classes.selectedPill : classes.activePill} limit={1} />
+      className={round?.status === SpeedrunRoundStatus.Ready ? classes.selectedPill : classes.activePill} />
   </div>
-  <div className={`${classes.poolGroup} ${classes.availablePool}`}><b>Unraided sectors</b>
-    <CategoryList values={available} className={classes.availablePill} limit={6} />
+  <div className={classes.poolGroup}><b className={classes.poolLabel}>Available sectors</b>
+    <CategoryList values={available} className={classes.availablePill} />
   </div>
-  <div className={`${classes.poolGroup} ${classes.usedPool}`}><b>Cleared sectors</b>
-    <CategoryList values={used} className={classes.usedPill} limit={4} />
+  <div className={classes.poolGroup}><b className={classes.poolLabel}>Activated / previous</b>
+    <CategoryList values={used} className={classes.usedPill} />
   </div>
 </footer>

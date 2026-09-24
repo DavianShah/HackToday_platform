@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="none">
+  <defs>
+    <radialGradient id="core" cx="0" cy="0" r="1" gradientTransform="translate(320 320) rotate(90) scale(144)">
+      <stop stop-color="#F3F8FF" stop-opacity=".9"/>
+      <stop offset=".18" stop-color="#61E7FF" stop-opacity=".7"/>
+      <stop offset=".58" stop-color="#208FE5" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#208FE5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="line" x1="96" y1="72" x2="552" y2="572" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#61E7FF" stop-opacity=".18"/>
+      <stop offset=".5" stop-color="#61E7FF" stop-opacity=".86"/>
+      <stop offset="1" stop-color="#208FE5" stop-opacity=".16"/>
+    </linearGradient>
+  </defs>
+  <circle cx="320" cy="320" r="306" stroke="#61E7FF" stroke-opacity=".08"/>
+  <circle cx="320" cy="320" r="252" stroke="url(#line)" stroke-width="2" stroke-dasharray="4 16"/>
+  <ellipse cx="320" cy="320" rx="286" ry="112" stroke="url(#line)" stroke-width="2"/>
+  <ellipse cx="320" cy="320" rx="112" ry="286" stroke="url(#line)" stroke-opacity=".6"/>
+  <path d="M82 211c81 27 144 12 196-45 47-50 105-69 185-36 45 19 79 49 102 91M72 418c87-26 156-7 207 55 44 53 103 68 179 37 48-20 85-52 111-96" stroke="url(#line)" stroke-width="2" stroke-dasharray="10 13"/>
+  <path d="M320 55v70M320 515v70M55 320h70M515 320h70" stroke="#61E7FF" stroke-opacity=".42" stroke-width="2"/>
+  <path d="M320 154l144 83v166l-144 83-144-83V237l144-83Z" stroke="#61E7FF" stroke-opacity=".18"/>
+  <circle cx="320" cy="320" r="144" fill="url(#core)"/>
+  <circle cx="320" cy="320" r="65" stroke="#61E7FF" stroke-opacity=".7" stroke-width="2"/>
+  <circle cx="320" cy="320" r="28" fill="#61E7FF" fill-opacity=".17" stroke="#F3F8FF" stroke-opacity=".85"/>
+  <g fill="#61E7FF">
+    <circle cx="108" cy="320" r="5"/><circle cx="234" cy="102" r="4"/><circle cx="493" cy="174" r="5"/>
+    <circle cx="529" cy="398" r="4"/><circle cx="226" cy="526" r="5"/><circle cx="151" cy="429" r="3"/>
+  </g>
+</svg>

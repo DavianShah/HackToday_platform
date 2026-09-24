@@ -30,6 +30,14 @@ export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => 
 
   const markSeen = useCallback((keys: string[]) => keys.forEach((key) => seen.current.add(key)), [])
 
+  const clear = useCallback(() => {
+    if (activationTimer.current !== undefined) window.clearTimeout(activationTimer.current)
+    activationTimer.current = undefined
+    queue.current = []
+    setActive(undefined)
+    setVisible(undefined)
+  }, [])
+
   useEffect(() => {
     setVisible(undefined)
     if (!active) return
@@ -52,5 +60,5 @@ export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => 
     []
   )
 
-  return { active, visible, enqueue, markSeen }
+  return { active, visible, enqueue, markSeen, clear }
 }

@@ -37,6 +37,7 @@ const PreviewStage: FC<{ gameId: number; config: LiveScoreboardConfigModel }> = 
           <button onClick={preview.hint}>Release hint</button><button onClick={preview.reminder}>60s reminder</button>
           <button onClick={preview.countdown}>10s countdown</button><button onClick={preview.overtime}>Overtime</button>
           <button onClick={preview.finish}>Finish round</button><button onClick={preview.wrongSubmit}>Wrong submit</button>
+          <button onClick={preview.toggleFreeze}>{preview.state.scoreboardFrozen ? 'Unfreeze standings' : 'Freeze standings'}</button>
           <button onClick={preview.reset}>Reset stage</button>
         </div>
         <div className={classes.showcase}>
