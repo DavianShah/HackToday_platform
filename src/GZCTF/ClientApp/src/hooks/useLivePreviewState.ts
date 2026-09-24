@@ -135,6 +135,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
             timeLeftSeconds: 300,
           },
           remainingCategories: (current.speedrunState?.remainingCategories ?? []).filter(value => value !== category),
+          usedCategories: [...new Set([...(current.speedrunState?.usedCategories ?? []), category])],
         },
       }
     })
@@ -256,6 +257,10 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
     })
   }, [selectedTeamId, state.topTeams])
 
+  const toggleFreeze = useCallback(() => {
+    setState(current => ({ ...current, scoreboardFrozen: !current.scoreboardFrozen }))
+  }, [])
+
   const schedule = useCallback((delay: number, step: string, action: () => void) => {
     timers.current.push(window.setTimeout(() => {
       setShowcaseStep(step)
@@ -316,6 +321,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
     overtime,
     finish,
     wrongSubmit,
+    toggleFreeze,
     runShowcase,
     stopShowcase,
   }

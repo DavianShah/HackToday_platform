@@ -6,10 +6,10 @@ import orbitalCore from '../../assets/live-galactic/orbital-core.svg'
 import sectorMarker from '../../assets/live-galactic/sector-marker.svg'
 import classes from '@Styles/GalacticCommand.module.css'
 
-const pingPosition = (id: number, index: number) => ({
-  '--ping-x': `${18 + Math.abs((id * 37 + index * 11) % 65)}%`,
-  '--ping-y': `${20 + Math.abs((id * 23 + index * 17) % 55)}%`,
-  '--ping-color': index % 3 === 0 ? '#FFD166' : '#61E7FF',
+const pingPosition = (id: number) => ({
+  '--ping-x': `${18 + Math.abs((id * 37) % 65)}%`,
+  '--ping-y': `${20 + Math.abs((id * 23) % 55)}%`,
+  '--ping-color': id % 3 === 0 ? '#FFD166' : '#61E7FF',
 }) as CSSProperties
 
 export const LiveCenterArena: FC<{
@@ -52,11 +52,11 @@ export const LiveCenterArena: FC<{
       <img className={`${classes.sectorMarker} ${classes.markerTwo}`} src={sectorMarker} alt="" />
       <img className={`${classes.sectorMarker} ${classes.markerThree}`} src={sectorMarker} alt="" />
     </div>
-    {!frozen && <div className={classes.energyPings} aria-hidden>{effectIds.map((id, index) => {
+    {!frozen && <div className={classes.energyPings} aria-hidden>{effectIds.map(id => {
       const team = teams.find(value => value.id === id)
       const stableId = team?.id ?? id
       const delta = scoreDeltas.get(id)
-      return <i className={classes.energyPing} style={pingPosition(stableId, index)} key={stableId}>
+      return <i className={classes.energyPing} style={pingPosition(stableId)} key={stableId}>
         {delta !== undefined && <b className={classes.pingDelta}>+{delta.toLocaleString()}</b>}
       </i>
     })}</div>}
