@@ -41,7 +41,7 @@ export const LiveScoreboardStage: FC<{
   const events = frozen ? [] : state.recentEvents ?? []
 
   return <main className={`${classes.stage} ${overtime ? classes.stageOvertime : ''}`}>
-    <Suspense fallback={null}><GalacticScene overtime={overtime} /></Suspense>
+    <Suspense fallback={null}><GalacticScene overtime={overtime} teams={teams} frozen={frozen} /></Suspense>
     <div className={classes.shell}>
       <LiveTopHud round={round} remainingSeconds={remainingSeconds}
         concealCategory={presentation.spinPhase === 'spinning'} audioEnabled={presentation.audioEnabled}

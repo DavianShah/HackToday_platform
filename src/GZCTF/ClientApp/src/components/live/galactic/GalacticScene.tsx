@@ -1,6 +1,8 @@
 import { ComponentType, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ErrorBoundary } from 'react-error-boundary'
+import { LiveScoreboardTeamModel } from '@Api'
+import { TeamFleet, TeamShipVisualProps } from './TeamFleet'
 import { Points } from 'three'
 import { BossVisual, BossVisualProps } from './BossVisual'
 import { sceneConfig as config } from './sceneConfig'
@@ -47,7 +49,7 @@ function ContextGuard({ onLost }: { onLost: () => void }) {
 
 const Fallback = () => <div className={classes.worldFallback} role="status"><div className={classes.fallbackFortress} aria-hidden /><span>3D unavailable · Live broadcast data continues</span></div>
 
-export default function GalacticScene({ overtime, Boss = BossVisual }: { overtime?: boolean; Boss?: ComponentType<BossVisualProps> }) {
+export default function GalacticScene({ overtime, teams, frozen, Boss = BossVisual, Ship }: { overtime?: boolean; teams: LiveScoreboardTeamModel[]; frozen: boolean; Boss?: ComponentType<BossVisualProps>; Ship?: ComponentType<TeamShipVisualProps> }) {
   const [lost, setLost] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function GalacticScene({ overtime, Boss = BossVisual }: { overtim
         <directionalLight position={[-5, -2, 4]} intensity={1.8} color="#508c9a" />
         <pointLight position={[0, 0, 3]} intensity={10} color={config.colors.amber} distance={9} />
         <Atmosphere reducedMotion={reducedMotion} /><Boss reducedMotion={reducedMotion} overtime={overtime} />
+        {!frozen && <TeamFleet teams={teams} reducedMotion={reducedMotion} ShipVisual={Ship} />}
       </Canvas>
     </ErrorBoundary>}
   </div>

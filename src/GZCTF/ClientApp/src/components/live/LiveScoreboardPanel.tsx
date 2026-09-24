@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { LiveScoreboardTeamModel } from '@Api'
+import { uniqueTeams } from './galactic/teamSlots'
 import classes from '@Styles/GalacticCommand.module.css'
 
 const podiumClass = (rank?: number) => {
@@ -24,16 +25,16 @@ export const LiveScoreboardPanel: FC<{
     <div className={classes.columnLabels}><span>Score</span><span>Solves</span></div>
   </header>
   {frozen ? <div className={classes.sealedRows}><div><strong>Standings sealed</strong><span>Names, scores, solves, and movement are hidden until the freeze is lifted.</span></div></div>
-    : <div className={classes.scoreRows}>{teams.slice(0, 10).map((team, index) => {
-      const id = team.id ?? index
+    : <div className={classes.scoreRows}>{uniqueTeams(teams).slice(0, 10).map((team) => {
+      const id = team.id!
       const delta = scoreDeltas.get(id)
       const movement = rankChanges.get(id)
-      const rank = team.rank ?? index + 1
+      const rank = team.rank
       const name = team.name ?? 'Unknown team'
       return <div key={id} className={`${classes.scoreRow} ${podiumClass(rank)} ${changedTeams.has(id) || bloodTeams.has(id) ? classes.scorePulse : ''}`}>
-        <strong>{String(rank).padStart(2, '0')}</strong>
+        <strong>{rank === undefined ? '?' : String(rank).padStart(2, '0')}</strong>
         <div className={classes.teamIdentity}><b title={name}>{name}</b><small>{team.solvedCount ?? "?"} solves ? {teamLabel(rank)}</small></div>
-        <span className={classes.scoreValue}>{team.score?.toLocaleString() ?? 0}</span>
+        <span className={classes.scoreValue}>{team.score?.toLocaleString() ?? '?'}</span>
         <em className={classes.solveValue}>{team.solvedCount ?? 0}</em>
         {movement && <div className={classes.rankShift}>{movement.to < movement.from ? '↑' : '↓'} {movement.from} → {movement.to}</div>}
         {delta !== undefined && <div className={classes.scoreDelta}>+{delta.toLocaleString()}</div>}

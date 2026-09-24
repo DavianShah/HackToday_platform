@@ -17,7 +17,9 @@ const clockFormatter = new Intl.DateTimeFormat('en-GB', {
   hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
 })
 
-const eventTime = (createdAt?: number) => createdAt
+const validTime = (value?: number): value is number => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= 8640000000000000
+
+const eventTime = (createdAt?: number) => validTime(createdAt)
   ? clockFormatter.format(new Date(createdAt))
   : '--:--:--'
 
@@ -27,7 +29,7 @@ export const LiveEventStream: FC<{ events: LiveScoreboardEventModel[]; frozen?: 
     : <div className={classes.eventRows}>{events.slice(0, 8).map(event => {
       const [label, color] = eventMeta(event)
       return <article className={`${classes.eventRow} ${color}`} key={event.id ?? `${event.createdAt}-${event.message}`}>
-        <time className={classes.eventTime} dateTime={event.createdAt ? new Date(event.createdAt).toISOString() : undefined}>{eventTime(event.createdAt)}</time>
+        <time className={classes.eventTime} dateTime={validTime(event.createdAt) ? new Date(event.createdAt).toISOString() : undefined}>{eventTime(event.createdAt)}</time>
         <div className={classes.eventBody}><b className={classes.eventBadge}>{label}</b><p className={classes.eventMessage}>{event.message}</p></div>
       </article>
     })}{!events.length && <div className={classes.emptyState}><i aria-hidden />Awaiting verified live events</div>}</div>}
