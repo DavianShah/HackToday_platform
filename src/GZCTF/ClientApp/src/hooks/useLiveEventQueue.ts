@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { LiveAnnouncement } from '@Components/live/types'
-import { dequeueLiveEvent } from '@Utils/LiveEventQueue'
+import { appendLiveEvent, dequeueLiveEvent } from '@Utils/LiveEventQueue'
 
 export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => {
   const [active, setActive] = useState<LiveAnnouncement>()
+  const activeRef = useRef<LiveAnnouncement | undefined>(undefined)
   const [visible, setVisible] = useState<LiveAnnouncement>()
+  const playRef = useRef(onPlay)
+  playRef.current = onPlay
+  const played = useRef<string | undefined>(undefined)
   const queue = useRef<LiveAnnouncement[]>([])
   const seen = useRef(new Set<string>())
   const activationTimer = useRef<number | undefined>(undefined)
@@ -13,7 +17,11 @@ export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => 
     if (activationTimer.current !== undefined) return
     activationTimer.current = window.setTimeout(() => {
       activationTimer.current = undefined
-      setActive((current) => current ?? dequeueLiveEvent(queue.current))
+      if (!activeRef.current) {
+        const next = dequeueLiveEvent(queue.current)
+        activeRef.current = next
+        setActive(next)
+      }
     }, 0)
   }, [])
 
@@ -21,7 +29,7 @@ export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => 
     (event: LiveAnnouncement) => {
       if (seen.current.has(event.key)) return
       seen.current.add(event.key)
-      queue.current.push(event)
+      appendLiveEvent(queue.current, event)
       // Defer activation by one task so events discovered in the same poll/render can be prioritized together.
       scheduleActivation()
     },
@@ -34,6 +42,7 @@ export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => 
     if (activationTimer.current !== undefined) window.clearTimeout(activationTimer.current)
     activationTimer.current = undefined
     queue.current = []
+    activeRef.current = undefined
     setActive(undefined)
     setVisible(undefined)
   }, [])
@@ -42,16 +51,23 @@ export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => 
     setVisible(undefined)
     if (!active) return
 
-    onPlay(active)
+    if (played.current !== active.key) {
+      played.current = active.key
+      playRef.current(active)
+    }
     const revealTimer =
       active.showPopup === false ? undefined : window.setTimeout(() => setVisible(active), active.popupDelay ?? 0)
-    const advanceTimer = window.setTimeout(() => setActive(dequeueLiveEvent(queue.current)), active.duration ?? 3200)
+    const advanceTimer = window.setTimeout(() => {
+      const next = dequeueLiveEvent(queue.current)
+      activeRef.current = next
+      setActive(next)
+    }, active.duration ?? 3200)
 
     return () => {
       if (revealTimer !== undefined) window.clearTimeout(revealTimer)
       window.clearTimeout(advanceTimer)
     }
-  }, [active, onPlay])
+  }, [active])
 
   useEffect(
     () => () => {

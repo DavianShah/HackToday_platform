@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { uniqueTeams } from '@Components/live/galactic/teamSlots'
 import { LiveAnnouncement, LiveSpinPhase } from '@Components/live/types'
 import { crossedReminderPoints, withoutBloodScoreChanges } from '@Utils/LiveEventQueue'
 import { formatDurationSeconds } from '@Utils/Shared'
@@ -16,7 +17,7 @@ export const useLivePresentation = (
 ) => {
   const round = state?.speedrunState?.currentRound
   const activeRound = round?.status === SpeedrunRoundStatus.Running || round?.status === SpeedrunRoundStatus.Overtime
-  const { audioEnabled, unlockAudio, play } = useStageSound(state?.config)
+  const { audioEnabled, unlockAudio, play, stop } = useStageSound(state?.config, Boolean(state?.scoreboardFrozen))
   const {
     active: announcement,
     visible: visibleAnnouncement,
@@ -41,14 +42,27 @@ export const useLivePresentation = (
   const [rankChanges, setRankChanges] = useState(new Map<number, { from: number; to: number }>())
 
   useEffect(() => {
-    if (!injectedAnnouncement || state?.scoreboardFrozen) return
+    if (!injectedAnnouncement) return
+    if (state?.scoreboardFrozen) {
+      markSeen([injectedAnnouncement.key])
+      return
+    }
     enqueue(injectedAnnouncement)
-  }, [enqueue, injectedAnnouncement, state?.scoreboardFrozen])
+  }, [enqueue, markSeen, injectedAnnouncement, state?.scoreboardFrozen])
 
   useEffect(() => {
     if (!state) return
     const eventIds = (state.recentEvents ?? []).flatMap((event) => (event.id ? [event.id] : []))
     const fingerprint = `${round?.id ?? 'none'}:${round?.status ?? 'none'}`
+    if (initialized.current && fingerprint !== previousRound.current) {
+      clear()
+      stop()
+      window.clearTimeout(attackTimer.current)
+      setChangedTeams(new Set())
+      setBloodAttackTeams(new Set())
+      setScoreDeltas(new Map())
+      setRankChanges(new Map())
+    }
 
     if (state.scoreboardFrozen) {
       markSeen(eventIds)
@@ -71,11 +85,15 @@ export const useLivePresentation = (
     }
 
     if (wasFrozen.current) {
-      state.topTeams?.forEach((team) => {
+      uniqueTeams(state.topTeams ?? []).forEach((team) => {
         if (team.id === undefined) return
-        previousScores.current.set(team.id, team.score ?? 0)
+        if (typeof team.score === 'number' && Number.isFinite(team.score))
+          previousScores.current.set(team.id, team.score)
+        else previousScores.current.delete(team.id)
         if (team.rank !== undefined) previousRanks.current.set(team.id, team.rank)
       })
+      markSeen(eventIds)
+      eventIds.forEach((id) => processedEvents.current.add(id))
       previousRound.current = fingerprint
       setSpinPhase(round?.status === SpeedrunRoundStatus.Ready ? 'revealed' : 'idle')
       wasFrozen.current = false
@@ -85,9 +103,11 @@ export const useLivePresentation = (
     if (!initialized.current) {
       markSeen(eventIds)
       eventIds.forEach((id) => processedEvents.current.add(id))
-      state.topTeams?.forEach((team) => {
+      uniqueTeams(state.topTeams ?? []).forEach((team) => {
         if (team.id === undefined) return
-        previousScores.current.set(team.id, team.score ?? 0)
+        if (typeof team.score === 'number' && Number.isFinite(team.score))
+          previousScores.current.set(team.id, team.score)
+        else previousScores.current.delete(team.id)
         if (team.rank !== undefined) previousRanks.current.set(team.id, team.rank)
       })
       previousRound.current = fingerprint
@@ -137,8 +157,10 @@ export const useLivePresentation = (
           sound: 'overtime',
           duration: 4400,
         })
-      } else if (round?.status === SpeedrunRoundStatus.Finished ||
-        (!round && previousRound.current && previousRound.current !== 'none:none')) {
+      } else if (
+        round?.status === SpeedrunRoundStatus.Finished ||
+        (!round && previousRound.current && previousRound.current !== 'none:none')
+      ) {
         setSpinPhase('idle')
         enqueue({
           key: `finished-${previousRound.current}`,
@@ -149,6 +171,7 @@ export const useLivePresentation = (
           duration: 3500,
         })
       }
+      if (round?.status === SpeedrunRoundStatus.Cancelled) setSpinPhase('idle')
       previousRound.current = fingerprint
     }
 
@@ -163,7 +186,7 @@ export const useLivePresentation = (
           event.type === NoticeType.ThirdBlood
         if (!blood) return []
         if (event.teamId !== undefined && event.teamId !== null) return [event.teamId]
-        const teamId = state.topTeams?.find((team) => team.name === event.teamName)?.id
+        const teamId = uniqueTeams(state.topTeams ?? []).find((team) => team.name === event.teamName)?.id
         return teamId !== undefined && teamId !== null ? [teamId] : []
       })
     )
@@ -175,7 +198,9 @@ export const useLivePresentation = (
           key: event.id!,
           kind: 'firstBlood',
           title: 'First Blood',
-          text: `${event.teamName} solved ${event.challengeTitle}`,
+          text: [event.teamName, event.challengeTitle ? `solved ${event.challengeTitle}` : 'recorded a solve']
+            .filter(Boolean)
+            .join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
           sound: 'firstBlood',
@@ -188,7 +213,9 @@ export const useLivePresentation = (
           key: event.id!,
           kind: 'blood',
           title: 'Second Blood',
-          text: `${event.teamName} solved ${event.challengeTitle}`,
+          text: [event.teamName, event.challengeTitle ? `solved ${event.challengeTitle}` : 'recorded a solve']
+            .filter(Boolean)
+            .join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
           sound: 'secondBlood',
@@ -200,14 +227,16 @@ export const useLivePresentation = (
           key: event.id!,
           kind: 'blood',
           title: 'Third Blood',
-          text: `${event.teamName} solved ${event.challengeTitle}`,
+          text: [event.teamName, event.challengeTitle ? `solved ${event.challengeTitle}` : 'recorded a solve']
+            .filter(Boolean)
+            .join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
           sound: 'thirdBlood',
           sceneKind: 'blood',
           duration: 3600,
         })
-      else if (event.message?.startsWith('Hint #'))
+      else if (event.type === NoticeType.NewHint || event.message?.startsWith('Hint #'))
         enqueue({
           key: event.id!,
           kind: 'hint',
@@ -224,18 +253,24 @@ export const useLivePresentation = (
     const scoreChangedTeamIds: number[] = []
     const nextScoreDeltas = new Map<number, number>()
     const nextRankChanges = new Map<number, { from: number; to: number }>()
-    for (const team of state.topTeams ?? []) {
+    for (const team of uniqueTeams(state.topTeams ?? [])) {
       if (team.id === undefined) continue
       const oldScore = previousScores.current.get(team.id)
-      if (oldScore !== undefined && (team.score ?? 0) > oldScore) {
+      if (
+        oldScore !== undefined &&
+        typeof team.score === 'number' &&
+        Number.isFinite(team.score) &&
+        team.score > oldScore
+      ) {
         scoreChangedTeamIds.push(team.id)
-        nextScoreDeltas.set(team.id, (team.score ?? 0) - oldScore)
+        nextScoreDeltas.set(team.id, team.score - oldScore)
         if (!freshBloodTeamIds.has(team.id)) play('correctSubmit')
       }
       const oldRank = previousRanks.current.get(team.id)
       if (oldRank !== undefined && team.rank !== undefined && oldRank !== team.rank)
         nextRankChanges.set(team.id, { from: oldRank, to: team.rank })
-      previousScores.current.set(team.id, team.score ?? 0)
+      if (typeof team.score === 'number' && Number.isFinite(team.score)) previousScores.current.set(team.id, team.score)
+      else previousScores.current.delete(team.id)
       if (team.rank !== undefined) previousRanks.current.set(team.id, team.rank)
     }
     if (scoreChangedTeamIds.length || nextRankChanges.size) {
@@ -253,7 +288,7 @@ export const useLivePresentation = (
         setRankChanges(new Map())
       }, 3200)
     }
-  }, [clear, enqueue, markSeen, play, round, state])
+  }, [clear, enqueue, markSeen, play, stop, round, state])
 
   useEffect(() => {
     if (state?.scoreboardFrozen || !activeRound || !round?.id) {

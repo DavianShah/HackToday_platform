@@ -1,6 +1,6 @@
 import { FC } from 'react'
-import { SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import { formatDurationSeconds } from '@Utils/Shared'
+import { SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
 
 const statusLabel = (round?: SpeedrunRoundModel | null, concealCategory?: boolean) => {
@@ -32,25 +32,40 @@ export const LiveTopHud: FC<{
       : round?.status === SpeedrunRoundStatus.Finished
         ? '00:00'
         : '--:--'
-  const category = concealCategory ? 'Sector scan in progress' : round?.category ?? 'Waiting for next round'
+  const category = concealCategory ? 'Sector scan in progress' : (round?.category ?? 'Waiting for next round')
 
-  return <header className={classes.topHud}>
-    <div className={classes.brandLockup}>
-      <div className={classes.brandGlyph} aria-hidden />
-      <div className={classes.brandText}><span>Live transmission</span><strong>HackToday 2026 Final</strong></div>
-    </div>
-    <div className={classes.statusCluster}>
-      <i className={classes.statusDot} aria-hidden />
-      <div className={classes.statusCopy}><span className={classes.statusLabel}>{statusLabel(round, concealCategory)}</span>
-        <strong className={classes.categoryName} title={String(category)}>{category}</strong></div>
-    </div>
-    <div className={classes.clockModule}>
-      <div className={classes.clockCopy}><span>Round timer</span>
-        <strong className={`${urgent ? classes.urgent : ''} ${critical ? classes.critical : ''}`}>{timer}</strong></div>
-      <button className={`${classes.audioButton} ${audioEnabled ? classes.audioOn : ''}`} type="button"
-        onClick={onUnlockAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? 'Sound enabled' : 'Enable broadcast sound'}>
-        <i aria-hidden /><span>{audioEnabled ? 'Sound on' : 'Enable sound'}</span>
-      </button>
-    </div>
-  </header>
+  return (
+    <header className={classes.topHud}>
+      <div className={classes.brandLockup}>
+        <div className={classes.brandText}>
+          <strong>HackToday 2026 Final</strong>
+        </div>
+      </div>
+      <div className={classes.statusCluster}>
+        <i className={classes.statusDot} aria-hidden />
+        <div className={classes.statusCopy}>
+          <span className={classes.statusLabel}>{statusLabel(round, concealCategory)}</span>
+          <strong className={classes.categoryName} title={String(category)}>
+            {category}
+          </strong>
+        </div>
+      </div>
+      <div className={classes.clockModule}>
+        <div className={classes.clockCopy}>
+          <span>Round timer</span>
+          <strong className={`${urgent ? classes.urgent : ''} ${critical ? classes.critical : ''}`}>{timer}</strong>
+        </div>
+        <button
+          className={`${classes.audioButton} ${audioEnabled ? classes.audioOn : ''}`}
+          type="button"
+          onClick={onUnlockAudio}
+          aria-pressed={audioEnabled}
+          aria-label={audioEnabled ? 'Sound enabled' : 'Enable broadcast sound'}
+        >
+          <i aria-hidden />
+          <span>{audioEnabled ? 'Sound on' : 'Enable sound'}</span>
+        </button>
+      </div>
+    </header>
+  )
 }
