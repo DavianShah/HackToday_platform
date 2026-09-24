@@ -36,8 +36,7 @@ export const LiveTopHud: FC<{
 
   return <header className={classes.topHud}>
     <div className={classes.brandLockup}>
-      <div className={classes.brandGlyph} aria-hidden />
-      <div className={classes.brandText}><span>Live transmission</span><strong>HackToday 2026 Final</strong></div>
+      <div className={classes.brandText}><strong>HackToday 2026 Final</strong></div>
     </div>
     <div className={classes.statusCluster}>
       <i className={classes.statusDot} aria-hidden />

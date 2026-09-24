@@ -320,88 +320,65 @@
 @keyframes scorePulse { 50% { background: rgba(97, 231, 255, .16); } }
 @keyframes announcementIn { from { opacity: 0; scale: .985; } }
 
-@media (max-width: 1100px) {
-  .shell { padding-inline: 12px; }
-  .topHud { grid-template-columns: minmax(210px, 1fr) minmax(210px, 1fr) minmax(190px, .8fr); gap: 13px; }
-  .brandGlyph { flex-basis: 30px; width: 30px; }
-  .audioButton span { display: none; }
-  .mainGrid { grid-template-columns: minmax(170px, 21fr) minmax(360px, 47fr) minmax(260px, 32fr); gap: 9px; }
-  .panelHead { padding: 11px; }
-  .eventRow { grid-template-columns: 40px minmax(0, 1fr); padding: 9px 10px; }
-  .scoreRow { padding-inline: 9px; }
-  .arenaTitle { font-size: clamp(25px, 3.5vw, 46px); }
-}
 
-@media (max-height: 760px) and (min-width: 801px) {
-  .shell { grid-template-rows: 70px minmax(0, 1fr); }
-  .content { grid-template-rows: minmax(0, 1fr) 56px; }
-  .mainGrid { padding-top: 8px; }
-  .panelHead { padding-block: 9px; }
-  .eventRow { min-height: 58px; padding-block: 7px; }
-  .scoreRow { min-height: 43px; padding-block: 4px; }
-  .arenaReadout { bottom: 5%; }
-  .poolLabel { margin-bottom: 3px; }
-  .categoryPill, .emptyPill { padding-block: 3px; }
+/* Broadcast composition: a single world behind equal 20% wings. */
+.stage::after { display: none; }
+.shell { padding: 0; grid-template-rows: clamp(76px, 8vh, 90px) minmax(0, 1fr); pointer-events: none; }
+.topHud { padding: 0 26px; grid-template-columns: 1fr 1fr 1fr; background: rgba(3, 7, 18, .7); }
+.topHud .clockModule { grid-column: 2; grid-row: 1; justify-content: center; }
+.topHud .statusCluster { grid-column: 3; grid-row: 1; justify-content: flex-end; }
+.brandText strong { text-transform: none; font-size: clamp(18px, 1.45vw, 28px); letter-spacing: -.025em; }
+.audioButton { pointer-events: auto; }
+.content { grid-template-rows: minmax(0, 1fr) clamp(68px, 7vh, 80px); }
+.mainGrid { grid-template-columns: 20% 60% 20%; gap: 0; padding: 14px 0; }
+.panel { margin: 0 14px; background: rgba(7, 17, 28, .76); clip-path: none; box-shadow: inset 0 1px rgba(190, 225, 235, .1); pointer-events: auto; }
+.panelHead { min-height: 76px; padding: 16px; align-items: center; }
+.panelTitle { text-transform: uppercase; font-size: clamp(17px, 1.2vw, 24px); letter-spacing: .09em; }
+.eyebrow, .panelHead .eyebrow, .poolLabel { font-size: clamp(10px, .65vw, 13px); }
+.panelHead .columnLabels { display: none; }
+.eventRows { display: flex; flex-direction: column; overflow: hidden; }
+.eventRow { flex: 1; min-height: 0; display: block; padding: 12px 16px; }
+.eventTime { float: right; font-size: 10px; }
+.eventBadge { font-size: 10px; letter-spacing: .08em; }
+.eventMessage { font-size: clamp(12px, .85vw, 16px); line-height: 1.4; }
+.scoreRows { overflow: hidden; }
+.scoreRow { min-height: 0; flex: 1; grid-template-columns: 25px minmax(0,1fr) auto; padding: 9px 12px; gap: 7px; }
+.teamIdentity b { font-size: clamp(12px, .85vw, 17px); }
+.teamIdentity small { font-size: 9px; letter-spacing: .03em; }
+.scoreValue { font-size: clamp(14px, 1vw, 20px); }
+.solveValue { display: none; }
+.scoreRow > strong { font-size: 14px; }
+.scoreDelta, .rankShift { font-size: 10px; bottom: 1px; }
+.rankShift { left: 43px; }
+.arena { background: none; border: 0; box-shadow: none; clip-path: none; overflow: visible; }
+.arena::after { display: none; }
+.arenaReadout { bottom: 2%; }
+.arenaTitle { font-size: clamp(26px, 2.6vw, 50px); letter-spacing: -.025em; }
+.arenaDetail { font-size: 12px; }
+.categoryPool { padding: 0 26px; background: rgba(3, 7, 18, .8); grid-template-columns: 1fr 1.5fr 1fr; }
+.categoryPill, .emptyPill { font-size: clamp(10px, .72vw, 14px); }
+.categoryPill { color: var(--gc-cyan); }
+.categoryPill img { display: none; }
+.announcement { position: absolute; inset: 24% 21% 20%; padding: 18px; background: none; backdrop-filter: none; }
+.announcementFrame { width: 100%; height: 75%; background: linear-gradient(90deg, transparent, rgba(3,7,18,.94) 25% 75%, transparent); }
+.announcementFrame::before, .announcementFrame::after { display: none; }
+.announcementCopy { max-width: 100%; }
+.announcementCopy strong { font-size: clamp(32px, 5vw, 92px); }
+.announcementCopy span { font-size: clamp(14px, 1.2vw, 24px); overflow-wrap: anywhere; }
+.world { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.worldFallback { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 35px; color: #9aafc2; }
+.worldFallback span { margin-top: 20vh; font-size: 12px; }
+.fallbackFortress { position: absolute; left: 44%; top: 30%; width: 12%; height: 27%; border: 12px double #536a77; transform: rotate(-12deg); box-shadow: 0 0 90px #61e7ff25, inset 0 0 50px #61e7ff20; }
+@media (max-height: 800px) {
+  .panelHead { min-height: 62px; padding: 12px; }
+  .eventRow { padding: 8px 12px; }
+  .eventTime { float: none; display: block; font-size: 9px; margin-bottom: 4px; }
+  .eventMessage { margin-top: 3px; -webkit-line-clamp: 2; }
+  .panel { margin-inline: 10px; }
+  .scoreRow { padding-inline: 8px; }
+  .mainGrid { padding-block: 10px; }
+  .brandText strong { font-size: 20px; }
 }
-
-@media (max-width: 800px) {
-  .stage { overflow: hidden; }
-  .shell { grid-template-rows: auto minmax(0, 1fr); padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
-  .topHud { z-index: 10; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand clock" "status status"; gap: 10px; padding: 12px 0 10px; background: rgba(3, 7, 18, .9); }
-  .brandLockup { grid-area: brand; }
-  .brandGlyph { flex-basis: 26px; width: 26px; }
-  .brandGlyph::before { inset: 5px; }
-  .brandGlyph::after { inset: 10px; }
-  .brandText strong { font-size: clamp(12px, 4vw, 16px); }
-  .brandText span { font-size: 7px; }
-  .clockModule { grid-area: clock; }
-  .clockModule strong { font-size: clamp(35px, 12vw, 50px); }
-  .clockModule span { font-size: 7px; }
-  .audioButton { padding: 7px; }
-  .statusCluster { grid-area: status; justify-content: flex-start; min-width: 0; padding-top: 8px; border-top: 1px solid rgba(97, 231, 255, .1); }
-  .statusCopy { flex: 1; align-items: flex-start; text-align: left; }
-  .categoryName { max-width: 78vw; }
-  .content { display: flex; flex-direction: column; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
-  .mainGrid { display: contents; }
-  .scoreboardPanel { order: 1; flex: 0 0 auto; min-height: 570px; margin-top: 10px; }
-  .arena { order: 2; flex: 0 0 auto; min-height: 480px; margin-top: 10px; }
-  .eventPanel { order: 3; flex: 0 0 auto; min-height: 430px; margin-top: 10px; }
-  .categoryPool { order: 4; flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch; gap: 14px; min-height: 210px; padding: 18px 0 28px; }
-  .poolValues { padding-bottom: 2px; }
-  .eventRows, .scoreRows { overflow: visible; }
-  .scoreRow { min-height: 49px; }
-  .sectorVisual { width: min(96%, 490px); }
-  .arenaReadout { inset-inline: 4%; }
-  .arenaTitle { font-size: clamp(31px, 11vw, 50px); }
-  .announcementFrame { width: 90vw; }
-}
-
-@media (max-width: 430px) {
-  .brandGlyph { display: none; }
-  .brandText { gap: 2px; }
-  .clockModule { gap: 7px; }
-  .audioButton { border: 0; background: transparent; }
-  .categoryName { max-width: 88vw; font-size: 12px; }
-  .scoreboardPanel { min-height: 555px; }
-  .arena { min-height: 420px; }
-  .eventPanel { min-height: 410px; }
-  .panelTitle { font-size: 18px; }
-  .sectorCounts { top: 13px; left: 13px; right: 13px; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .stage::after,
-  .statusDot,
-  .clockModule .urgent,
-  .orbitalCore,
-  .orbitRing,
-  .orbitRingTwo,
-  .radarSweep,
-  .arenaScan,
-  .arenaSpinning .sectorVisual,
-  .energyPing,
-  .energyPing::after,
-  .scorePulse,
-  .announcement { animation: none !important; }
-  .scoreRow { transition: none; }
+  .stage *, .stage *::before, .stage *::after { animation: none !important; transition: none !important; }
 }

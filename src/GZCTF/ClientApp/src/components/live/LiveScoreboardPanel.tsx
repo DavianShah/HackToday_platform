@@ -20,7 +20,7 @@ export const LiveScoreboardPanel: FC<{
   frozen?: boolean
 }> = ({ teams, changedTeams, bloodTeams = new Set(), scoreDeltas, rankChanges, frozen }) => <aside className={`${classes.panel} ${classes.scoreboardPanel}`}>
   <header className={classes.panelHead}>
-    <div><span className={classes.eyebrow}>Live standings · top 10</span><h2 className={classes.panelTitle}>Leaderboard</h2></div>
+    <div><span className={classes.eyebrow}>Live standings · top 10</span><h2 className={classes.panelTitle}>Standings</h2></div>
     <div className={classes.columnLabels}><span>Score</span><span>Solves</span></div>
   </header>
   {frozen ? <div className={classes.sealedRows}><div><strong>Standings sealed</strong><span>Names, scores, solves, and movement are hidden until the freeze is lifted.</span></div></div>
@@ -32,7 +32,7 @@ export const LiveScoreboardPanel: FC<{
       const name = team.name ?? 'Unknown team'
       return <div key={id} className={`${classes.scoreRow} ${podiumClass(rank)} ${changedTeams.has(id) || bloodTeams.has(id) ? classes.scorePulse : ''}`}>
         <strong>{String(rank).padStart(2, '0')}</strong>
-        <div className={classes.teamIdentity}><b title={name}>{name}</b><small>{teamLabel(rank)}</small></div>
+        <div className={classes.teamIdentity}><b title={name}>{name}</b><small>{team.solvedCount ?? "?"} solves ? {teamLabel(rank)}</small></div>
         <span className={classes.scoreValue}>{team.score?.toLocaleString() ?? 0}</span>
         <em className={classes.solveValue}>{team.solvedCount ?? 0}</em>
         {movement && <div className={classes.rankShift}>{movement.to < movement.from ? '↑' : '↓'} {movement.from} → {movement.to}</div>}

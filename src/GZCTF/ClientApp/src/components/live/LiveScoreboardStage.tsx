@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, lazy, Suspense } from 'react'
 import { GameMode, LiveScoreboardStateModel, SpeedrunRoundStatus } from '@Api'
 import { LiveAnnouncement } from '@Components/live/types'
 import { LiveAnnouncementOverlay } from '@Components/live/LiveAnnouncementOverlay'
@@ -10,11 +10,12 @@ import { LiveTopHud } from '@Components/live/LiveTopHud'
 import { useLivePresentation } from '@Hooks/useLivePresentation'
 import classes from '@Styles/GalacticCommand.module.css'
 
+const GalacticScene = lazy(() => import('./galactic/GalacticScene'))
+
 const EVENT_TITLE = 'HackToday 2026 Final'
 
 const Fallback: FC<{ title: string; text: string }> = ({ title, text }) => <main className={classes.fallback}>
   <div className={classes.fallbackInner}>
-    <div className={classes.fallbackGlyph} aria-hidden />
     <div className={classes.fallbackBrand}>{EVENT_TITLE}</div>
     <h1>{title}</h1>
     <p>{text}</p>
@@ -40,6 +41,7 @@ export const LiveScoreboardStage: FC<{
   const events = frozen ? [] : state.recentEvents ?? []
 
   return <main className={`${classes.stage} ${overtime ? classes.stageOvertime : ''}`}>
+    <Suspense fallback={null}><GalacticScene overtime={overtime} /></Suspense>
     <div className={classes.shell}>
       <LiveTopHud round={round} remainingSeconds={remainingSeconds}
         concealCategory={presentation.spinPhase === 'spinning'} audioEnabled={presentation.audioEnabled}
