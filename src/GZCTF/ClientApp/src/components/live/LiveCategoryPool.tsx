@@ -1,20 +1,34 @@
 import { CSSProperties, FC } from 'react'
-import { ChallengeCategory, SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import { useChallengeCategoryLabelMap } from '@Utils/Shared'
-import sectorMarker from '../../assets/live-galactic/sector-marker.svg'
+import { ChallengeCategory, SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
+import sectorMarker from '../../assets/live-galactic/sector-marker.svg'
 
 const CategoryList: FC<{ values: ChallengeCategory[]; className: string }> = ({ values, className }) => {
   const categoryMap = useChallengeCategoryLabelMap()
-  return <div className={classes.poolValues}>
-    {values.length ? values.map(value => {
-      const visual = categoryMap.get(value)
-      const style = visual ? { '--category-color': visual.colors[4] } as CSSProperties : undefined
-      return <span className={`${classes.categoryPill} ${className}`} style={style} key={value} title={visual?.name ?? String(value)}>
-        <img src={sectorMarker} alt="" aria-hidden />{visual?.name ?? value}
-      </span>
-    }) : <span className={classes.emptyPill}>None</span>}
-  </div>
+  return (
+    <div className={classes.poolValues}>
+      {values.length ? (
+        values.map((value) => {
+          const visual = categoryMap.get(value)
+          const style = visual ? ({ '--category-color': visual.colors[4] } as CSSProperties) : undefined
+          return (
+            <span
+              className={`${classes.categoryPill} ${className}`}
+              style={style}
+              key={value}
+              title={visual?.name ?? String(value)}
+            >
+              <img src={sectorMarker} alt="" aria-hidden />
+              {visual?.name ?? value}
+            </span>
+          )
+        })
+      ) : (
+        <span className={classes.emptyPill}>None</span>
+      )}
+    </div>
+  )
 }
 
 export const LiveCategoryPool: FC<{
@@ -22,15 +36,22 @@ export const LiveCategoryPool: FC<{
   available: ChallengeCategory[]
   used: ChallengeCategory[]
   concealActive?: boolean
-}> = ({ round, available, used, concealActive }) => <footer className={classes.categoryPool}>
-  <div className={classes.poolGroup}><b className={classes.poolLabel}>Galactic sectors / Current</b>
-    <CategoryList values={!concealActive && round?.category ? [round.category] : []}
-      className={round?.status === SpeedrunRoundStatus.Ready ? classes.selectedPill : classes.activePill} />
-  </div>
-  <div className={classes.poolGroup}><b className={classes.poolLabel}>Available sectors</b>
-    <CategoryList values={available} className={classes.availablePill} />
-  </div>
-  <div className={classes.poolGroup}><b className={classes.poolLabel}>Used / started</b>
-    <CategoryList values={used} className={classes.usedPill} />
-  </div>
-</footer>
+}> = ({ round, available, used, concealActive }) => (
+  <footer className={classes.categoryPool}>
+    <div className={classes.poolGroup}>
+      <b className={classes.poolLabel}>Galactic sectors / Current</b>
+      <CategoryList
+        values={!concealActive && round?.category ? [round.category] : []}
+        className={round?.status === SpeedrunRoundStatus.Ready ? classes.selectedPill : classes.activePill}
+      />
+    </div>
+    <div className={classes.poolGroup}>
+      <b className={classes.poolLabel}>Available sectors</b>
+      <CategoryList values={available} className={classes.availablePill} />
+    </div>
+    <div className={classes.poolGroup}>
+      <b className={classes.poolLabel}>Used / started</b>
+      <CategoryList values={used} className={classes.usedPill} />
+    </div>
+  </footer>
+)

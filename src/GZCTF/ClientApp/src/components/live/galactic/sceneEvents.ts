@@ -1,13 +1,33 @@
 import type { LiveAnnouncement } from '../types'
 
 export interface SceneEvent {
-  key: string; kind: LiveAnnouncement['kind']; teamId?: number; teamName?: string
-  delta?: number; duration: number; started: number
+  key: string
+  kind: LiveAnnouncement['kind']
+  teamId?: number
+  teamName?: string
+  delta?: number
+  duration: number
+  started: number
+  bloodTier?: 2 | 3
 }
 
-export function announcementScene(event: LiveAnnouncement | undefined, frozen: boolean, preview: boolean): Omit<SceneEvent, 'started'> | undefined {
+export function announcementScene(
+  event: LiveAnnouncement | undefined,
+  frozen: boolean,
+  preview: boolean
+): Omit<SceneEvent, 'started'> | undefined {
   if (!event || frozen || event.kind === 'correct' || (event.kind === 'wrong' && !preview)) return undefined
-  return { key: event.key, kind: event.kind, teamId: event.teamId, teamName: event.teamName, duration: Math.min(event.duration ?? 3200, event.kind === 'firstBlood' ? 8000 : 5400) }
+  return {
+    key: event.key,
+    kind: event.kind,
+    teamId: event.teamId,
+    teamName: event.teamName,
+    bloodTier: event.kind === 'blood' ? (event.sound === 'thirdBlood' ? 3 : 2) : undefined,
+    duration: Math.min(
+      event.duration ?? 3200,
+      event.kind === 'firstBlood' ? 8000 : event.kind === 'blood' ? 3200 : 5400
+    ),
+  }
 }
 
 /** One visual foreground. Facts remain in the independent API-backed HUD. */
@@ -15,7 +35,11 @@ export class SceneScheduler {
   active?: SceneEvent
   pending: Omit<SceneEvent, 'started'>[] = []
   private seen = new Set<string>()
-  reset() { this.active = undefined; this.pending = []; this.seen.clear() }
+  reset() {
+    this.active = undefined
+    this.pending = []
+    this.seen.clear()
+  }
   push(event: Omit<SceneEvent, 'started'>, now: number, foreground = false) {
     if (this.seen.has(event.key)) return
     this.seen.add(event.key)
@@ -24,7 +48,7 @@ export class SceneScheduler {
       this.active = { ...event, started: now }
     } else {
       // Coalesce pending score effects for the same team without replaying polling snapshots.
-      const old = this.pending.find(item => item.kind === 'correct' && item.teamId === event.teamId)
+      const old = this.pending.find((item) => item.kind === 'correct' && item.teamId === event.teamId)
       if (old) old.delta = (old.delta ?? 0) + (event.delta ?? 0)
       else if (this.pending.length < 12) this.pending.push(event)
     }
@@ -38,6 +62,9 @@ export class SceneScheduler {
 }
 
 export function positiveSolveEvents(deltas: ReadonlyMap<number, number>, changed: ReadonlySet<number>, epoch: string) {
-  return [...deltas].filter(([id, value]) => Number.isSafeInteger(id) && id > 0 && Number.isFinite(value) && value > 0 && changed.has(id))
+  return [...deltas]
+    .filter(
+      ([id, value]) => Number.isSafeInteger(id) && id > 0 && Number.isFinite(value) && value > 0 && changed.has(id)
+    )
     .map(([teamId, delta]) => ({ key: `${epoch}-${teamId}`, kind: 'correct' as const, teamId, delta, duration: 1500 }))
 }

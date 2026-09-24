@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { LiveAnnouncement } from '@Components/live/types'
 import {
   ChallengeCategory,
   GameMode,
@@ -8,7 +9,6 @@ import {
   NoticeType,
   SpeedrunRoundStatus,
 } from '@Api'
-import { LiveAnnouncement } from '@Components/live/types'
 
 const PREVIEW_CATEGORIES = [
   ChallengeCategory.Web,
@@ -71,6 +71,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
   const [selectedCategory, setSelectedCategory] = useState(ChallengeCategory.Web)
   const [injectedAnnouncement, setInjectedAnnouncement] = useState<LiveAnnouncement>()
   const [showcaseRunning, setShowcaseRunning] = useState(false)
+  const [resetEpoch, setResetEpoch] = useState(0)
   const [showcaseStep, setShowcaseStep] = useState('Ready')
   const roundId = useRef(1000)
   const eventId = useRef(1000)
@@ -83,7 +84,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
 
   const addEvent = useCallback((event: Omit<LiveScoreboardEventModel, 'id' | 'createdAt'>) => {
     const id = `preview-${++eventId.current}`
-    setState(current => ({
+    setState((current) => ({
       ...current,
       serverTimeUtc: Date.now(),
       recentEvents: [{ ...event, id, createdAt: Date.now() }, ...(current.recentEvents ?? [])].slice(0, 20),
@@ -92,6 +93,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
 
   const reset = useCallback(() => {
     clearTimers()
+    setResetEpoch(value => value + 1)
     setShowcaseRunning(false)
     setShowcaseStep('Ready')
     setRemainingSeconds(0)
@@ -102,7 +104,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
   const spin = useCallback(() => {
     const id = ++roundId.current
     setRemainingSeconds(300)
-    setState(current => ({
+    setState((current) => ({
       ...current,
       speedrunState: {
         ...current.speedrunState,
@@ -119,7 +121,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
 
   const start = useCallback(() => {
     setRemainingSeconds(300)
-    setState(current => {
+    setState((current) => {
       const round = current.speedrunState?.currentRound
       const category = round?.category ?? selectedCategory
       return {
@@ -134,7 +136,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
             startedAtUtc: Date.now(),
             timeLeftSeconds: 300,
           },
-          remainingCategories: (current.speedrunState?.remainingCategories ?? []).filter(value => value !== category),
+          remainingCategories: (current.speedrunState?.remainingCategories ?? []).filter((value) => value !== category),
           usedCategories: [...new Set([...(current.speedrunState?.usedCategories ?? []), category])],
         },
       }
@@ -142,36 +144,46 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
     addEvent({ type: NoticeType.Normal, message: `${selectedCategory} round is now live` })
   }, [addEvent, selectedCategory])
 
-  const scoreTeam = useCallback((points: number, bloodType?: NoticeType) => {
-    const teamName = PREVIEW_TEAMS[selectedTeamId - 1]?.[0] ?? 'Unknown team'
-    setState(current => {
-      const topTeams = (current.topTeams ?? []).map(team => {
-        if (team.id !== selectedTeamId) return team
-        return { ...team, score: (team.score ?? 0) + points, solvedCount: (team.solvedCount ?? 0) + 1 }
-      }).sort((left, right) => (right.score ?? 0) - (left.score ?? 0))
-        .map((team, index) => ({ ...team, rank: index + 1 }))
-      return { ...current, topTeams }
-    })
+  const scoreTeam = useCallback(
+    (points: number, bloodType?: NoticeType) => {
+      const teamName = PREVIEW_TEAMS[selectedTeamId - 1]?.[0] ?? 'Unknown team'
+      setState((current) => {
+        const topTeams = (current.topTeams ?? [])
+          .map((team) => {
+            if (team.id !== selectedTeamId) return team
+            return { ...team, score: (team.score ?? 0) + points, solvedCount: (team.solvedCount ?? 0) + 1 }
+          })
+          .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))
+          .map((team, index) => ({ ...team, rank: index + 1 }))
+        return { ...current, topTeams }
+      })
 
-    if (bloodType) addEvent({
-      type: bloodType,
-      message: `${teamName} solved Tidal Lock`,
-      teamId: selectedTeamId,
-      teamName,
-      challengeTitle: `${selectedCategory} — Tidal Lock`,
-    })
-    else addEvent({ type: NoticeType.Normal, message: `${teamName} solved a ${selectedCategory} challenge` })
-  }, [addEvent, selectedCategory, selectedTeamId])
+      if (bloodType)
+        addEvent({
+          type: bloodType,
+          message: `${teamName} solved Tidal Lock`,
+          teamId: selectedTeamId,
+          teamName,
+          challengeTitle: `${selectedCategory} — Tidal Lock`,
+        })
+      else addEvent({ type: NoticeType.Normal, message: `${teamName} solved a ${selectedCategory} challenge` })
+    },
+    [addEvent, selectedCategory, selectedTeamId]
+  )
 
-  const hint = useCallback(() => addEvent({
-    type: NoticeType.NewHint,
-    message: `Hint #${eventId.current % 3 + 1} released for Tidal Lock`,
-    challengeTitle: `${selectedCategory} — Tidal Lock`,
-  }), [addEvent, selectedCategory])
+  const hint = useCallback(
+    () =>
+      addEvent({
+        type: NoticeType.NewHint,
+        message: `Hint #${(eventId.current % 3) + 1} released for Tidal Lock`,
+        challengeTitle: `${selectedCategory} — Tidal Lock`,
+      }),
+    [addEvent, selectedCategory]
+  )
 
   const countdown = useCallback(() => {
     setRemainingSeconds(10)
-    setState(current => ({
+    setState((current) => ({
       ...current,
       speedrunState: {
         ...current.speedrunState,
@@ -188,7 +200,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
 
   const overtime = useCallback(() => {
     setRemainingSeconds(180)
-    setState(current => ({
+    setState((current) => ({
       ...current,
       speedrunState: {
         ...current.speedrunState,
@@ -207,7 +219,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
 
   const finish = useCallback(() => {
     setRemainingSeconds(0)
-    setState(current => {
+    setState((current) => {
       const category = current.speedrunState?.currentRound?.category
       return {
         ...current,
@@ -225,7 +237,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
 
   const reminder = useCallback(() => {
     setRemainingSeconds(60)
-    setState(current => ({
+    setState((current) => ({
       ...current,
       speedrunState: {
         ...current.speedrunState,
@@ -241,9 +253,10 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
   }, [selectedCategory])
 
   const wrongSubmit = useCallback(() => {
-    const teamName = state.topTeams?.find(team => team.id === selectedTeamId)?.name
-      ?? PREVIEW_TEAMS[selectedTeamId - 1]?.[0]
-      ?? 'Unknown team'
+    const teamName =
+      state.topTeams?.find((team) => team.id === selectedTeamId)?.name ??
+      PREVIEW_TEAMS[selectedTeamId - 1]?.[0] ??
+      'Unknown team'
     setInjectedAnnouncement({
       key: `preview-wrong-${++eventId.current}`,
       kind: 'wrong',
@@ -258,14 +271,16 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
   }, [selectedTeamId, state.topTeams])
 
   const toggleFreeze = useCallback(() => {
-    setState(current => ({ ...current, scoreboardFrozen: !current.scoreboardFrozen }))
+    setState((current) => ({ ...current, scoreboardFrozen: !current.scoreboardFrozen }))
   }, [])
 
   const schedule = useCallback((delay: number, step: string, action: () => void) => {
-    timers.current.push(window.setTimeout(() => {
-      setShowcaseStep(step)
-      action()
-    }, delay))
+    timers.current.push(
+      window.setTimeout(() => {
+        setShowcaseStep(step)
+        action()
+      }, delay)
+    )
   }, [])
 
   const stopShowcase = useCallback(() => {
@@ -278,7 +293,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
     reset()
     setShowcaseRunning(true)
     setShowcaseStep('Choosing category')
-    spin()
+    schedule(100, 'Choosing category', spin)
     schedule(7200, 'Round started', start)
     schedule(10800, 'Verified strike', () => scoreTeam(180))
     schedule(14800, 'Hint transmission', hint)
@@ -296,15 +311,29 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
   useEffect(() => {
     const status = state.speedrunState?.currentRound?.status
     if (status !== SpeedrunRoundStatus.Running && status !== SpeedrunRoundStatus.Overtime) return
-    const interval = window.setInterval(() => setRemainingSeconds(value => Math.max(0, value - 1)), 1000)
+    const interval = window.setInterval(() => setRemainingSeconds((value) => Math.max(0, value - 1)), 1000)
     return () => window.clearInterval(interval)
   }, [state.speedrunState?.currentRound?.status])
 
   useEffect(() => () => clearTimers(), [clearTimers])
 
   return {
-    simultaneousSolves: () => setState(current => ({ ...current, topTeams: (current.topTeams ?? []).map((team, index) => index < 3 ? { ...team, score: (team.score ?? 0) + 100, solvedCount: (team.solvedCount ?? 0) + 1 } : team) })),
-    lateTeam: () => setState(current => ({ ...current, topTeams: [...(current.topTeams ?? []).slice(0, 9), { id: ++eventId.current, rank: 10, name: 'Arrival Test Team', score: 1200, solvedCount: 6 }] })),
+    resetEpoch,
+    simultaneousSolves: () =>
+      setState((current) => ({
+        ...current,
+        topTeams: (current.topTeams ?? []).map((team, index) =>
+          index < 3 ? { ...team, score: (team.score ?? 0) + 100, solvedCount: (team.solvedCount ?? 0) + 1 } : team
+        ),
+      })),
+    lateTeam: () =>
+      setState((current) => ({
+        ...current,
+        topTeams: [
+          ...(current.topTeams ?? []).slice(0, 9),
+          { id: ++eventId.current, rank: 10, name: 'Arrival Test Team', score: 1200, solvedCount: 6 },
+        ],
+      })),
     state,
     remainingSeconds,
     selectedTeamId,

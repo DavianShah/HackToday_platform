@@ -23,7 +23,8 @@ export const liveEventPriority = (event: PrioritizedLiveEvent) => PRIORITY[event
 export function appendLiveEvent<T extends PrioritizedLiveEvent>(queue: T[], event: T, limit = 32) {
   if (queue.length >= limit) {
     let lowest = 0
-    for (let i = 1; i < queue.length; i++) if (liveEventPriority(queue[i]) < liveEventPriority(queue[lowest])) lowest = i
+    for (let i = 1; i < queue.length; i++)
+      if (liveEventPriority(queue[i]) < liveEventPriority(queue[lowest])) lowest = i
     if (liveEventPriority(event) < liveEventPriority(queue[lowest])) return
     queue.splice(lowest, 1)
   }

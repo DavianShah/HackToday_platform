@@ -12,7 +12,9 @@
     "build": "pnpm check && vite build",
     "preview": "vite preview",
     "prettier": "prettier --write src --write plugins --write *.mjs --write *.mts",
-    "genapi": "swagger-typescript-api generate -p http://localhost:8080/openapi/v1.json -t template -o src --module-name-first-tag --sort-routes"
+    "genapi": "swagger-typescript-api generate -p http://localhost:8080/openapi/v1.json -t template -o src --module-name-first-tag --sort-routes",
+    "test:galactic": "node --experimental-strip-types tests/GalacticScene.test.ts",
+    "test:galactic-browser": "node tests/galactic-browser.mjs"
   },
   "dependencies": {
     "@babel/core": "^7.29.7",

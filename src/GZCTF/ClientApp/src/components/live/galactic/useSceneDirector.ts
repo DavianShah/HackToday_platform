@@ -2,9 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { LiveAnnouncement } from '../types'
 import { announcementScene, positiveSolveEvents, SceneEvent, SceneScheduler } from './sceneEvents'
 
-export function useSceneDirector({ announcement, deltas, changed, frozen, preview, roundKey }: {
-  announcement?: LiveAnnouncement; deltas: Map<number, number>; changed: Set<number>
-  frozen: boolean; preview: boolean; roundKey: string
+export function useSceneDirector({
+  announcement,
+  deltas,
+  changed,
+  frozen,
+  preview,
+  roundKey,
+}: {
+  announcement?: LiveAnnouncement
+  deltas: Map<number, number>
+  changed: Set<number>
+  frozen: boolean
+  preview: boolean
+  roundKey: string
 }) {
   const scheduler = useRef(new SceneScheduler())
   const observed = useRef(new WeakSet<Map<number, number>>())
@@ -23,14 +34,15 @@ export function useSceneDirector({ announcement, deltas, changed, frozen, previe
     if (mapped && mapped.key !== blockedAnnouncement.current) scheduler.current.push(mapped, performance.now(), true)
     if (!observed.current.has(deltas)) {
       observed.current.add(deltas)
-      for (const solve of positiveSolveEvents(deltas, changed, `${roundKey}-${++epoch.current}`)) scheduler.current.push(solve, performance.now())
+      for (const solve of positiveSolveEvents(deltas, changed, `${roundKey}-${++epoch.current}`))
+        scheduler.current.push(solve, performance.now())
     }
     setEvent(scheduler.current.advance(performance.now()))
   }, [announcement, changed, deltas, frozen, preview, roundKey])
   useEffect(() => {
     const timer = window.setInterval(() => {
       const next = scheduler.current.advance(performance.now())
-      setEvent(current => current === next ? current : next)
+      setEvent((current) => (current === next ? current : next))
     }, 80)
     return () => window.clearInterval(timer)
   }, [])
