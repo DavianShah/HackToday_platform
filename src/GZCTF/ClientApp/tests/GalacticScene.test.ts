@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { reconcileSlots, orbitPose, uniqueTeams } from '../src/components/live/galactic/teamSlots.ts'
+import { announcementScene, positiveSolveEvents, SceneScheduler } from '../src/components/live/galactic/sceneEvents.ts'
 
 test('ranking and late entries preserve occupied lanes, exits release only after fade', () => {
   const first = reconcileSlots([], [{ id: 8, rank: 1 }, { id: 3, rank: 2 }], 0)
@@ -20,4 +21,39 @@ test('orbit envelope stays inside camera world bounds for top ten', () => {
     const pose = orbitPose(lane, time)
     assert.ok(Math.abs(pose.x) < 6.5 && Math.abs(pose.y) < 3.8)
   }
+})
+
+test('only genuine positive ordinary deltas produce solve attacks', () => {
+  const events = positiveSolveEvents(new Map([[1, 150], [2, -20], [3, 0], [4, NaN], [5, 250]]), new Set([1, 2, 3, 4]), 'poll')
+  assert.deepEqual(events.map(e => [e.teamId, e.delta]), [[1, 150]])
+})
+
+test('freeze and wrong-submit boundary are enforced before scheduling', () => {
+  const wrong = { key: 'wrong', kind: 'wrong' as const, title: 'Wrong', sound: 'wrongSubmit' as const }
+  assert.equal(announcementScene(wrong, false, false), undefined)
+  assert.equal(announcementScene(wrong, true, true), undefined)
+  assert.equal(announcementScene(wrong, false, true)?.kind, 'wrong')
+})
+
+test('cinematic starts at active event, deduplicates and interrupts solves, then recovers', () => {
+  const scheduler = new SceneScheduler()
+  scheduler.push({ key: 'score', kind: 'correct', duration: 1500 }, 0)
+  const blood = announcementScene({ key: 'blood', kind: 'firstBlood', title: 'First Blood', sound: 'firstBlood', popupDelay: 5000, duration: 8600 }, false, false)!
+  scheduler.push(blood, 100, true)
+  assert.equal(scheduler.active?.started, 100)
+  scheduler.push(blood, 2100, true)
+  assert.equal(scheduler.active?.started, 100)
+  assert.equal(scheduler.advance(8099)?.kind, 'firstBlood')
+  assert.equal(scheduler.advance(8100), undefined)
+  scheduler.reset()
+  assert.equal(scheduler.active, undefined)
+  assert.equal(scheduler.pending.length, 0)
+})
+
+test('visual backlog is bounded and coalesces score facts per team', () => {
+  const scheduler = new SceneScheduler()
+  scheduler.push({ key: 'blood', kind: 'firstBlood', duration: 8000 }, 0, true)
+  for (let i = 0; i < 50; i++) scheduler.push({ key: String(i), kind: 'correct', teamId: i % 15, delta: 1, duration: 1500 }, 1)
+  assert.equal(scheduler.pending.length, 12)
+  assert.ok(scheduler.pending[0].delta! > 1)
 })

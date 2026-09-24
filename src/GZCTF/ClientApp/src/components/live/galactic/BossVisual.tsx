@@ -1,16 +1,24 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Group } from 'three'
+import { Group, MeshStandardMaterial } from 'three'
+import { SceneEvent } from './sceneEvents'
+import { attackKind, eventAge, impactTime } from './EventVFX'
 import { sceneConfig as config } from './sceneConfig'
 
-export interface BossVisualProps { reducedMotion: boolean; overtime?: boolean }
+export interface BossVisualProps { reducedMotion: boolean; overtime?: boolean; event?: SceneEvent }
 
 /** Split-citadel silhouette: two armored bastions around a suspended axial reactor. */
-export function BossVisual({ reducedMotion, overtime }: BossVisualProps) {
+export function BossVisual({ reducedMotion, overtime, event }: BossVisualProps) {
+  const reactor = useRef<MeshStandardMaterial>(null)
   const root = useRef<Group>(null)
   useFrame(({ clock }) => {
     if (!root.current) return
     root.current.rotation.y = reducedMotion ? .12 : .12 + Math.sin(clock.elapsedTime * .16) * .1
+    const hitAge = event ? eventAge(event) - impactTime(event) : 100
+    const hit = attackKind(event) && event?.kind !== 'wrong' && hitAge > 0 && hitAge < 1 ? Math.sin(hitAge * Math.PI) : 0
+    root.current.rotation.z = -.08 + (reducedMotion ? 0 : hit * .07)
+    if (reactor.current) reactor.current.emissiveIntensity = 1.4 + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * (overtime ? 2 : .8)) * .3) + hit * 3 + (event?.kind === 'start' ? Math.max(0, 2 - eventAge(event)) : 0)
+    root.current.scale.setScalar(1 + (reducedMotion ? 0 : hit * .035))
     root.current.position.y = reducedMotion ? 0 : Math.sin(clock.elapsedTime * .4) * .08
   })
   const glow = overtime ? config.colors.danger : config.colors.amber
@@ -25,7 +33,7 @@ export function BossVisual({ reducedMotion, overtime }: BossVisualProps) {
     </group>)}
     <mesh rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[.92, .16, 8, 48]} /><meshStandardMaterial color={config.colors.plate} metalness={.8} roughness={.3} /></mesh>
     <mesh position={[0, 0, .85]}><torusGeometry args={[.63, .045, 8, 48]} /><meshBasicMaterial color={glow} /></mesh>
-    <mesh position={[0, 0, .75]} scale={[.45, .45, .3]}><icosahedronGeometry /><meshStandardMaterial color={glow} emissive={glow} emissiveIntensity={2} /></mesh>
+    <mesh position={[0, 0, .75]} scale={[.45, .45, .3]}><icosahedronGeometry /><meshStandardMaterial ref={reactor} color={glow} emissive={glow} emissiveIntensity={2} /></mesh>
     {/* Bridging trusses, inset vents and asymmetrical communications spine. */}
     {[-1, 1].map(side => <group key={`array-${side}`}>
       <mesh position={[side * 1.15, -.8, -.25]} rotation={[0, 0, side * .3]} scale={[2, .18, .3]}><boxGeometry /><meshStandardMaterial color={config.colors.plate} metalness={.8} roughness={.4} /></mesh>

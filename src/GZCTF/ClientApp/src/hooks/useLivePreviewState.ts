@@ -42,7 +42,7 @@ const PREVIEW_TEAMS = [
 
 const createState = (gameId: number, config: LiveScoreboardConfigModel): LiveScoreboardStateModel => ({
   gameId,
-  gameTitle: config.title || 'ITFest Speedrun Championship',
+  gameTitle: config.title || 'HackToday 2026 Final',
   gameMode: GameMode.Speedrun,
   scoreboardFrozen: false,
   serverTimeUtc: Date.now(),
@@ -54,7 +54,7 @@ const createState = (gameId: number, config: LiveScoreboardConfigModel): LiveSco
     remainingCategories: PREVIEW_CATEGORIES,
     message: 'Preview simulator ready',
   },
-  topTeams: PREVIEW_TEAMS.map(([name, score, solvedCount], index) => ({
+  topTeams: PREVIEW_TEAMS.slice(0, 10).map(([name, score, solvedCount], index) => ({
     id: index + 1,
     rank: index + 1,
     name,
@@ -280,14 +280,18 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
     setShowcaseStep('Choosing category')
     spin()
     schedule(7200, 'Round started', start)
-    schedule(10800, 'Pearl tether', () => scoreTeam(180))
-    schedule(14800, 'Oracle illumination', hint)
-    schedule(21400, 'Abyssal convergence', () => scoreTeam(260, NoticeType.FirstBlood))
-    schedule(30200, 'Final countdown', countdown)
-    schedule(41800, 'Overtime', overtime)
-    schedule(46800, 'Round finished', finish)
-    schedule(51000, 'Complete', () => setShowcaseRunning(false))
-  }, [countdown, finish, hint, overtime, reset, schedule, scoreTeam, spin, start])
+    schedule(10800, 'Verified strike', () => scoreTeam(180))
+    schedule(14800, 'Hint transmission', hint)
+    schedule(21400, 'First Blood', () => scoreTeam(260, NoticeType.FirstBlood))
+    schedule(30200, 'Second Blood', () => scoreTeam(200, NoticeType.SecondBlood))
+    schedule(34200, 'Third Blood', () => scoreTeam(175, NoticeType.ThirdBlood))
+    schedule(38200, 'Preview wrong submission', wrongSubmit)
+    schedule(42400, '60 second reminder', reminder)
+    schedule(46000, 'Final countdown', countdown)
+    schedule(58000, 'Overtime', overtime)
+    schedule(63000, 'Round finished', finish)
+    schedule(67500, 'Complete', () => setShowcaseRunning(false))
+  }, [countdown, finish, hint, overtime, reset, schedule, scoreTeam, spin, start, wrongSubmit, reminder])
 
   useEffect(() => {
     const status = state.speedrunState?.currentRound?.status
@@ -299,6 +303,8 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
   useEffect(() => () => clearTimers(), [clearTimers])
 
   return {
+    simultaneousSolves: () => setState(current => ({ ...current, topTeams: (current.topTeams ?? []).map((team, index) => index < 3 ? { ...team, score: (team.score ?? 0) + 100, solvedCount: (team.solvedCount ?? 0) + 1 } : team) })),
+    lateTeam: () => setState(current => ({ ...current, topTeams: [...(current.topTeams ?? []).slice(0, 9), { id: ++eventId.current, rank: 10, name: 'Arrival Test Team', score: 1200, solvedCount: 6 }] })),
     state,
     remainingSeconds,
     selectedTeamId,

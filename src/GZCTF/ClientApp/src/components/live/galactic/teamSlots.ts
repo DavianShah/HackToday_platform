@@ -35,8 +35,12 @@ export function reconcileSlots(previous: TeamSlot[], teams: LiveScoreboardTeamMo
 }
 
 export const teamAccent = (id: number) => ['#86ced2', '#9bbdcf', '#c3c9ba', '#86aabf'][Math.abs(id * 31) % 4]
-export const orbitPose = (lane: number, time: number, speed = .045) => {
+export const orbitPose = (lane: number, time: number, speed = .045, target = { x: 0, y: 0, z: 0, angle: 0 }) => {
   const angle = lane * Math.PI * 2 / 10 + time * speed
   const radius = 5.6 + lane % 3 * .42
-  return { x: Math.cos(angle) * radius, y: Math.sin(angle) * (2.8 + lane % 2 * .55) + .35, z: Math.sin(angle * 2) * .65 + 1, angle }
+  target.x = Math.cos(angle) * radius
+  target.y = Math.sin(angle) * (2.8 + lane % 2 * .55) + .35
+  target.z = Math.sin(angle * 2) * .65 + 1
+  target.angle = angle
+  return target
 }

@@ -32,9 +32,9 @@ export const LiveScoreboardPanel: FC<{
       const rank = team.rank
       const name = team.name ?? 'Unknown team'
       return <div key={id} className={`${classes.scoreRow} ${podiumClass(rank)} ${changedTeams.has(id) || bloodTeams.has(id) ? classes.scorePulse : ''}`}>
-        <strong>{rank === undefined ? '?' : String(rank).padStart(2, '0')}</strong>
-        <div className={classes.teamIdentity}><b title={name}>{name}</b><small>{team.solvedCount ?? "?"} solves ? {teamLabel(rank)}</small></div>
-        <span className={classes.scoreValue}>{team.score?.toLocaleString() ?? '?'}</span>
+        <strong>{rank === undefined ? '--' : String(rank).padStart(2, '0')}</strong>
+        <div className={classes.teamIdentity}><b title={name}>{name}</b><small>{team.solvedCount ?? "--"} solves / {teamLabel(rank)}</small></div>
+        <span className={classes.scoreValue}>{team.score?.toLocaleString() ?? '--'}</span>
         <em className={classes.solveValue}>{team.solvedCount ?? 0}</em>
         {movement && <div className={classes.rankShift}>{movement.to < movement.from ? '↑' : '↓'} {movement.from} → {movement.to}</div>}
         {delta !== undefined && <div className={classes.scoreDelta}>+{delta.toLocaleString()}</div>}

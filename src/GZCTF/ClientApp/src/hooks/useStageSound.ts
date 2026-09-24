@@ -21,15 +21,38 @@ const patterns: Record<StageSoundName, [number, number, OscillatorType][]> = {
   scoreUpdate: [[620, .08, 'sine'], [820, .12, 'sine']],
 }
 
-export const useStageSound = (config?: LiveScoreboardConfigModel) => {
+export const useStageSound = (config?: LiveScoreboardConfigModel, muted = false) => {
   const [enabled, setEnabled] = useState(false)
   const context = useRef<AudioContext | undefined>(undefined)
   const preloaded = useRef<HTMLAudioElement[]>([])
   const configRef = useRef(config)
 
-  useEffect(() => {
-    configRef.current = config
-  }, [config])
+  const mutedRef = useRef(muted)
+  configRef.current = config
+  mutedRef.current = muted
+  const voices = useRef(new Set<OscillatorNode>())
+  const playing = useRef(new Set<HTMLAudioElement>())
+  const generation = useRef(0)
+  const stop = useCallback(() => {
+    generation.current++
+    playing.current.forEach(audio => { audio.pause(); audio.removeAttribute('src'); audio.load() })
+    playing.current.clear()
+    voices.current.forEach(voice => { try { voice.stop() } catch { /* already ended */ } voice.disconnect() })
+    voices.current.clear()
+  }, [])
+  useEffect(() => { if (muted || !config?.soundEnabled) stop() }, [muted, config?.soundEnabled, stop])
+  useEffect(() => () => {
+    stop()
+    preloaded.current.forEach(audio => { audio.pause(); audio.removeAttribute('src') })
+    void context.current?.close()
+    context.current = undefined
+  }, [stop])
+  const oscillator = useCallback((ctx: AudioContext) => {
+    const voice = ctx.createOscillator()
+    voices.current.add(voice)
+    voice.onended = () => { voices.current.delete(voice); voice.disconnect() }
+    return voice
+  }, [])
 
   const unlock = useCallback(() => {
     const ctx = context.current ?? new AudioContext()
@@ -50,48 +73,48 @@ export const useStageSound = (config?: LiveScoreboardConfigModel) => {
   const fallback = useCallback((name: StageSoundName) => {
     const ctx = context.current
     if (!ctx) return
-    const volume = configRef.current?.volume ?? .75
+    const volume = Math.max(0, Math.min(1, configRef.current?.volume ?? .75))
 
     if (name === 'firstBlood') {
       const now = ctx.currentTime
       const master = ctx.createGain()
       const compressor = ctx.createDynamicsCompressor()
       master.gain.setValueAtTime(volume * .48, now)
-      master.gain.exponentialRampToValueAtTime(.001, now + 2.7)
+      master.gain.exponentialRampToValueAtTime(.001, now + 8)
       master.connect(compressor).connect(ctx.destination)
 
-      const impact = ctx.createOscillator()
+      const impact = oscillator(ctx)
       const impactGain = ctx.createGain()
       impact.type = 'sine'
-      impact.frequency.setValueAtTime(82, now)
-      impact.frequency.exponentialRampToValueAtTime(38, now + .7)
-      impactGain.gain.setValueAtTime(.001, now)
-      impactGain.gain.exponentialRampToValueAtTime(.9, now + .025)
-      impactGain.gain.exponentialRampToValueAtTime(.001, now + .9)
+      impact.frequency.setValueAtTime(82, now + 4.65)
+      impact.frequency.exponentialRampToValueAtTime(38, now + 5.35)
+      impactGain.gain.setValueAtTime(.001, now + 4.6)
+      impactGain.gain.exponentialRampToValueAtTime(.9, now + 4.68)
+      impactGain.gain.exponentialRampToValueAtTime(.001, now + 5.55)
       impact.connect(impactGain).connect(master)
-      impact.start(now)
-      impact.stop(now + .95)
+      impact.start(now + 4.6)
+      impact.stop(now + 5.6)
 
-      const swell = ctx.createOscillator()
+      const swell = oscillator(ctx)
       const swellFilter = ctx.createBiquadFilter()
       const swellGain = ctx.createGain()
       swell.type = 'sawtooth'
       swell.frequency.setValueAtTime(110, now + .08)
-      swell.frequency.exponentialRampToValueAtTime(245, now + 1.5)
+      swell.frequency.exponentialRampToValueAtTime(245, now + 4.5)
       swellFilter.type = 'lowpass'
       swellFilter.frequency.setValueAtTime(240, now)
-      swellFilter.frequency.exponentialRampToValueAtTime(1100, now + 1.45)
+      swellFilter.frequency.exponentialRampToValueAtTime(1100, now + 4.45)
       swellGain.gain.setValueAtTime(.001, now)
       swellGain.gain.exponentialRampToValueAtTime(.24, now + .45)
-      swellGain.gain.exponentialRampToValueAtTime(.001, now + 1.75)
+      swellGain.gain.exponentialRampToValueAtTime(.001, now + 4.75)
       swell.connect(swellFilter).connect(swellGain).connect(master)
       swell.start(now + .06)
-      swell.stop(now + 1.8)
+      swell.stop(now + 4.8)
 
       for (const [index, frequency] of [392, 587, 784, 1175].entries()) {
-        const voice = ctx.createOscillator()
+        const voice = oscillator(ctx)
         const gain = ctx.createGain()
-        const at = now + .82 + index * .17
+        const at = now + 4.85 + index * .17
         voice.type = index < 2 ? 'triangle' : 'sine'
         voice.frequency.setValueAtTime(frequency, at)
         gain.gain.setValueAtTime(.001, at)
@@ -106,26 +129,34 @@ export const useStageSound = (config?: LiveScoreboardConfigModel) => {
 
     let at = ctx.currentTime
     for (const [frequency, duration, type] of patterns[name]) {
-      const oscillator = ctx.createOscillator()
+      const oscillatorNode = oscillator(ctx)
       const gain = ctx.createGain()
-      oscillator.type = type
-      oscillator.frequency.setValueAtTime(frequency, at)
+      oscillatorNode.type = type
+      oscillatorNode.frequency.setValueAtTime(frequency, at)
       gain.gain.setValueAtTime(volume * .14, at)
       gain.gain.exponentialRampToValueAtTime(.001, at + duration)
-      oscillator.connect(gain).connect(ctx.destination)
-      oscillator.start(at)
-      oscillator.stop(at + duration)
+      oscillatorNode.connect(gain).connect(ctx.destination)
+      oscillatorNode.start(at)
+      oscillatorNode.stop(at + duration)
       at += duration * .75
     }
-  }, [])
+  }, [oscillator])
 
   const play = useCallback((name: StageSoundName) => {
     const currentConfig = configRef.current
-    if (!enabled || !currentConfig?.soundEnabled) return
-    const url = currentConfig.sounds?.[name]?.trim() || stageSoundPack[name]
+    if (!enabled || mutedRef.current || !currentConfig?.soundEnabled) return
+    const override = currentConfig.sounds?.[name]?.trim()
+    if (name === 'firstBlood' && !override) { fallback(name); return }
+    const url = override || stageSoundPack[name]
     const audio = new Audio(url)
-    audio.volume = currentConfig.volume ?? .75
-    void audio.play().catch(() => fallback(name))
+    audio.volume = Math.max(0, Math.min(1, currentConfig.volume ?? .75))
+    const epoch = generation.current
+    playing.current.add(audio)
+    audio.onended = () => playing.current.delete(audio)
+    void audio.play().catch(() => {
+      playing.current.delete(audio)
+      if (epoch === generation.current && !mutedRef.current && configRef.current?.soundEnabled) fallback(name)
+    })
   }, [enabled, fallback])
 
   return { audioEnabled: enabled, unlockAudio: unlock, play }

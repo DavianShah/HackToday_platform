@@ -19,6 +19,17 @@ const PRIORITY: Record<string, number> = {
 
 export const liveEventPriority = (event: PrioritizedLiveEvent) => PRIORITY[event.kind] ?? 0
 
+/** Bound presentation backlog; the independent recent-events feed retains the real facts. */
+export function appendLiveEvent<T extends PrioritizedLiveEvent>(queue: T[], event: T, limit = 32) {
+  if (queue.length >= limit) {
+    let lowest = 0
+    for (let i = 1; i < queue.length; i++) if (liveEventPriority(queue[i]) < liveEventPriority(queue[lowest])) lowest = i
+    if (liveEventPriority(event) < liveEventPriority(queue[lowest])) return
+    queue.splice(lowest, 1)
+  }
+  queue.push(event)
+}
+
 /** Removes the highest-priority event while preserving FIFO order for equal priorities. */
 export const dequeueLiveEvent = <T extends PrioritizedLiveEvent>(events: T[]): T | undefined => {
   if (events.length === 0) return undefined

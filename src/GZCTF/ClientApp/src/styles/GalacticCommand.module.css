@@ -382,3 +382,11 @@
 @media (prefers-reduced-motion: reduce) {
   .stage *, .stage *::before, .stage *::after { animation: none !important; transition: none !important; }
 }
+
+.sceneCallout { position: absolute; z-index: 4; top: 16%; left: 30%; right: 30%; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; text-shadow: 0 2px 10px #000; pointer-events: none; }
+.sceneCallout span { color: var(--gc-amber); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+.sceneCallout strong { color: var(--gc-text); max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: clamp(18px, 1.7vw, 32px); white-space: nowrap; }
+.sceneCallout b { color: var(--gc-cyan); font-size: 25px; }
+
+.sectorScanLabels { position: absolute; top: 19%; left: 14%; right: 14%; display: flex; justify-content: center; flex-wrap: wrap; gap: 18px; color: var(--gc-cyan); font-size: 12px; text-transform: uppercase; letter-spacing: .13em; animation: sectorDecelerate 6.5s cubic-bezier(.1,.8,.25,1) both; }
+@keyframes sectorDecelerate { from { opacity: .2; transform: perspective(600px) rotateY(-35deg) translateX(-20px); } to { opacity: 1; transform: perspective(600px) rotateY(0) translateX(0); } }

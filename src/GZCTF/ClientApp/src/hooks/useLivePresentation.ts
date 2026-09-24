@@ -16,7 +16,7 @@ export const useLivePresentation = (
 ) => {
   const round = state?.speedrunState?.currentRound
   const activeRound = round?.status === SpeedrunRoundStatus.Running || round?.status === SpeedrunRoundStatus.Overtime
-  const { audioEnabled, unlockAudio, play } = useStageSound(state?.config)
+  const { audioEnabled, unlockAudio, play } = useStageSound(state?.config, Boolean(state?.scoreboardFrozen))
   const {
     active: announcement,
     visible: visibleAnnouncement,
@@ -26,6 +26,7 @@ export const useLivePresentation = (
   } = useLiveEventQueue(useCallback((event: LiveAnnouncement) => play(event.sound), [play]))
   const initialized = useRef(false)
   const wasFrozen = useRef(false)
+  const previousRoundId = useRef<number | undefined>(undefined)
   const previousRound = useRef<string | undefined>(undefined)
   const previousScores = useRef(new Map<number, number>())
   const previousRanks = useRef(new Map<number, number>())
@@ -41,14 +42,21 @@ export const useLivePresentation = (
   const [rankChanges, setRankChanges] = useState(new Map<number, { from: number; to: number }>())
 
   useEffect(() => {
-    if (!injectedAnnouncement || state?.scoreboardFrozen) return
+    if (!injectedAnnouncement) return
+    if (state?.scoreboardFrozen) { markSeen([injectedAnnouncement.key]); return }
     enqueue(injectedAnnouncement)
-  }, [enqueue, injectedAnnouncement, state?.scoreboardFrozen])
+  }, [enqueue, markSeen, injectedAnnouncement, state?.scoreboardFrozen])
 
   useEffect(() => {
     if (!state) return
     const eventIds = (state.recentEvents ?? []).flatMap((event) => (event.id ? [event.id] : []))
     const fingerprint = `${round?.id ?? 'none'}:${round?.status ?? 'none'}`
+    if (initialized.current && fingerprint !== previousRound.current && (previousRoundId.current !== round?.id || round?.status === SpeedrunRoundStatus.Cancelled || round?.status === SpeedrunRoundStatus.Finished)) {
+      clear()
+      window.clearTimeout(attackTimer.current)
+      setChangedTeams(new Set()); setBloodAttackTeams(new Set()); setScoreDeltas(new Map()); setRankChanges(new Map())
+    }
+    previousRoundId.current = round?.id
 
     if (state.scoreboardFrozen) {
       markSeen(eventIds)
@@ -76,6 +84,8 @@ export const useLivePresentation = (
         previousScores.current.set(team.id, team.score ?? 0)
         if (team.rank !== undefined) previousRanks.current.set(team.id, team.rank)
       })
+      markSeen(eventIds)
+      eventIds.forEach(id => processedEvents.current.add(id))
       previousRound.current = fingerprint
       setSpinPhase(round?.status === SpeedrunRoundStatus.Ready ? 'revealed' : 'idle')
       wasFrozen.current = false
@@ -149,6 +159,7 @@ export const useLivePresentation = (
           duration: 3500,
         })
       }
+      if (round?.status === SpeedrunRoundStatus.Cancelled) setSpinPhase('idle')
       previousRound.current = fingerprint
     }
 
@@ -175,7 +186,7 @@ export const useLivePresentation = (
           key: event.id!,
           kind: 'firstBlood',
           title: 'First Blood',
-          text: `${event.teamName} solved ${event.challengeTitle}`,
+          text: [event.teamName, event.challengeTitle ? `solved ${event.challengeTitle}` : 'recorded a solve'].filter(Boolean).join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
           sound: 'firstBlood',
@@ -188,7 +199,7 @@ export const useLivePresentation = (
           key: event.id!,
           kind: 'blood',
           title: 'Second Blood',
-          text: `${event.teamName} solved ${event.challengeTitle}`,
+          text: [event.teamName, event.challengeTitle ? `solved ${event.challengeTitle}` : 'recorded a solve'].filter(Boolean).join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
           sound: 'secondBlood',
@@ -200,14 +211,14 @@ export const useLivePresentation = (
           key: event.id!,
           kind: 'blood',
           title: 'Third Blood',
-          text: `${event.teamName} solved ${event.challengeTitle}`,
+          text: [event.teamName, event.challengeTitle ? `solved ${event.challengeTitle}` : 'recorded a solve'].filter(Boolean).join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
           sound: 'thirdBlood',
           sceneKind: 'blood',
           duration: 3600,
         })
-      else if (event.message?.startsWith('Hint #'))
+      else if (event.type === NoticeType.NewHint || event.message?.startsWith('Hint #'))
         enqueue({
           key: event.id!,
           kind: 'hint',
