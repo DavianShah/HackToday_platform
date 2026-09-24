@@ -8,4 +8,6 @@ All artwork in this folder is original, lightweight SVG created for the HackToda
 - Stars, nebula, scanlines, radar sweeps, and energy pings are procedural CSS; there are no external image requests.
 - Sound remains managed by `useStageSound.ts` and the existing live-scoreboard configuration. No audio asset is defined here.
 
+The stage uses a `100vh` fallback followed by `100dvh`. Desktop panels stay inside the fixed broadcast shell, while mobile content scrolls inside the shell below the persistent timer. Motion has a `prefers-reduced-motion` fallback in the same CSS module.
+
 Keep replacement art abstract and locally hosted. Do not introduce event logos, franchise imagery, hotlinks, or a second event identity into the live stage.

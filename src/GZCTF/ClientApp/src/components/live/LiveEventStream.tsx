@@ -13,9 +13,12 @@ const eventMeta = (event: LiveScoreboardEventModel) => {
   return ['Transmission', '']
 }
 
+const clockFormatter = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+})
+
 const eventTime = (createdAt?: number) => createdAt
-  ? new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
-    .format(new Date(createdAt))
+  ? clockFormatter.format(new Date(createdAt))
   : '--:--:--'
 
 export const LiveEventStream: FC<{ events: LiveScoreboardEventModel[]; frozen?: boolean }> = ({ events, frozen }) => <aside className={`${classes.panel} ${classes.eventPanel}`}>

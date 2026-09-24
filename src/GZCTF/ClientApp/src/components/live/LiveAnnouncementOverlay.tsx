@@ -8,11 +8,7 @@ const announcementClasses: Partial<Record<LiveAnnouncement['kind'], string>> = {
   hint: classes.announcement_hint,
   overtime: classes.announcement_overtime,
   countdown: classes.announcement_countdown,
-  correct: classes.announcement_correct,
-  wrong: classes.announcement_wrong,
   category: classes.announcement_category,
-  start: classes.announcement_start,
-  finished: classes.announcement_finished,
 }
 
 const eyebrow: Partial<Record<LiveAnnouncement['kind'], string>> = {
