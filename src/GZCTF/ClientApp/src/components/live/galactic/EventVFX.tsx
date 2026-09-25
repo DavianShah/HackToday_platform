@@ -14,10 +14,12 @@ export function EventVFX({
   event,
   source,
   reducedMotion,
+  targetAvailable,
 }: {
   event?: SceneEvent
   source: Vector3
   reducedMotion: boolean
+  targetAvailable: boolean
 }) {
   const beam = useRef<Mesh>(null)
   const wave = useRef<Mesh>(null)
@@ -38,7 +40,7 @@ export function EventVFX({
   useFrame(() => {
     const age = eventAge(event)
     const hit = event ? impactTime(event) : 0
-    const attack = Boolean(attackKind(event))
+    const attack = Boolean(attackKind(event) && targetAvailable)
     const impact = age - hit
     if (beam.current) {
       beam.current.visible = attack && !reducedMotion && impact >= 0 && impact < 0.55

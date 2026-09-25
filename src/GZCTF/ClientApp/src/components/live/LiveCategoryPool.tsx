@@ -1,8 +1,8 @@
 import { CSSProperties, FC } from 'react'
+import Icon from '@mdi/react'
 import { useChallengeCategoryLabelMap } from '@Utils/Shared'
 import { ChallengeCategory, SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
-import sectorMarker from '../../assets/live-galactic/sector-marker.svg'
 
 const CategoryList: FC<{ values: ChallengeCategory[]; className: string }> = ({ values, className }) => {
   const categoryMap = useChallengeCategoryLabelMap()
@@ -19,7 +19,7 @@ const CategoryList: FC<{ values: ChallengeCategory[]; className: string }> = ({ 
               key={value}
               title={visual?.name ?? String(value)}
             >
-              <img src={sectorMarker} alt="" aria-hidden />
+              {visual && <Icon path={visual.icon} size={0.6} aria-hidden />}
               {visual?.name ?? value}
             </span>
           )

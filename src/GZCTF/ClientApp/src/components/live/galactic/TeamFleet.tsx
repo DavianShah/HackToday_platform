@@ -1,7 +1,9 @@
 import { useFrame } from '@react-three/fiber'
+import { Html } from '@react-three/drei'
 import { ComponentType, useEffect, useRef, useState } from 'react'
 import { Group, Vector3 } from 'three'
 import { LiveScoreboardTeamModel } from '@Api'
+import classes from '@Styles/GalacticCommand.module.css'
 import { attackKind, eventAge } from './EventVFX'
 import { sceneConfig as config } from './sceneConfig'
 import { SceneEvent } from './sceneEvents'
@@ -28,6 +30,10 @@ export function TeamShipVisual({ id, accent }: TeamShipVisualProps) {
           metalness={0.5}
           roughness={0.2}
         />
+      </mesh>
+      <mesh position={[0, -0.72, -0.08]} scale={[0.3, 0.13, 0.18]}>
+        <cylinderGeometry args={[1, 0.7, 1, 8]} />
+        <meshStandardMaterial color="#193441" emissive={accent} emissiveIntensity={1.8} />
       </mesh>
       {[-1, 1].map((side) => (
         <group key={side} position={[side * 0.48, 0.25, 0]}>
@@ -102,6 +108,11 @@ function Ship({
         <meshBasicMaterial color={config.colors.amber} transparent opacity={0.75} />
       </mesh>
       <ShipVisual id={slot.id} accent={teamAccent(slot.id)} />
+      <Html center position={[0, -0.72, 0.2]} distanceFactor={17} className={classes.shipLabel}>
+        <span className={event?.teamId === slot.id ? classes.shipLabelActive : ''} title={slot.team.name ?? undefined}>
+          {slot.team.name?.trim() || `Team ${slot.id}`}
+        </span>
+      </Html>
     </group>
   )
 }

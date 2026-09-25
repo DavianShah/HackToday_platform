@@ -175,6 +175,9 @@
   color: var(--gc-cyan);
 }
 .categoryName {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   max-width: min(36vw, 520px);
   overflow: hidden;
   font-size: clamp(13px, 1.1vw, 19px);
@@ -569,6 +572,9 @@
   text-shadow: 0 3px 18px #030712;
 }
 .arenaTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   max-width: 100%;
   overflow: hidden;
   margin: 8px 0 0;
@@ -638,6 +644,11 @@
 .categoryPill img {
   width: 13px;
   height: 13px;
+}
+.categoryPill svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
 }
 .activePill,
 .selectedPill {
@@ -1038,6 +1049,11 @@
 .categoryPill img {
   display: none;
 }
+.sectorScanLabels span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
 .announcement {
   position: absolute;
   inset: 24% 21% 20%;
@@ -1182,6 +1198,32 @@
   text-transform: uppercase;
   letter-spacing: 0.13em;
   animation: sectorDecelerate 6.5s cubic-bezier(0.1, 0.8, 0.25, 1) both;
+}
+.shipLabel {
+  pointer-events: none;
+  z-index: 2;
+}
+.shipLabel span {
+  display: block;
+  max-width: 128px;
+  overflow: hidden;
+  padding: 2px 6px;
+  color: #d6f3f7;
+  background: rgba(3, 10, 21, 0.63);
+  border-bottom: 1px solid rgba(97, 231, 255, 0.5);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 5px #000;
+  white-space: nowrap;
+}
+.shipLabel .shipLabelActive {
+  max-width: 180px;
+  color: #fff2c8;
+  border-color: var(--gc-amber);
+  box-shadow: 0 3px 18px rgba(255, 209, 102, 0.3);
 }
 @keyframes sectorDecelerate {
   from {

@@ -17,6 +17,19 @@ export function uniqueTeams(teams: LiveScoreboardTeamModel[]) {
   })
 }
 
+/** A name is usable only when it identifies exactly one roster entry. */
+export function resolveTeamId(
+  teams: LiveScoreboardTeamModel[],
+  id?: number,
+  name?: string
+): number | undefined {
+  const roster = uniqueTeams(teams)
+  if (id !== undefined && id !== null) return roster.some((team) => team.id === id) ? id : undefined
+  if (!name?.trim()) return undefined
+  const matches = roster.filter((team) => team.name?.trim() === name.trim())
+  return matches.length === 1 ? matches[0].id : undefined
+}
+
 /** Keep occupied lanes through exit; polling/rank changes never shuffle an existing ship. */
 export function reconcileSlots(
   previous: TeamSlot[],

@@ -1,5 +1,6 @@
 import { FC } from 'react'
-import { formatDurationSeconds } from '@Utils/Shared'
+import Icon from '@mdi/react'
+import { formatDurationSeconds, useChallengeCategoryLabelMap } from '@Utils/Shared'
 import { SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
 import logo from '../../assets/logo.png'
@@ -22,6 +23,8 @@ export const LiveTopHud: FC<{
   audioEnabled: boolean
   onUnlockAudio: () => void
 }> = ({ round, remainingSeconds, concealCategory, audioEnabled, onUnlockAudio }) => {
+  const categoryMap = useChallengeCategoryLabelMap()
+  const categoryVisual = !concealCategory && round?.category ? categoryMap.get(round.category) : undefined
   const active = round?.status === SpeedrunRoundStatus.Running || round?.status === SpeedrunRoundStatus.Overtime
   const urgent = active && remainingSeconds <= 60
   const critical = active && remainingSeconds <= 10
@@ -54,6 +57,7 @@ export const LiveTopHud: FC<{
         <div className={classes.statusCopy}>
           <span className={classes.statusLabel}>{statusLabel(round, concealCategory)}</span>
           <strong className={classes.categoryName} title={String(category)}>
+            {categoryVisual && <Icon path={categoryVisual.icon} size={0.7} aria-hidden />}
             {category}
           </strong>
         </div>

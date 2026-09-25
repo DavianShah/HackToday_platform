@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { announcementScene, positiveSolveEvents, SceneScheduler } from '../src/components/live/galactic/sceneEvents.ts'
-import { reconcileSlots, orbitPose, uniqueTeams } from '../src/components/live/galactic/teamSlots.ts'
+import { reconcileSlots, orbitPose, resolveTeamId, uniqueTeams } from '../src/components/live/galactic/teamSlots.ts'
 
 test('ranking and late entries preserve occupied lanes, exits release only after fade', () => {
   const first = reconcileSlots(
@@ -24,6 +24,14 @@ test('invalid and duplicate identities never produce anonymous ranked ships', ()
     uniqueTeams([{ id: 1 }, { id: 1 }, {}, { id: NaN }, { id: -1 }, { id: 2 }]).map((t) => t.id),
     [1, 2]
   )
+})
+
+test('ship targeting uses an exact ID or an unambiguous name', () => {
+  const teams = [{ id: 3, name: 'A' }, { id: 8, name: 'B' }, { id: 9, name: 'B' }]
+  assert.equal(resolveTeamId(teams, 3, 'B'), 3)
+  assert.equal(resolveTeamId(teams, 99, 'A'), undefined)
+  assert.equal(resolveTeamId(teams, undefined, 'A'), 3)
+  assert.equal(resolveTeamId(teams, undefined, 'B'), undefined)
 })
 
 test('orbit envelope stays inside camera world bounds for top ten', () => {
