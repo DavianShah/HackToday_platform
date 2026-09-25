@@ -135,7 +135,8 @@ export const LiveScoreboardStage: FC<{
           />
         </div>
       </div>
-      {sceneEvent && !frozen && (sceneEvent.teamId || sceneEvent.teamName) && (
+      {sceneEvent && !frozen && (sceneEvent.teamId || sceneEvent.teamName) &&
+        !['firstBlood', 'blood'].includes(presentation.visibleAnnouncement?.kind ?? '') && (
         <div className={classes.sceneCallout} role="status">
           <span>
             {sceneEvent.kind === 'wrong'

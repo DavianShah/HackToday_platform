@@ -4,6 +4,13 @@ import { connect, pause } from './galactic-cdp.mjs'
 const c = await connect()
 const { call, evaluate } = c
 const action = (name) => evaluate(`window.galactic.${name}()`)
+const waitFor = async (expression, timeout = 8000) => {
+  for (let elapsed = 0; elapsed < timeout; elapsed += 200) {
+    if (await evaluate(expression)) return
+    await pause(200)
+  }
+  throw new Error(`Timed out: ${expression}`)
+}
 try {
   await call('Page.navigate', { url: 'http://127.0.0.1:63000/tests/galactic-preview.html' })
   for (let i = 0; i < 40; i++) {
@@ -23,7 +30,7 @@ try {
   await call('Runtime.evaluate', { expression: 'document.querySelector("button").click()', userGesture: true })
   await pause(300)
   await action('firstBlood')
-  await pause(250)
+  await waitFor('window.audioAudit.starts === 6')
   assert.equal(await evaluate('window.audioAudit.starts'), 6)
   await call('Runtime.evaluate', { expression: 'document.querySelector("button").click()', userGesture: true })
   await pause(200)
@@ -39,7 +46,7 @@ try {
   )
   await pause(200)
   await action('firstBlood')
-  await pause(300)
+  await waitFor('window.audioAudit.plays.length > 0')
   const custom = await evaluate('window.audioAudit.plays.at(-1)')
   assert.match(custom.src, /correct-submit.wav$/)
   assert.equal(custom.volume, 0.17)

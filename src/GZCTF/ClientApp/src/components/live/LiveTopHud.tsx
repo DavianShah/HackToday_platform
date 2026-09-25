@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import Icon from '@mdi/react'
+import { Icon } from '@mdi/react'
 import { formatDurationSeconds, useChallengeCategoryLabelMap } from '@Utils/Shared'
 import { SpeedrunRoundModel, SpeedrunRoundStatus } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
@@ -49,7 +49,7 @@ export const LiveTopHud: FC<{
       <div className={classes.clockModule}>
         <div className={classes.clockCopy}>
           <span>Round timer</span>
-          <strong className={`${urgent ? classes.urgent : ''} ${critical ? classes.critical : ''}`}>{timer}</strong>
+          <strong data-live-timer className={`${urgent ? classes.urgent : ''} ${critical ? classes.critical : ''}`}>{timer}</strong>
         </div>
       </div>
       <div className={classes.statusCluster}>

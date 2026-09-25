@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import Icon from '@mdi/react'
+import { Icon } from '@mdi/react'
 import { useChallengeCategoryLabelMap } from '@Utils/Shared'
 import { ChallengeCategory, LiveScoreboardTeamModel, SpeedrunRoundModel } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
