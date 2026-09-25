@@ -159,7 +159,7 @@
   <Target Name="PublishFrontend" AfterTargets="ComputeFilesToPublish" DependsOnTargets="DetectNodeEnv">
     <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
     <Exec WorkingDirectory="$(SpaRoot)" Command="$(NodePackageManager) install $(NodePackageInstallArgs)"/>
-    <Exec WorkingDirectory="$(SpaRoot)" Command="$(NodePackageManager) run build"/>
+    <Exec WorkingDirectory="$(SpaRoot)" Command="$(NodePackageManager) run build" IgnoreStandardErrorWarningFormat="true"/>
 
     <!-- Include the newly-built files in the publish output -->
     <ItemGroup>
