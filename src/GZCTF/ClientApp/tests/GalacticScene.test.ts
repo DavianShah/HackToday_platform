@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { announcementScene, positiveSolveEvents, SceneScheduler } from '../src/components/live/galactic/sceneEvents.ts'
-import { reconcileSlots, orbitPose, uniqueTeams } from '../src/components/live/galactic/teamSlots.ts'
+import { announcementScene, attackBlend, positiveSolveEvents, SceneScheduler } from '../src/components/live/galactic/sceneEvents.ts'
+import { reconcileSlots, orbitPose, resolveTeamId, uniqueTeams } from '../src/components/live/galactic/teamSlots.ts'
 
 test('ranking and late entries preserve occupied lanes, exits release only after fade', () => {
   const first = reconcileSlots(
@@ -24,6 +24,14 @@ test('invalid and duplicate identities never produce anonymous ranked ships', ()
     uniqueTeams([{ id: 1 }, { id: 1 }, {}, { id: NaN }, { id: -1 }, { id: 2 }]).map((t) => t.id),
     [1, 2]
   )
+})
+
+test('ship targeting uses an exact ID or an unambiguous name', () => {
+  const teams = [{ id: 3, name: 'A' }, { id: 8, name: 'B' }, { id: 9, name: 'B' }]
+  assert.equal(resolveTeamId(teams, 3, 'B'), 3)
+  assert.equal(resolveTeamId(teams, 99, 'A'), undefined)
+  assert.equal(resolveTeamId(teams, undefined, 'A'), 3)
+  assert.equal(resolveTeamId(teams, undefined, 'B'), undefined)
 })
 
 test('orbit envelope stays inside camera world bounds for top ten', () => {
@@ -71,8 +79,8 @@ test('cinematic starts at active event, deduplicates and interrupts solves, then
   assert.equal(scheduler.active?.started, 100)
   scheduler.push(blood, 2100, true)
   assert.equal(scheduler.active?.started, 100)
-  assert.equal(scheduler.advance(8099)?.kind, 'firstBlood')
-  assert.equal(scheduler.advance(8100), undefined)
+  assert.equal(scheduler.advance(7699)?.kind, 'firstBlood')
+  assert.equal(scheduler.advance(7700), undefined)
   scheduler.reset()
   assert.equal(scheduler.active, undefined)
   assert.equal(scheduler.pending.length, 0)
@@ -85,4 +93,11 @@ test('visual backlog is bounded and coalesces score facts per team', () => {
     scheduler.push({ key: String(i), kind: 'correct', teamId: i % 15, delta: 1, duration: 1500 }, 1)
   assert.equal(scheduler.pending.length, 12)
   assert.ok(scheduler.pending[0].delta! > 1)
+})
+
+test('First Blood ship commits after acquisition and returns after recognition', () => {
+  assert.equal(attackBlend('firstBlood', 0.5), 0)
+  assert.ok(attackBlend('firstBlood', 2.5) > 0.99)
+  assert.ok(attackBlend('firstBlood', 5.5) > 0.99)
+  assert.equal(attackBlend('firstBlood', 7.6), 0)
 })

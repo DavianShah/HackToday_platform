@@ -1,10 +1,12 @@
 import { useFrame } from '@react-three/fiber'
+import { Html } from '@react-three/drei'
 import { ComponentType, useEffect, useRef, useState } from 'react'
 import { Group, Vector3 } from 'three'
 import { LiveScoreboardTeamModel } from '@Api'
+import classes from '@Styles/GalacticCommand.module.css'
 import { attackKind, eventAge } from './EventVFX'
 import { sceneConfig as config } from './sceneConfig'
-import { SceneEvent } from './sceneEvents'
+import { attackBlend, SceneEvent } from './sceneEvents'
 import { orbitPose, reconcileSlots, TeamSlot, teamAccent } from './teamSlots'
 
 export interface TeamShipVisualProps {
@@ -28,6 +30,10 @@ export function TeamShipVisual({ id, accent }: TeamShipVisualProps) {
           metalness={0.5}
           roughness={0.2}
         />
+      </mesh>
+      <mesh position={[0, -0.72, -0.08]} scale={[0.3, 0.13, 0.18]}>
+        <cylinderGeometry args={[1, 0.7, 1, 8]} />
+        <meshStandardMaterial color="#193441" emissive={accent} emissiveIntensity={1.8} />
       </mesh>
       {[-1, 1].map((side) => (
         <group key={side} position={[side * 0.48, 0.25, 0]}>
@@ -81,10 +87,9 @@ function Ship({
           : Math.max(0, 1 - (now - slot.leaving) / (config.orbit.transition * 1000))
     const active = attackKind(event) && event?.teamId === slot.id
     const age = eventAge(event)
-    const attack =
-      active && event ? Math.min(1, age / 0.9) * Math.min(1, Math.max(0, (event.duration / 1000 - age) / 1.1)) : 0
-    const mix = reducedMotion ? 0 : attack
-    root.current.position.set(pose.x * (1 - mix) - 3.8 * mix, pose.y * (1 - mix) - 1.6 * mix, pose.z + mix * 1.2)
+    const attack = active && event ? attackBlend(event.kind, age) : 0
+    const mix = reducedMotion ? 0 : event?.kind === 'wrong' ? attack * 0.55 : attack
+    root.current.position.set(pose.x * (1 - mix) - 2.4 * mix, pose.y * (1 - mix) - 1.1 * mix, pose.z + mix * 1.5)
     if (active) source.copy(root.current.position)
     root.current.rotation.set(0.18, Math.sin(pose.angle) * 0.25, pose.angle + Math.PI / 2)
     if (active && !reducedMotion) root.current.rotation.z = -1.2
@@ -102,6 +107,11 @@ function Ship({
         <meshBasicMaterial color={config.colors.amber} transparent opacity={0.75} />
       </mesh>
       <ShipVisual id={slot.id} accent={teamAccent(slot.id)} />
+      <Html center position={[0, -0.72, 0.2]} distanceFactor={17} className={classes.shipLabel}>
+        <span className={event?.teamId === slot.id ? classes.shipLabelActive : ''} title={slot.team.name ?? undefined}>
+          {slot.team.name?.trim() || `Team ${slot.id}`}
+        </span>
+      </Html>
     </group>
   )
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { uniqueTeams } from '@Components/live/galactic/teamSlots'
+import { resolveTeamId, uniqueTeams } from '@Components/live/galactic/teamSlots'
+import { sceneConfig } from '@Components/live/galactic/sceneConfig'
 import { LiveAnnouncement, LiveSpinPhase } from '@Components/live/types'
 import { crossedReminderPoints, withoutBloodScoreChanges } from '@Utils/LiveEventQueue'
 import { formatDurationSeconds } from '@Utils/Shared'
@@ -185,8 +186,7 @@ export const useLivePresentation = (
           event.type === NoticeType.SecondBlood ||
           event.type === NoticeType.ThirdBlood
         if (!blood) return []
-        if (event.teamId !== undefined && event.teamId !== null) return [event.teamId]
-        const teamId = uniqueTeams(state.topTeams ?? []).find((team) => team.name === event.teamName)?.id
+        const teamId = resolveTeamId(state.topTeams ?? [], event.teamId ?? undefined, event.teamName ?? undefined)
         return teamId !== undefined && teamId !== null ? [teamId] : []
       })
     )
@@ -203,10 +203,11 @@ export const useLivePresentation = (
             .join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
+          challengeTitle: event.challengeTitle ?? undefined,
           sound: 'firstBlood',
           sceneKind: 'firstBlood',
-          popupDelay: 5000,
-          duration: 8600,
+          popupDelay: sceneConfig.timing.recognition * 1000,
+          duration: sceneConfig.timing.firstBlood * 1000,
         })
       else if (event.type === NoticeType.SecondBlood)
         enqueue({
@@ -218,6 +219,7 @@ export const useLivePresentation = (
             .join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
+          challengeTitle: event.challengeTitle ?? undefined,
           sound: 'secondBlood',
           sceneKind: 'blood',
           duration: 3600,
@@ -232,6 +234,7 @@ export const useLivePresentation = (
             .join(' '),
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
+          challengeTitle: event.challengeTitle ?? undefined,
           sound: 'thirdBlood',
           sceneKind: 'blood',
           duration: 3600,

@@ -29,16 +29,43 @@ function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boo
     if (stars.current && !reducedMotion) stars.current.rotation.z = Math.sin(clock.elapsedTime * 0.025) * 0.025
   })
   return (
-    <points ref={stars}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.035} color="#b6cdd9" transparent opacity={0.6} sizeAttenuation />
-    </points>
+    <group>
+      <points ref={stars}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        </bufferGeometry>
+        <pointsMaterial size={0.035} color="#b6cdd9" transparent opacity={0.6} sizeAttenuation />
+      </points>
+      {Array.from({ length: calm ? 8 : 16 }, (_, i) => {
+        const angle = i * 2.39996323
+        const radius = 10 + (i % 4) * 2.5
+        return (
+          <mesh
+            key={i}
+            position={[Math.cos(angle) * radius, Math.sin(angle) * radius * 0.65, -8 - (i % 5) * 3]}
+            rotation={[angle * 0.2, angle, angle * 0.4]}
+            scale={[0.5 + (i % 3) * 0.4, 0.22 + (i % 4) * 0.15, 0.35]}
+          >
+            <icosahedronGeometry args={[1, 0]} />
+            <meshStandardMaterial color={i % 3 ? '#152a38' : '#294153'} roughness={1} metalness={0.1} />
+          </mesh>
+        )
+      })}
+    </group>
   )
 }
 
-function CameraDirector({ event, reducedMotion }: { event?: SceneEvent; reducedMotion: boolean }) {
+function CameraDirector({
+  event,
+  source,
+  targetAvailable,
+  reducedMotion,
+}: {
+  event?: SceneEvent
+  source: Vector3
+  targetAvailable: boolean
+  reducedMotion: boolean
+}) {
   const base = useRef(config.camera.z as number)
   const { camera, size } = useThree()
   useEffect(() => {
@@ -49,19 +76,20 @@ function CameraDirector({ event, reducedMotion }: { event?: SceneEvent; reducedM
       config.camera.worldWidth / (((2 * fov * size.width) / size.height) * config.camera.safeWidth)
     )
     base.current = distance
-    camera.position.set(0, 0.4, distance)
-    camera.lookAt(0, 0.3, 0)
+    camera.position.set(config.camera.x, config.camera.y, distance)
+    camera.lookAt(0, 0.2, 0)
     camera.updateProjectionMatrix()
   }, [camera, size])
   useFrame(({ clock }, dt) => {
     const age = eventAge(event)
-    const prestige = event?.kind === 'firstBlood' && age < 8
-    const accent = reducedMotion ? 0 : prestige ? Math.sin(Math.min(1, age / 8) * Math.PI) : 0
+    const prestige = event?.kind === 'firstBlood' && targetAvailable && age < config.timing.firstBlood
+    const accent = reducedMotion ? 0 : prestige ? Math.sin(Math.min(1, age / config.timing.firstBlood) * Math.PI) : 0
+    const focus = prestige ? (age < 1 ? age : Math.max(0, 1 - Math.max(0, age - 5.5) / 2.1)) : 0
     const ease = 1 - Math.exp(-Math.min(dt, 0.05) * 3)
     camera.position.x +=
-      ((reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.09) * 0.08) - accent * 0.35 - camera.position.x) * ease
-    camera.position.z += (base.current - accent * 0.55 - camera.position.z) * ease
-    camera.lookAt(0, 0.3, 0)
+      (config.camera.x + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.09) * 0.08) + source.x * focus * 0.22 - camera.position.x) * ease
+    camera.position.z += (base.current - accent * 1.7 - camera.position.z) * ease
+    camera.lookAt(source.x * focus * 0.2, 0.2 + source.y * focus * 0.12, 0)
   })
   return null
 }
@@ -133,12 +161,17 @@ export default function GalacticScene({
         <ErrorBoundary FallbackComponent={Fallback}>
           <Canvas
             dpr={[1, calm ? config.quality.calmDpr : config.quality.dpr]}
-            camera={{ position: [0, 0.4, config.camera.z], fov: config.camera.fov }}
+            camera={{ position: [config.camera.x, config.camera.y, config.camera.z], fov: config.camera.fov }}
             gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
             fallback={<Fallback />}
           >
             <ContextGuard onLost={() => setLost(true)} />
-            <CameraDirector event={event} reducedMotion={reducedMotion} />
+            <CameraDirector
+              event={event}
+              source={source}
+              targetAvailable={teams.some((team) => team.id === event?.teamId)}
+              reducedMotion={reducedMotion}
+            />
             <ambientLight intensity={0.9} />
             <directionalLight position={[3, 5, 7]} intensity={3} color="#cce2ef" />
             <directionalLight position={[-5, -2, 4]} intensity={1.8} color="#508c9a" />
@@ -155,16 +188,15 @@ export default function GalacticScene({
                 highlighted={highlighted}
               />
             )}
-            {!frozen &&
-              event &&
-              ['firstBlood', 'blood', 'wrong'].includes(event.kind) &&
-              !teams.some((team) => team.id === event.teamId) && (
-                <group position={[-3.8, -1.6, 2]} rotation={[0.18, 0, -1.2]}>
-                  <TeamShipVisual id={0} accent={config.colors.cyan} />
-                </group>
-              )}
             <SectorWheel phase={spinPhase} count={categoryCount} reducedMotion={reducedMotion} />
-            {!frozen && <EventVFX event={event} source={source} reducedMotion={reducedMotion || calm} />}
+            {!frozen && (
+              <EventVFX
+                event={event}
+                source={source}
+                reducedMotion={reducedMotion || calm}
+                targetAvailable={teams.some((team) => team.id === event?.teamId)}
+              />
+            )}
           </Canvas>
         </ErrorBoundary>
       )}

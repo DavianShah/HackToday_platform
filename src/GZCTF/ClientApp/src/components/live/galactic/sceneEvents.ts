@@ -1,5 +1,8 @@
 import type { LiveAnnouncement } from '../types'
 
+/** Seconds from the start of the authoritative First Blood announcement. */
+export const firstBloodTiming = { duration: 7.6, impact: 2.9, recognition: 3.2, return: 5.5 } as const
+
 export interface SceneEvent {
   key: string
   kind: LiveAnnouncement['kind']
@@ -9,6 +12,18 @@ export interface SceneEvent {
   duration: number
   started: number
   bloodTier?: 2 | 3
+}
+
+const smooth = (value: number) => {
+  const t = Math.max(0, Math.min(1, value))
+  return t * t * (3 - 2 * t)
+}
+
+/** Motion envelope in seconds, shared by the ship and camera choreography. */
+export function attackBlend(kind: SceneEvent['kind'], age: number) {
+  if (kind === 'firstBlood')
+    return smooth((age - 1) / 1.5) * (1 - smooth((age - firstBloodTiming.return) / 2.1))
+  return smooth((age - 0.12) / 0.75) * (1 - smooth((age - 2.2) / 0.9))
 }
 
 export function announcementScene(
@@ -25,7 +40,7 @@ export function announcementScene(
     bloodTier: event.kind === 'blood' ? (event.sound === 'thirdBlood' ? 3 : 2) : undefined,
     duration: Math.min(
       event.duration ?? 3200,
-      event.kind === 'firstBlood' ? 8000 : event.kind === 'blood' ? 3200 : 5400
+      event.kind === 'firstBlood' ? firstBloodTiming.duration * 1000 : event.kind === 'blood' ? 3200 : 5400
     ),
   }
 }

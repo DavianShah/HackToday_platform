@@ -9,7 +9,7 @@ import { LiveAnnouncement } from '@Components/live/types'
 import { useLivePresentation } from '@Hooks/useLivePresentation'
 import { GameMode, LiveScoreboardStateModel, SpeedrunRoundStatus } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
-import { uniqueTeams } from './galactic/teamSlots'
+import { resolveTeamId, uniqueTeams } from './galactic/teamSlots'
 import { useSceneDirector } from './galactic/useSceneDirector'
 
 const GalacticScene = lazy(() => import('./galactic/GalacticScene'))
@@ -38,9 +38,17 @@ export const LiveScoreboardStage: FC<{
     () => (state?.scoreboardFrozen ? [] : uniqueTeams(state?.topTeams ?? [])),
     [state?.scoreboardFrozen, state?.topTeams]
   )
+  const sceneAnnouncement = useMemo(() => {
+    const announcement = presentation.announcement
+    if (!announcement || !['firstBlood', 'blood', 'wrong'].includes(announcement.kind)) return announcement
+    return {
+      ...announcement,
+      teamId: resolveTeamId(safeTeams, announcement.teamId, announcement.teamName),
+    }
+  }, [presentation.announcement, safeTeams])
 
   const sceneEvent = useSceneDirector({
-    announcement: presentation.announcement,
+    announcement: sceneAnnouncement,
     deltas: presentation.scoreDeltas,
     changed: presentation.changedTeams,
     frozen: Boolean(state?.scoreboardFrozen),
@@ -127,7 +135,8 @@ export const LiveScoreboardStage: FC<{
           />
         </div>
       </div>
-      {sceneEvent && !frozen && (sceneEvent.teamId || sceneEvent.teamName) && (
+      {sceneEvent && !frozen && (sceneEvent.teamId || sceneEvent.teamName) &&
+        !['firstBlood', 'blood'].includes(presentation.visibleAnnouncement?.kind ?? '') && (
         <div className={classes.sceneCallout} role="status">
           <span>
             {sceneEvent.kind === 'wrong'

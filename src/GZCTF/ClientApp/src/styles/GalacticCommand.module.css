@@ -175,6 +175,9 @@
   color: var(--gc-cyan);
 }
 .categoryName {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   max-width: min(36vw, 520px);
   overflow: hidden;
   font-size: clamp(13px, 1.1vw, 19px);
@@ -569,6 +572,9 @@
   text-shadow: 0 3px 18px #030712;
 }
 .arenaTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   max-width: 100%;
   overflow: hidden;
   margin: 8px 0 0;
@@ -638,6 +644,11 @@
 .categoryPill img {
   width: 13px;
   height: 13px;
+}
+.categoryPill svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
 }
 .activePill,
 .selectedPill {
@@ -825,7 +836,22 @@
 
 /* Broadcast composition: a single world behind equal 20% wings. */
 .stage::after {
-  display: none;
+  display: block;
+  opacity: 0.26;
+  background-image:
+    radial-gradient(circle, #d8f2ff 0 1px, transparent 1.5px),
+    radial-gradient(circle, #70bfd5 0 0.8px, transparent 1.3px);
+  background-size: 173px 173px, 277px 277px;
+  background-position: 12px 39px, 89px 121px;
+  animation: starDrift 100s linear infinite;
+}
+.stage::before {
+  background:
+    radial-gradient(ellipse 24% 55% at 49% 46%, rgba(30, 115, 145, 0.17), transparent 100%),
+    radial-gradient(ellipse 15% 48% at 33% 72%, rgba(40, 94, 143, 0.17), transparent 100%),
+    radial-gradient(ellipse 21% 34% at 68% 25%, rgba(111, 69, 120, 0.12), transparent 100%),
+    radial-gradient(ellipse 70% 32% at 51% 112%, rgba(11, 54, 77, 0.5), transparent 100%),
+    linear-gradient(150deg, #02050c 0%, #071322 53%, #02050c 100%);
 }
 .shell {
   padding: 0;
@@ -833,19 +859,34 @@
   pointer-events: none;
 }
 .topHud {
-  padding: 0 26px;
-  grid-template-columns: 1fr 1fr 1fr;
-  background: rgba(3, 7, 18, 0.7);
+  padding: 0 clamp(16px, 1.4vw, 26px);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  background: linear-gradient(180deg, rgba(3, 7, 18, 0.86), rgba(3, 7, 18, 0.38));
 }
 .topHud .clockModule {
   grid-column: 2;
   grid-row: 1;
   justify-content: center;
 }
+.topHud .clockCopy {
+  align-items: center;
+  text-align: center;
+}
 .topHud .statusCluster {
   grid-column: 3;
   grid-row: 1;
   justify-content: flex-end;
+}
+.topHud .statusCopy {
+  align-items: flex-end;
+  text-align: right;
+}
+.brandLogo {
+  display: block;
+  width: clamp(38px, 3.3vw, 58px);
+  height: clamp(38px, 3.3vw, 58px);
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 .brandText strong {
   text-transform: none;
@@ -854,21 +895,43 @@
 }
 .audioButton {
   pointer-events: auto;
+  position: fixed;
+  z-index: 6;
+  right: 12px;
+  bottom: 12px;
+  clip-path: none;
+  border-radius: 3px;
+  background: rgba(4, 12, 24, 0.88);
 }
 .content {
-  grid-template-rows: minmax(0, 1fr) clamp(68px, 7vh, 80px);
+  position: relative;
+  display: block;
 }
 .mainGrid {
   grid-template-columns: 20% 60% 20%;
   gap: 0;
-  padding: 14px 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
 }
 .panel {
-  margin: 0 14px;
-  background: rgba(7, 17, 28, 0.76);
+  margin: 0;
+  background: linear-gradient(180deg, rgba(7, 19, 33, 0.73), rgba(5, 13, 26, 0.6));
+  border: 0;
   clip-path: none;
-  box-shadow: inset 0 1px rgba(190, 225, 235, 0.1);
+  box-shadow: none;
+  backdrop-filter: blur(7px);
   pointer-events: auto;
+}
+.eventPanel {
+  border-right: 1px solid var(--gc-line);
+}
+.scoreboardPanel {
+  border-left: 1px solid var(--gc-line);
+  padding-bottom: 36px;
+}
+.panel::after {
+  display: none;
 }
 .panelHead {
   min-height: 76px;
@@ -891,11 +954,11 @@
 .eventRows {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 .eventRow {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: 72px;
   display: block;
   padding: 12px 16px;
 }
@@ -912,12 +975,12 @@
   line-height: 1.4;
 }
 .scoreRows {
-  overflow: hidden;
+  overflow: auto;
 }
 .scoreRow {
-  min-height: 0;
-  flex: 1;
-  grid-template-columns: 25px minmax(0, 1fr) auto;
+  min-height: 52px;
+  flex: 1 0 auto;
+  grid-template-columns: 25px minmax(0, 1fr) minmax(42px, auto) 27px;
   padding: 9px 12px;
   gap: 7px;
 }
@@ -932,7 +995,7 @@
   font-size: clamp(14px, 1vw, 20px);
 }
 .solveValue {
-  display: none;
+  display: block;
 }
 .scoreRow > strong {
   font-size: 14px;
@@ -956,7 +1019,7 @@
   display: none;
 }
 .arenaReadout {
-  bottom: 2%;
+  bottom: calc(clamp(68px, 7vh, 80px) + 2vh);
 }
 .arenaTitle {
   font-size: clamp(26px, 2.6vw, 50px);
@@ -966,8 +1029,14 @@
   font-size: 12px;
 }
 .categoryPool {
-  padding: 0 26px;
-  background: rgba(3, 7, 18, 0.8);
+  position: absolute;
+  z-index: 3;
+  left: 20%;
+  right: 20%;
+  bottom: 0;
+  min-height: clamp(68px, 7vh, 80px);
+  padding: 0 clamp(12px, 1.4vw, 26px);
+  background: linear-gradient(180deg, rgba(3, 7, 18, 0.14), rgba(3, 7, 18, 0.8));
   grid-template-columns: 1fr 1.5fr 1fr;
 }
 .categoryPill,
@@ -980,31 +1049,97 @@
 .categoryPill img {
   display: none;
 }
+.sectorScanLabels span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
 .announcement {
   position: absolute;
-  inset: 24% 21% 20%;
+  inset: 28% 21% 23%;
   padding: 18px;
   background: none;
   backdrop-filter: none;
 }
+.announcement_firstBlood,
+.announcement_blood {
+  top: 11%;
+  bottom: auto;
+  height: 27%;
+}
 .announcementFrame {
   width: 100%;
-  height: 75%;
-  background: linear-gradient(90deg, transparent, rgba(3, 7, 18, 0.94) 25% 75%, transparent);
+  height: 65%;
+  border: 0;
+  background: none;
+  box-shadow: none;
 }
 .announcementFrame::before,
 .announcementFrame::after {
-  display: none;
+  display: block;
+  top: 20%;
+  left: 18%;
+  right: auto;
+  width: 64%;
+  height: 1px;
+  rotate: none;
+  background: linear-gradient(90deg, transparent, var(--gc-cyan), transparent);
+}
+.announcementFrame::after {
+  top: 85%;
+  left: 28%;
+  width: 44%;
+}
+.announcement_firstBlood .announcementFrame::before,
+.announcement_firstBlood .announcementFrame::after {
+  background: linear-gradient(90deg, transparent, var(--gc-amber), transparent);
+}
+.announcement_firstBlood .announcementFrame {
+  border: 0;
+  box-shadow: none;
 }
 .announcementCopy {
   max-width: 100%;
+  padding: 10px 28px;
+  background: radial-gradient(ellipse at center, rgba(2, 7, 17, 0.72), transparent 72%);
 }
 .announcementCopy strong {
   font-size: clamp(32px, 5vw, 92px);
+  text-shadow: 0 5px 22px #02050c, 0 0 36px rgba(255, 209, 102, 0.45);
 }
 .announcementCopy span {
   font-size: clamp(14px, 1.2vw, 24px);
   overflow-wrap: anywhere;
+}
+.announcement_firstBlood .announcementCopy strong {
+  font-size: clamp(42px, 4.4vw, 82px);
+  letter-spacing: -0.075em;
+}
+.announcement_blood .announcementCopy strong {
+  font-size: clamp(32px, 3.5vw, 58px);
+  color: #d8e2f2;
+}
+.announcement_thirdBlood .announcementCopy strong {
+  color: #d2a9a0;
+}
+.announcementCopy .bloodTeam {
+  max-width: 100%;
+  margin-top: 10px;
+  color: #fff;
+  font-size: clamp(18px, 1.65vw, 28px);
+  font-weight: 800;
+  text-shadow: 0 3px 18px #000;
+}
+.announcementCopy .bloodChallenge {
+  max-width: 90%;
+  margin-top: 6px;
+  color: #d7e2ed;
+  font-size: clamp(12px, 1vw, 18px);
+  text-shadow: 0 3px 16px #000;
+}
+.announcement_firstBlood .announcementCopy,
+.announcement_firstBlood .announcementFrame {
+  animation: announcementIn 0.45s var(--gc-ease) both;
 }
 .world {
   position: absolute;
@@ -1056,7 +1191,7 @@
     -webkit-line-clamp: 2;
   }
   .panel {
-    margin-inline: 10px;
+    margin-inline: 0;
   }
   .scoreRow {
     padding-inline: 8px;
@@ -1124,6 +1259,32 @@
   text-transform: uppercase;
   letter-spacing: 0.13em;
   animation: sectorDecelerate 6.5s cubic-bezier(0.1, 0.8, 0.25, 1) both;
+}
+.shipLabel {
+  pointer-events: none;
+  z-index: 2;
+}
+.shipLabel span {
+  display: block;
+  max-width: 128px;
+  overflow: hidden;
+  padding: 2px 6px;
+  color: #d6f3f7;
+  background: rgba(3, 10, 21, 0.63);
+  border-bottom: 1px solid rgba(97, 231, 255, 0.5);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 5px #000;
+  white-space: nowrap;
+}
+.shipLabel .shipLabelActive {
+  max-width: 180px;
+  color: #fff2c8;
+  border-color: var(--gc-amber);
+  box-shadow: 0 3px 18px rgba(255, 209, 102, 0.3);
 }
 @keyframes sectorDecelerate {
   from {
