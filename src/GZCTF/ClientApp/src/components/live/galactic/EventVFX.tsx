@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
-import { Group, Mesh, Vector3 } from 'three'
+import { Group, Mesh, PointLight, Vector3 } from 'three'
 import { sceneConfig as config } from './sceneConfig'
 import { SceneEvent } from './sceneEvents'
 
@@ -25,6 +25,7 @@ export function EventVFX({
   const wave = useRef<Mesh>(null)
   const charge = useRef<Mesh>(null)
   const sparks = useRef<Group>(null)
+  const flash = useRef<PointLight>(null)
   const axis = useMemo(() => new Vector3(0, 1, 0), [])
   const direction = useMemo(() => new Vector3(), [])
   const color =
@@ -59,6 +60,7 @@ export function EventVFX({
     if (wave.current) {
       const pulse = attack ? impact : age - 0.2
       wave.current.visible = Boolean(event) && pulse > 0 && pulse < 1.5
+      wave.current.position.set(event?.kind === 'wrong' ? source.x : 0, event?.kind === 'wrong' ? source.y : 0, 1.8)
       wave.current.scale.setScalar(reducedMotion ? 1.7 : 0.5 + pulse * (event?.kind === 'firstBlood' ? 4.4 : 2.4))
       wave.current.rotation.z = event?.kind === 'hint' ? age * 0.7 : 0
       wave.current.rotation.x = event?.kind === 'start' ? 1.15 : 0
@@ -70,9 +72,15 @@ export function EventVFX({
       sparks.current.scale.setScalar(1 + Math.max(0, impact) * 3)
       sparks.current.rotation.z = impact * 0.12
     }
+    if (flash.current)
+      flash.current.intensity =
+        attack && event?.kind !== 'wrong' && impact > 0 && impact < 0.8
+          ? Math.sin((impact / 0.8) * Math.PI) * (event?.kind === 'firstBlood' ? 24 : 8)
+          : 0
   })
   return (
     <group>
+      <pointLight ref={flash} position={[0, 0, 2.2]} color={color} distance={9} intensity={0} />
       <mesh ref={beam} visible={false}>
         <cylinderGeometry args={[1, 1, 1, 6]} />
         <meshBasicMaterial color={color} transparent opacity={0.85} depthWrite={false} />

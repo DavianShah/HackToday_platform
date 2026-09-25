@@ -6,7 +6,7 @@ import { LiveScoreboardTeamModel } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
 import { attackKind, eventAge } from './EventVFX'
 import { sceneConfig as config } from './sceneConfig'
-import { SceneEvent } from './sceneEvents'
+import { attackBlend, SceneEvent } from './sceneEvents'
 import { orbitPose, reconcileSlots, TeamSlot, teamAccent } from './teamSlots'
 
 export interface TeamShipVisualProps {
@@ -87,10 +87,9 @@ function Ship({
           : Math.max(0, 1 - (now - slot.leaving) / (config.orbit.transition * 1000))
     const active = attackKind(event) && event?.teamId === slot.id
     const age = eventAge(event)
-    const attack =
-      active && event ? Math.min(1, age / 0.9) * Math.min(1, Math.max(0, (event.duration / 1000 - age) / 1.1)) : 0
-    const mix = reducedMotion ? 0 : attack
-    root.current.position.set(pose.x * (1 - mix) - 3.8 * mix, pose.y * (1 - mix) - 1.6 * mix, pose.z + mix * 1.2)
+    const attack = active && event ? attackBlend(event.kind, age) : 0
+    const mix = reducedMotion ? 0 : event?.kind === 'wrong' ? attack * 0.55 : attack
+    root.current.position.set(pose.x * (1 - mix) - 2.4 * mix, pose.y * (1 - mix) - 1.1 * mix, pose.z + mix * 1.5)
     if (active) source.copy(root.current.position)
     root.current.rotation.set(0.18, Math.sin(pose.angle) * 0.25, pose.angle + Math.PI / 2)
     if (active && !reducedMotion) root.current.rotation.z = -1.2

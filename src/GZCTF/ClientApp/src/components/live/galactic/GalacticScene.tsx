@@ -55,7 +55,17 @@ function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boo
   )
 }
 
-function CameraDirector({ event, reducedMotion }: { event?: SceneEvent; reducedMotion: boolean }) {
+function CameraDirector({
+  event,
+  source,
+  targetAvailable,
+  reducedMotion,
+}: {
+  event?: SceneEvent
+  source: Vector3
+  targetAvailable: boolean
+  reducedMotion: boolean
+}) {
   const base = useRef(config.camera.z as number)
   const { camera, size } = useThree()
   useEffect(() => {
@@ -72,13 +82,14 @@ function CameraDirector({ event, reducedMotion }: { event?: SceneEvent; reducedM
   }, [camera, size])
   useFrame(({ clock }, dt) => {
     const age = eventAge(event)
-    const prestige = event?.kind === 'firstBlood' && age < 8
-    const accent = reducedMotion ? 0 : prestige ? Math.sin(Math.min(1, age / 8) * Math.PI) : 0
+    const prestige = event?.kind === 'firstBlood' && targetAvailable && age < config.timing.firstBlood
+    const accent = reducedMotion ? 0 : prestige ? Math.sin(Math.min(1, age / config.timing.firstBlood) * Math.PI) : 0
+    const focus = prestige ? (age < 1 ? age : Math.max(0, 1 - Math.max(0, age - 5.5) / 2.1)) : 0
     const ease = 1 - Math.exp(-Math.min(dt, 0.05) * 3)
     camera.position.x +=
-      (config.camera.x + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.09) * 0.08) - accent * 0.35 - camera.position.x) * ease
-    camera.position.z += (base.current - accent * 0.55 - camera.position.z) * ease
-    camera.lookAt(0, 0.2, 0)
+      (config.camera.x + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.09) * 0.08) + source.x * focus * 0.22 - camera.position.x) * ease
+    camera.position.z += (base.current - accent * 1.7 - camera.position.z) * ease
+    camera.lookAt(source.x * focus * 0.2, 0.2 + source.y * focus * 0.12, 0)
   })
   return null
 }
@@ -155,7 +166,12 @@ export default function GalacticScene({
             fallback={<Fallback />}
           >
             <ContextGuard onLost={() => setLost(true)} />
-            <CameraDirector event={event} reducedMotion={reducedMotion} />
+            <CameraDirector
+              event={event}
+              source={source}
+              targetAvailable={teams.some((team) => team.id === event?.teamId)}
+              reducedMotion={reducedMotion}
+            />
             <ambientLight intensity={0.9} />
             <directionalLight position={[3, 5, 7]} intensity={3} color="#cce2ef" />
             <directionalLight position={[-5, -2, 4]} intensity={1.8} color="#508c9a" />

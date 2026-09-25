@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { stageSoundPack } from '@Components/live/stageSoundPack'
+import { sceneConfig } from '@Components/live/galactic/sceneConfig'
 import { StageSoundName } from '@Components/live/types'
 import { LiveScoreboardConfigModel } from '@Api'
 
@@ -82,9 +83,12 @@ export const useStageSound = (config?: LiveScoreboardConfigModel, muted = false)
   mutedRef.current = muted
   const voices = useRef(new Set<OscillatorNode>())
   const playing = useRef(new Set<HTMLAudioElement>())
+  const pending = useRef(new Set<number>())
   const generation = useRef(0)
   const stop = useCallback(() => {
     generation.current++
+    pending.current.forEach(window.clearTimeout)
+    pending.current.clear()
     playing.current.forEach((audio) => {
       audio.pause()
       audio.removeAttribute('src')
@@ -150,44 +154,45 @@ export const useStageSound = (config?: LiveScoreboardConfigModel, muted = false)
 
       if (name === 'firstBlood') {
         const now = ctx.currentTime
+        const impactAt = sceneConfig.timing.impact
         const master = ctx.createGain()
         const compressor = ctx.createDynamicsCompressor()
         master.gain.setValueAtTime(volume * 0.48, now)
-        master.gain.exponentialRampToValueAtTime(0.001, now + 8)
+        master.gain.exponentialRampToValueAtTime(0.001, now + sceneConfig.timing.firstBlood)
         master.connect(compressor).connect(ctx.destination)
 
         const impact = oscillator(ctx)
         const impactGain = ctx.createGain()
         impact.type = 'sine'
-        impact.frequency.setValueAtTime(82, now + 4.65)
-        impact.frequency.exponentialRampToValueAtTime(38, now + 5.35)
-        impactGain.gain.setValueAtTime(0.001, now + 4.6)
-        impactGain.gain.exponentialRampToValueAtTime(0.9, now + 4.68)
-        impactGain.gain.exponentialRampToValueAtTime(0.001, now + 5.55)
+        impact.frequency.setValueAtTime(82, now + impactAt)
+        impact.frequency.exponentialRampToValueAtTime(38, now + impactAt + 0.7)
+        impactGain.gain.setValueAtTime(0.001, now + impactAt - 0.05)
+        impactGain.gain.exponentialRampToValueAtTime(0.9, now + impactAt + 0.03)
+        impactGain.gain.exponentialRampToValueAtTime(0.001, now + impactAt + 0.9)
         impact.connect(impactGain).connect(master)
-        impact.start(now + 4.6)
-        impact.stop(now + 5.6)
+        impact.start(now + impactAt - 0.05)
+        impact.stop(now + impactAt + 0.95)
 
         const swell = oscillator(ctx)
         const swellFilter = ctx.createBiquadFilter()
         const swellGain = ctx.createGain()
         swell.type = 'sawtooth'
         swell.frequency.setValueAtTime(110, now + 0.08)
-        swell.frequency.exponentialRampToValueAtTime(245, now + 4.5)
+        swell.frequency.exponentialRampToValueAtTime(245, now + impactAt - 0.15)
         swellFilter.type = 'lowpass'
         swellFilter.frequency.setValueAtTime(240, now)
-        swellFilter.frequency.exponentialRampToValueAtTime(1100, now + 4.45)
+        swellFilter.frequency.exponentialRampToValueAtTime(1100, now + impactAt - 0.2)
         swellGain.gain.setValueAtTime(0.001, now)
         swellGain.gain.exponentialRampToValueAtTime(0.24, now + 0.45)
-        swellGain.gain.exponentialRampToValueAtTime(0.001, now + 4.75)
+        swellGain.gain.exponentialRampToValueAtTime(0.001, now + impactAt + 0.1)
         swell.connect(swellFilter).connect(swellGain).connect(master)
         swell.start(now + 0.06)
-        swell.stop(now + 4.8)
+        swell.stop(now + impactAt + 0.15)
 
         for (const [index, frequency] of [392, 587, 784, 1175].entries()) {
           const voice = oscillator(ctx)
           const gain = ctx.createGain()
-          const at = now + 4.85 + index * 0.17
+          const at = now + sceneConfig.timing.recognition + index * 0.17
           voice.type = index < 2 ? 'triangle' : 'sine'
           voice.frequency.setValueAtTime(frequency, at)
           gain.gain.setValueAtTime(0.001, at)
@@ -242,15 +247,25 @@ export const useStageSound = (config?: LiveScoreboardConfigModel, muted = false)
         return
       }
       const url = override || stageSoundPack[name]
-      const audio = new Audio(url)
-      audio.volume = Math.max(0, Math.min(1, currentConfig.volume ?? 0.75))
       const epoch = generation.current
-      playing.current.add(audio)
-      audio.onended = () => playing.current.delete(audio)
-      void audio.play().catch(() => {
-        playing.current.delete(audio)
-        if (epoch === generation.current && !mutedRef.current && configRef.current?.soundEnabled) fallback(name)
-      })
+      const start = () => {
+        if (epoch !== generation.current || mutedRef.current || !configRef.current?.soundEnabled) return
+        const audio = new Audio(url)
+        audio.volume = Math.max(0, Math.min(1, currentConfig.volume ?? 0.75))
+        playing.current.add(audio)
+        audio.onended = () => playing.current.delete(audio)
+        void audio.play().catch(() => {
+          playing.current.delete(audio)
+          if (epoch === generation.current && !mutedRef.current && configRef.current?.soundEnabled) fallback(name)
+        })
+      }
+      if (name === 'firstBlood' && override) {
+        const timer = window.setTimeout(() => {
+          pending.current.delete(timer)
+          start()
+        }, sceneConfig.timing.impact * 1000)
+        pending.current.add(timer)
+      } else start()
     },
     [enabled, fallback]
   )

@@ -19,11 +19,17 @@ const eyebrow: Partial<Record<LiveAnnouncement['kind'], string>> = {
 }
 
 export const LiveAnnouncementOverlay: FC<{ event?: LiveAnnouncement }> = ({ event }) => event ? <div
-  className={`${classes.announcement} ${announcementClasses[event.kind] ?? ''}`} role="status" aria-live="assertive">
+  className={`${classes.announcement} ${announcementClasses[event.kind] ?? ''} ${event.sound === 'thirdBlood' ? classes.announcement_thirdBlood : ''}`} role="status" aria-live="assertive">
   <div className={classes.announcementFrame} aria-hidden />
   <div className={classes.announcementCopy}>
     {eyebrow[event.kind] && <small>{eyebrow[event.kind]}</small>}
     <strong>{event.title}</strong>
-    {event.text && <span>{event.text}</span>}
+    {event.kind === 'firstBlood' || event.kind === 'blood' ? (
+      <>
+        {event.teamName && <span className={classes.bloodTeam}>{event.teamName}</span>}
+        {event.challengeTitle && <span className={classes.bloodChallenge}>{event.challengeTitle}</span>}
+        {!event.teamName && !event.challengeTitle && event.text && <span>{event.text}</span>}
+      </>
+    ) : event.text && <span>{event.text}</span>}
   </div>
 </div> : null

@@ -14,6 +14,7 @@ export interface LiveAnnouncement {
   title: string
   text?: string
   teamName?: string
+  challengeTitle?: string
   teamId?: number
   sound: StageSoundName
   duration?: number
