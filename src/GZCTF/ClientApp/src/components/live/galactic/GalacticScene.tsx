@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ComponentType, useEffect, useMemo, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { Points, Vector3 } from 'three'
+import { Group, Points, Vector3 } from 'three'
 import { LiveScoreboardTeamModel, LiveScoreboardVisualIntensity } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
 import { LiveSpinPhase } from '../types'
@@ -14,6 +14,7 @@ import { SceneEvent } from './sceneEvents'
 
 function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boolean }) {
   const stars = useRef<Points>(null)
+  const haze = useRef<Group>(null)
   const positions = useMemo(() => {
     const array = new Float32Array((calm ? config.quality.calmStars : config.quality.stars) * 3)
     let seed = 76
@@ -27,9 +28,23 @@ function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boo
   }, [calm])
   useFrame(({ clock }) => {
     if (stars.current && !reducedMotion) stars.current.rotation.z = Math.sin(clock.elapsedTime * 0.025) * 0.025
+    if (haze.current && !reducedMotion) haze.current.position.x = Math.sin(clock.elapsedTime * 0.022) * 0.42
   })
   return (
     <group>
+      <group ref={haze}>
+        {[
+          [-23, 8, -31, 17, '#17344b', 0.14],
+          [20, -9, -26, 13, '#42405d', 0.1],
+          [-12, -17, -19, 10, '#22505c', 0.08],
+          [29, 13, -35, 20, '#284554', 0.11],
+        ].map(([x, y, z, radius, color, opacity], i) => (
+          <mesh key={i} position={[x as number, y as number, z as number]} scale={[1.8, 0.75, 0.3]}>
+            <sphereGeometry args={[radius as number, 20, 12]} />
+            <meshBasicMaterial color={color as string} transparent opacity={opacity as number} depthWrite={false} />
+          </mesh>
+        ))}
+      </group>
       <points ref={stars}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[positions, 3]} />
