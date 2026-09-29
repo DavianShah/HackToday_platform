@@ -1372,6 +1372,7 @@
   pointer-events: none;
   z-index: 2;
 }
+.stageFrozen .shipLabel { display: none; }
 .shipLabel span {
   display: block;
   max-width: 128px;

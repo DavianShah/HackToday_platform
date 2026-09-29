@@ -12,9 +12,10 @@ const waitFor = async (expression, timeout = 8000) => {
   throw new Error(`Timed out: ${expression}`)
 }
 try {
-  await call('Page.navigate', { url: 'http://127.0.0.1:63000/tests/galactic-preview.html' })
+  const run = Date.now()
+  await call('Page.navigate', { url: `http://127.0.0.1:${process.env.GALACTIC_TEST_PORT ?? 63000}/tests/galactic-preview.html?run=${run}` })
   for (let i = 0; i < 40; i++) {
-    if (await evaluate('!!window.galactic')) break
+    if (await evaluate(`location.search.includes('run=${run}') && !!window.galactic`)) break
     await pause(200)
   }
   c.errors.length = 0
@@ -37,7 +38,7 @@ try {
   assert.equal(await evaluate('window.audioAudit.starts'), 6, 're-enabling sound must not replay the active event')
   const stops = await evaluate('window.audioAudit.stops')
   await action('toggleFreeze')
-  await pause(200)
+  await waitFor('document.body.innerText.toLowerCase().includes("standings sealed")', 5000)
   assert.ok((await evaluate('window.audioAudit.stops')) > stops, 'freeze must stop scheduled synth voices')
   await action('toggleFreeze')
   await pause(200)
