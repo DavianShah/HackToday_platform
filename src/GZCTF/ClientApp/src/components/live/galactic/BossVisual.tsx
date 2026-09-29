@@ -28,11 +28,12 @@ export function BossVisual({ reducedMotion, overtime, event }: BossVisualProps) 
   const root = useRef<Group>(null)
   useFrame(({ clock }) => {
     if (!root.current) return
-    root.current.rotation.y = reducedMotion ? 0.12 : 0.12 + Math.sin(clock.elapsedTime * 0.16) * 0.1
+    root.current.rotation.y = reducedMotion ? -0.22 : -0.22 + Math.sin(clock.elapsedTime * 0.16) * 0.06
     const hitAge = event ? eventAge(event) - impactTime(event) : 100
     const hit =
       attackKind(event) && event?.kind !== 'wrong' && hitAge > 0 && hitAge < 1 ? Math.sin(hitAge * Math.PI) : 0
     root.current.rotation.z = -0.08 + (reducedMotion ? 0 : hit * 0.07)
+    root.current.position.z = -hit * 0.16
     if (reactor.current)
       reactor.current.emissiveIntensity =
         1.4 +
@@ -44,14 +45,30 @@ export function BossVisual({ reducedMotion, overtime, event }: BossVisualProps) 
   })
   const glow = overtime ? config.colors.danger : config.colors.amber
   return (
-    <group ref={root} rotation={[0.16, 0.12, -0.08]}>
+    <group ref={root} rotation={[0.16, -0.22, -0.08]}>
+      <mesh position={[0.25, 0.18, -1.25]} rotation={[0, -0.13, 0]} scale={[4.7, 2.15, 1.05]}>
+        <boxGeometry />
+        <meshStandardMaterial color="#111d2a" metalness={0.55} roughness={0.7} />
+      </mesh>
+      <mesh position={[-1.15, 0.18, -1.94]} rotation={[0, 0.2, -0.13]} scale={[3.1, 1.22, 0.7]}>
+        <boxGeometry />
+        <meshStandardMaterial color="#293a49" metalness={0.65} roughness={0.51} />
+      </mesh>
+      <mesh position={[1.95, 1.25, -1.4]} rotation={[0.1, -0.34, 0.2]} scale={[1.7, 0.36, 1.45]}>
+        <boxGeometry />
+        <meshStandardMaterial color="#536579" metalness={0.66} roughness={0.44} />
+      </mesh>
+      <mesh position={[-2.45, -1.05, -1.25]} rotation={[0, 0.18, 0.3]} scale={[1.05, 0.65, 1.6]}>
+        <boxGeometry />
+        <meshStandardMaterial color="#344654" metalness={0.58} roughness={0.53} />
+      </mesh>
       <mesh scale={[1.1, 1.45, 0.7]}>
         <octahedronGeometry args={[1.2, 0]} />
         <meshStandardMaterial color={config.colors.hull} metalness={0.7} roughness={0.36} />
       </mesh>
       {[-1, 1].map((side) => (
         <group key={side} position={[side * 1.6, 0, 0]} rotation={[0, 0, side * -0.18]}>
-          <mesh scale={[1.05, 2.8, 0.85]}>
+          <mesh scale={[1.05, 2.8, 1.55]}>
             <boxGeometry />
             <meshStandardMaterial color={config.colors.hull} metalness={0.65} roughness={0.4} />
           </mesh>

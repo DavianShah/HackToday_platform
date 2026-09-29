@@ -103,6 +103,8 @@ function CameraDirector({
     const ease = 1 - Math.exp(-Math.min(dt, 0.05) * 3)
     camera.position.x +=
       (config.camera.x + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.09) * 0.08) + source.x * focus * 0.22 - camera.position.x) * ease
+    camera.position.y +=
+      (config.camera.y + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.07) * 0.09) + source.y * focus * 0.14 - camera.position.y) * ease
     camera.position.z += (base.current - accent * 1.7 - camera.position.z) * ease
     camera.lookAt(source.x * focus * 0.2, 0.2 + source.y * focus * 0.12, 0)
   })
@@ -187,10 +189,11 @@ export default function GalacticScene({
               targetAvailable={teams.some((team) => team.id === event?.teamId)}
               reducedMotion={reducedMotion}
             />
-            <ambientLight intensity={0.9} />
-            <directionalLight position={[3, 5, 7]} intensity={3} color="#cce2ef" />
-            <directionalLight position={[-5, -2, 4]} intensity={1.8} color="#508c9a" />
-            <pointLight position={[0, 0, 3]} intensity={10} color={config.colors.amber} distance={9} />
+            <ambientLight intensity={0.58} />
+            <directionalLight position={[8, 8, 5]} intensity={2.45} color="#c4d3dc" />
+            <directionalLight position={[-7, -3, -5]} intensity={2.05} color="#547d93" />
+            <directionalLight position={[-2, 4, -8]} intensity={1.1} color="#a5b3c9" />
+            <pointLight position={[0, 0, 3]} intensity={7} color={config.colors.amber} distance={10} />
             <Atmosphere reducedMotion={reducedMotion} calm={calm} />
             <Boss reducedMotion={reducedMotion} overtime={overtime} event={event} />
             {!frozen && (
