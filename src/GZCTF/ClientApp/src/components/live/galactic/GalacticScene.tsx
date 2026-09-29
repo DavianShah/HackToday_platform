@@ -156,6 +156,7 @@ export default function GalacticScene({
   Ship?: ComponentType<TeamShipVisualProps>
 }) {
   const calm = intensity === LiveScoreboardVisualIntensity.Calm
+  const targetAvailable = teams.some((team) => team.id === event?.teamId)
   const source = useMemo(() => new Vector3(-3.8, -1.6, 2), [])
   useEffect(() => {
     source.set(-3.8, -1.6, 2)
@@ -186,7 +187,7 @@ export default function GalacticScene({
             <CameraDirector
               event={event}
               source={source}
-              targetAvailable={teams.some((team) => team.id === event?.teamId)}
+              targetAvailable={targetAvailable}
               reducedMotion={reducedMotion}
             />
             <ambientLight intensity={0.58} />
@@ -195,7 +196,7 @@ export default function GalacticScene({
             <directionalLight position={[-2, 4, -8]} intensity={1.1} color="#a5b3c9" />
             <pointLight position={[0, 0, 3]} intensity={7} color={config.colors.amber} distance={10} />
             <Atmosphere reducedMotion={reducedMotion} calm={calm} />
-            <Boss reducedMotion={reducedMotion} overtime={overtime} event={event} />
+            <Boss reducedMotion={reducedMotion} overtime={overtime} event={event} targetAvailable={targetAvailable} />
             {!frozen && (
               <TeamFleet
                 teams={teams}
@@ -212,7 +213,7 @@ export default function GalacticScene({
                 event={event}
                 source={source}
                 reducedMotion={reducedMotion || calm}
-                targetAvailable={teams.some((team) => team.id === event?.teamId)}
+                targetAvailable={targetAvailable}
               />
             )}
           </Canvas>

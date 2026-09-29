@@ -44,11 +44,12 @@ export function EventVFX({
     const attack = Boolean(attackKind(event) && targetAvailable)
     const impact = age - hit
     if (beam.current) {
-      beam.current.visible = attack && !reducedMotion && impact >= 0 && impact < 0.55
+      const travel = Math.max(0, Math.min(1, (impact + 0.28) / 0.28))
+      beam.current.visible = attack && !reducedMotion && impact >= -0.28 && impact < 0.38
       direction.copy(source).multiplyScalar(-1)
       if (event?.kind === 'wrong') direction.set(-source.x * 0.4, 2.5 - source.y, -source.z)
-      beam.current.position.copy(source).addScaledVector(direction, 0.5)
-      beam.current.scale.set(event?.kind === 'firstBlood' ? 0.12 : 0.045, direction.length(), 0.07)
+      beam.current.position.copy(source).addScaledVector(direction, travel * 0.5)
+      beam.current.scale.set(event?.kind === 'firstBlood' ? 0.085 : 0.04, Math.max(0.01, direction.length() * travel), 0.06)
       beam.current.quaternion.setFromUnitVectors(axis, direction.normalize())
     }
     if (charge.current) {
@@ -75,7 +76,7 @@ export function EventVFX({
     if (flash.current)
       flash.current.intensity =
         attack && event?.kind !== 'wrong' && impact > 0 && impact < 0.8
-          ? Math.sin((impact / 0.8) * Math.PI) * (event?.kind === 'firstBlood' ? 24 : 8)
+          ? Math.sin((impact / 0.8) * Math.PI) * (event?.kind === 'firstBlood' ? 13 : 6)
           : 0
   })
   return (

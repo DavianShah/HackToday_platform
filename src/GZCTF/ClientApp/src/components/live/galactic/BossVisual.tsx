@@ -9,10 +9,11 @@ export interface BossVisualProps {
   reducedMotion: boolean
   overtime?: boolean
   event?: SceneEvent
+  targetAvailable?: boolean
 }
 
 /** Split-citadel silhouette: two armored bastions around a suspended axial reactor. */
-export function BossVisual({ reducedMotion, overtime, event }: BossVisualProps) {
+export function BossVisual({ reducedMotion, overtime, event, targetAvailable = false }: BossVisualProps) {
   const plate = useMemo(() => {
     const shape = new Shape()
     shape.moveTo(-0.5, -0.4)
@@ -31,7 +32,7 @@ export function BossVisual({ reducedMotion, overtime, event }: BossVisualProps) 
     root.current.rotation.y = reducedMotion ? -0.22 : -0.22 + Math.sin(clock.elapsedTime * 0.16) * 0.06
     const hitAge = event ? eventAge(event) - impactTime(event) : 100
     const hit =
-      attackKind(event) && event?.kind !== 'wrong' && hitAge > 0 && hitAge < 1 ? Math.sin(hitAge * Math.PI) : 0
+      targetAvailable && attackKind(event) && event?.kind !== 'wrong' && hitAge > 0 && hitAge < 1 ? Math.sin(hitAge * Math.PI) : 0
     root.current.rotation.z = -0.08 + (reducedMotion ? 0 : hit * 0.07)
     root.current.position.z = -hit * 0.16
     if (reactor.current)

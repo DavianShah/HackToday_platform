@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useLayoutEffect, useRef } from 'react'
 import { LiveAnnouncement } from '@Components/live/types'
 import classes from '@Styles/GalacticCommand.module.css'
 
@@ -18,12 +18,27 @@ const eyebrow: Partial<Record<LiveAnnouncement['kind'], string>> = {
   reminder: 'Time remaining', countdown: 'Final countdown',
 }
 
-export const LiveAnnouncementOverlay: FC<{ event?: LiveAnnouncement }> = ({ event }) => event ? <div
+export const LiveAnnouncementOverlay: FC<{ event?: LiveAnnouncement }> = ({ event }) => {
+  const titleRef = useRef<HTMLElement>(null)
+  useLayoutEffect(() => {
+    if (event?.kind !== 'firstBlood' || !titleRef.current) return
+    const title = titleRef.current
+    const measure = () => {
+      const naturalWidth = title.offsetWidth
+      if (naturalWidth) title.style.setProperty('--blood-fit', String(window.innerWidth * 0.9 / naturalWidth))
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(document.documentElement)
+    void document.fonts.ready.then(measure)
+    measure()
+    return () => observer.disconnect()
+  }, [event?.kind, event?.key, event?.title])
+  return event ? <div key={event.key}
   className={`${classes.announcement} ${announcementClasses[event.kind] ?? ''} ${event.sound === 'thirdBlood' ? classes.announcement_thirdBlood : ''}`} role="status" aria-live="assertive">
   <div className={classes.announcementFrame} aria-hidden />
   <div className={classes.announcementCopy}>
     {eyebrow[event.kind] && <small>{eyebrow[event.kind]}</small>}
-    <strong>{event.title}</strong>
+    <strong ref={event.kind === 'firstBlood' ? titleRef : undefined} data-blood-title={event.kind === 'firstBlood' ? '' : undefined}>{event.title}</strong>
     {event.kind === 'firstBlood' || event.kind === 'blood' ? (
       <>
         {event.teamName && <span className={classes.bloodTeam}>{event.teamName}</span>}
@@ -33,3 +48,4 @@ export const LiveAnnouncementOverlay: FC<{ event?: LiveAnnouncement }> = ({ even
     ) : event.text && <span>{event.text}</span>}
   </div>
 </div> : null
+}
