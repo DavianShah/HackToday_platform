@@ -9,7 +9,8 @@ export const sceneConfig = {
     amber: '#eab66b',
     danger: '#e56860',
   },
-  camera: { fov: 38, x: 0.65, y: 1.05, z: 24, safeWidth: 0.54, worldWidth: 17, worldHeight: 13 },
+  // Three-quarter broadcast establishing shot; framing distance is still fitted to the middle 60%.
+  camera: { fov: 38, x: 8.2, y: 6.4, z: 25, safeWidth: 0.54, worldWidth: 17, worldHeight: 13 },
   quality: { dpr: 1.5, stars: 650, sparks: 24, calmDpr: 1, calmStars: 240 },
   orbit: { speed: 0.045, radius: 6.4, height: 3.3, transition: 1.2 },
   // First Blood: acquire 0-1, commit 1-2.5, impact 2.9, recognition 3.2-5.5, return 5.5-7.6.

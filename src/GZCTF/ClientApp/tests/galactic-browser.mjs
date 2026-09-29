@@ -4,7 +4,7 @@ import { connect, pause, screenshot } from './galactic-cdp.mjs'
 
 const client = await connect()
 const { call, evaluate } = client
-const origin = 'http://127.0.0.1:63000/tests/galactic-preview.html'
+const origin = `http://127.0.0.1:${process.env.GALACTIC_TEST_PORT ?? 63000}/tests/galactic-preview.html`
 const invoke = (action) => evaluate(`window.galactic.${action}()`)
 const text = () => evaluate('document.body.innerText')
 const statuses = () =>
@@ -35,22 +35,22 @@ const checkLayout = async (width, height) => {
 }
 
 try {
-  await call('Page.navigate', { url: origin })
-  await waitFor('!!window.galactic && !!document.querySelector("canvas")')
+  const run = Date.now()
+  await call('Page.navigate', { url: `${origin}?run=${run}` })
+  await waitFor(`location.search.includes('run=${run}') && !!window.galactic && !!document.querySelector("canvas")`)
   // Discard errors from an old document/hot-reload; every following assertion uses a fresh page.
   client.errors.length = 0
+  await invoke('spin')
+  await waitFor('document.body.innerText.toLowerCase().includes("scanning sectors")')
+  assert.match(await evaluate('document.querySelector("h1").innerText'), /Scanning sectors/i)
+  await pause(6600)
+  assert.equal(await evaluate('document.querySelector("h1").innerText'), 'WEB')
   for (const size of [
     [1920, 1080],
     [2560, 1440],
     [1366, 768],
   ])
     await checkLayout(...size)
-  await invoke('spin')
-  await pause(400)
-  assert.match(await text(), /Scanning sectors/i)
-  assert.match(await evaluate('document.querySelector("h1").innerText'), /Scanning sectors/i)
-  await pause(6600)
-  assert.equal(await evaluate('document.querySelector("h1").innerText'), 'WEB')
   await invoke('start')
   await pause(4100)
   await invoke('solve')
@@ -86,13 +86,13 @@ try {
   await pause(3500)
   await invoke('simultaneousSolves')
   await waitFor('document.body.innerText.includes("+100")', 3000)
-  await pause(1600)
+  await waitFor('[...document.querySelectorAll("[role=status]")].some(e=>e.innerText.includes("ByteBenders"))', 5000)
   assert.match(await statuses(), /ByteBenders/)
   await invoke('lateTeam')
   await pause(1400)
   assert.match(await text(), /Arrival Test Team/)
   await invoke('toggleFreeze')
-  await pause(250)
+  await waitFor('document.body.innerText.toLowerCase().includes("standings sealed")', 5000)
   assert.doesNotMatch(await text(), /NULL SECTOR|ByteBenders|Arrival Test Team|\+100/)
   await invoke('firstBlood')
   await pause(300)

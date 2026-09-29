@@ -65,7 +65,8 @@ export const orbitPose = (lane: number, time: number, speed = 0.045, target = { 
   const radius = 5.6 + (lane % 3) * 0.42
   target.x = Math.cos(angle) * radius
   target.y = Math.sin(angle) * (2.8 + (lane % 2) * 0.55) + 0.35
-  target.z = Math.sin(angle * 2) * 0.65 + 1
+  // A tilted orbital plane puts the same identity in front of and behind the citadel.
+  target.z = Math.sin(angle + 0.42) * 3.15 + (lane % 3 - 1) * 0.32
   target.angle = angle
   return target
 }

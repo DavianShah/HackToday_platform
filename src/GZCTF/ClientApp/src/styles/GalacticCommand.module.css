@@ -857,11 +857,27 @@
   padding: 0;
   grid-template-rows: clamp(76px, 8vh, 90px) minmax(0, 1fr);
   pointer-events: none;
+  isolation: isolate;
+}
+.shell::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    rgba(4, 10, 19, 0.31) 0%, rgba(4, 10, 19, 0.24) 19.8%,
+    transparent 20.15%, transparent 79.85%,
+    rgba(4, 10, 19, 0.24) 80.2%, rgba(4, 10, 19, 0.31) 100%);
 }
 .topHud {
   padding: 0 clamp(16px, 1.4vw, 26px);
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  background: linear-gradient(180deg, rgba(3, 7, 18, 0.86), rgba(3, 7, 18, 0.38));
+  background: transparent;
+  border: 0;
+}
+.topHud::after {
+  display: none;
 }
 .topHud .clockModule {
   grid-column: 2;
@@ -897,11 +913,13 @@
   pointer-events: auto;
   position: fixed;
   z-index: 6;
-  right: 12px;
+  left: 12px;
+  right: auto;
   bottom: 12px;
   clip-path: none;
-  border-radius: 3px;
-  background: rgba(4, 12, 24, 0.88);
+  border: 0;
+  border-radius: 0;
+  background: rgba(4, 12, 24, 0.26);
 }
 .content {
   position: relative;
@@ -916,19 +934,20 @@
 }
 .panel {
   margin: 0;
-  background: linear-gradient(180deg, rgba(7, 19, 33, 0.73), rgba(5, 13, 26, 0.6));
+  background: transparent;
   border: 0;
   clip-path: none;
   box-shadow: none;
-  backdrop-filter: blur(7px);
+  backdrop-filter: none;
   pointer-events: auto;
+  text-shadow: 0 2px 8px rgba(0, 3, 10, 0.8);
 }
 .eventPanel {
-  border-right: 1px solid var(--gc-line);
+  border-right: 1px solid rgba(180, 209, 221, 0.1);
 }
 .scoreboardPanel {
-  border-left: 1px solid var(--gc-line);
-  padding-bottom: 36px;
+  border-left: 1px solid rgba(180, 209, 221, 0.1);
+  padding-bottom: 0;
 }
 .panel::after {
   display: none;
@@ -937,6 +956,7 @@
   min-height: 76px;
   padding: 16px;
   align-items: center;
+  border-bottom: 1px solid rgba(180, 209, 221, 0.1);
 }
 .panelTitle {
   text-transform: uppercase;
@@ -961,6 +981,7 @@
   min-height: 72px;
   display: block;
   padding: 12px 16px;
+  border-bottom-color: rgba(180, 209, 221, 0.07);
 }
 .eventTime {
   float: right;
@@ -983,7 +1004,9 @@
   grid-template-columns: 25px minmax(0, 1fr) minmax(42px, auto) 27px;
   padding: 9px 12px;
   gap: 7px;
+  border-bottom-color: rgba(180, 209, 221, 0.07);
 }
+.podium1, .podium2, .podium3 { background: transparent; }
 .teamIdentity b {
   font-size: clamp(12px, 0.85vw, 17px);
 }
@@ -1021,6 +1044,7 @@
 .arenaReadout {
   bottom: calc(clamp(68px, 7vh, 80px) + 2vh);
 }
+.stageBlood .arenaReadout { opacity: 0; }
 .arenaTitle {
   font-size: clamp(26px, 2.6vw, 50px);
   letter-spacing: -0.025em;
@@ -1056,90 +1080,174 @@
 }
 .announcement {
   position: absolute;
-  inset: 28% 21% 23%;
-  padding: 18px;
-  background: none;
+  z-index: 20;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
   backdrop-filter: none;
+  animation: none;
 }
 .announcement_firstBlood,
 .announcement_blood {
-  top: 11%;
-  bottom: auto;
-  height: 27%;
+  inset: 0;
+  height: 100%;
 }
 .announcementFrame {
   width: 100%;
-  height: 65%;
+  height: 100%;
   border: 0;
   background: none;
   box-shadow: none;
 }
 .announcementFrame::before,
 .announcementFrame::after {
-  display: block;
-  top: 20%;
-  left: 18%;
-  right: auto;
-  width: 64%;
-  height: 1px;
-  rotate: none;
-  background: linear-gradient(90deg, transparent, var(--gc-cyan), transparent);
-}
-.announcementFrame::after {
-  top: 85%;
-  left: 28%;
-  width: 44%;
-}
-.announcement_firstBlood .announcementFrame::before,
-.announcement_firstBlood .announcementFrame::after {
-  background: linear-gradient(90deg, transparent, var(--gc-amber), transparent);
-}
-.announcement_firstBlood .announcementFrame {
-  border: 0;
-  box-shadow: none;
+  display: none;
 }
 .announcementCopy {
-  max-width: 100%;
-  padding: 10px 28px;
-  background: radial-gradient(ellipse at center, rgba(2, 7, 17, 0.72), transparent 72%);
+  position: absolute;
+  inset: auto 0 38%;
+  width: 100%;
+  max-width: none;
+  padding: 0 3vw;
+  background: none;
+  text-shadow: 0 3px 14px rgba(0, 4, 12, 0.92);
 }
 .announcementCopy strong {
-  font-size: clamp(32px, 5vw, 92px);
-  text-shadow: 0 5px 22px #02050c, 0 0 36px rgba(255, 209, 102, 0.45);
+  font-size: clamp(35px, 5vw, 96px);
+  line-height: 0.95;
+  color: #e7edf0;
+  text-shadow: 0 4px 24px #02060e;
 }
 .announcementCopy span {
-  font-size: clamp(14px, 1.2vw, 24px);
   overflow-wrap: anywhere;
 }
+.announcement_firstBlood .announcementCopy {
+  inset: auto 0 19%;
+  padding: 0;
+  animation: bloodCopy 4.4s ease-out both;
+}
 .announcement_firstBlood .announcementCopy strong {
-  font-size: clamp(42px, 4.4vw, 82px);
-  letter-spacing: -0.075em;
+  display: block;
+  width: max-content;
+  max-width: none;
+  margin: 0 auto;
+  font-family: 'Arial Black', Impact, 'Segoe UI Black', sans-serif;
+  font-size: clamp(112px, 13vw, 330px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+  white-space: nowrap;
+  color: #f7e7be;
+  background: linear-gradient(170deg, #fff7df 12%, #f1cb83 64%, #be8956 98%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: scaleX(var(--blood-fit, 1));
+  transform-origin: center;
+  -webkit-text-stroke: 1px rgba(255, 244, 215, 0.12);
+  text-shadow: 0 4px 18px rgba(0, 3, 10, 0.7);
+  animation: bloodMask 4.4s cubic-bezier(.2,.7,.25,1) both;
+}
+.announcement_firstBlood .announcementCopy small {
+  margin-bottom: clamp(8px, 1vh, 16px);
+  color: #f7dfa8;
+  letter-spacing: .34em;
+  animation: bloodSignal 4.4s both;
+}
+.announcement_firstBlood .bloodTeam {
+  max-width: min(82vw, 1500px);
+  margin-top: clamp(15px, 2.2vh, 28px);
+  color: #fff;
+  font-size: clamp(25px, 2.4vw, 52px);
+  line-height: 1.06;
+  font-weight: 800;
+  animation: bloodIdentity 4.4s both;
+}
+.announcement_firstBlood .bloodChallenge {
+  max-width: min(75vw, 1200px);
+  margin-top: 9px;
+  color: #d7dfe4;
+  font-size: clamp(14px, 1vw, 22px);
+  animation: bloodIdentity 4.4s .12s both;
+}
+.announcement_firstBlood .announcementFrame::before {
+  display: block;
+  top: 54%;
+  left: 2%;
+  width: 96%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(246,218,158,.46) 20%, rgba(246,218,158,.62) 80%, transparent);
+  animation: bloodRule 4.4s both;
+}
+.announcement_blood .announcementCopy {
+  inset: auto 20% 41%;
+  width: 60%;
+  padding: 0;
+  align-items: flex-start;
+  text-align: left;
+  animation: silverSweep 3.6s both;
 }
 .announcement_blood .announcementCopy strong {
-  font-size: clamp(32px, 3.5vw, 58px);
-  color: #d8e2f2;
+  color: #e4e9ed;
+  font-family: 'Arial Black', Impact, sans-serif;
+  font-size: clamp(44px, 5vw, 96px);
+  letter-spacing: -.06em;
 }
-.announcement_thirdBlood .announcementCopy strong {
-  color: #d2a9a0;
-}
-.announcementCopy .bloodTeam {
+.announcement_blood .bloodTeam,
+.announcement_blood .bloodChallenge {
+  margin-top: 8px;
   max-width: 100%;
-  margin-top: 10px;
-  color: #fff;
-  font-size: clamp(18px, 1.65vw, 28px);
-  font-weight: 800;
-  text-shadow: 0 3px 18px #000;
+  color: #e2e9ee;
+  font-size: clamp(16px, 1.35vw, 27px);
 }
-.announcementCopy .bloodChallenge {
-  max-width: 90%;
-  margin-top: 6px;
-  color: #d7e2ed;
-  font-size: clamp(12px, 1vw, 18px);
-  text-shadow: 0 3px 16px #000;
+.announcement_thirdBlood .announcementCopy {
+  align-items: flex-end;
+  text-align: right;
+  animation: bronzeTransmit 3.6s both;
 }
-.announcement_firstBlood .announcementCopy,
-.announcement_firstBlood .announcementFrame {
-  animation: announcementIn 0.45s var(--gc-ease) both;
+.announcement_thirdBlood .announcementCopy small { color: #d7a894; }
+.announcement_thirdBlood .announcementCopy strong {
+  color: #e1b7a0;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: clamp(39px, 4.3vw, 78px);
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+@keyframes bloodCopy {
+  0%, 5% { opacity: 0; translate: 0 16px; }
+  15%, 51% { opacity: 1; translate: 0 0; }
+  72%, 100% { opacity: 0; translate: 0 -20px; }
+}
+@keyframes bloodMask {
+  0%, 4% { clip-path: inset(0 100% 0 0); }
+  17%, 53% { clip-path: inset(0 0 0 0); }
+  74%, 100% { clip-path: inset(0 0 0 100%); }
+}
+@keyframes bloodSignal {
+  0%, 13% { opacity: 0; letter-spacing: .55em; }
+  23%, 55% { opacity: 1; letter-spacing: .34em; }
+  73%, 100% { opacity: 0; }
+}
+@keyframes bloodIdentity {
+  0%, 16% { opacity: 0; translate: 0 12px; }
+  26%, 55% { opacity: 1; translate: 0 0; }
+  75%, 100% { opacity: 0; translate: 0 -8px; }
+}
+@keyframes bloodRule {
+  0%, 8% { opacity: 0; scale: 0 1; }
+  24%, 50% { opacity: 1; scale: 1 1; }
+  70%, 100% { opacity: 0; scale: 1 1; }
+}
+@keyframes silverSweep {
+  0% { opacity: 0; clip-path: inset(0 100% 0 0); translate: -22px 0; }
+  18%, 70% { opacity: 1; clip-path: inset(0 0 0 0); translate: 0 0; }
+  100% { opacity: 0; clip-path: inset(0 0 0 100%); translate: 15px 0; }
+}
+@keyframes bronzeTransmit {
+  0% { opacity: 0; clip-path: inset(0 0 100% 0); translate: 0 -12px; }
+  20%, 70% { opacity: 1; clip-path: inset(0 0 0 0); translate: 0 0; }
+  100% { opacity: 0; clip-path: inset(100% 0 0 0); translate: 0 9px; }
 }
 .world {
   position: absolute;
@@ -1197,7 +1305,7 @@
     padding-inline: 8px;
   }
   .mainGrid {
-    padding-block: 10px;
+    padding-block: 0;
   }
   .brandText strong {
     font-size: 20px;
@@ -1264,6 +1372,7 @@
   pointer-events: none;
   z-index: 2;
 }
+.stageFrozen .shipLabel { display: none; }
 .shipLabel span {
   display: block;
   max-width: 128px;

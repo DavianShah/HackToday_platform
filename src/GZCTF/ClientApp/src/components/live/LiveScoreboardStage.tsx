@@ -74,7 +74,7 @@ export const LiveScoreboardStage: FC<{
   const events = frozen ? [] : (state.recentEvents ?? [])
 
   return (
-    <main className={`${classes.stage} ${overtime ? classes.stageOvertime : ''}`}>
+    <main className={`${classes.stage} ${overtime ? classes.stageOvertime : ''} ${frozen ? classes.stageFrozen : ''} ${!frozen && presentation.visibleAnnouncement?.kind === 'firstBlood' ? classes.stageBlood : ''}`}>
       <Suspense fallback={null}>
         <GalacticScene
           intensity={state.config?.visualIntensity}
