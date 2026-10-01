@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&display=swap');
+
 .stage,
 .fallback {
   --gc-bg: #030712;
@@ -19,7 +21,7 @@
   overflow: hidden;
   color: var(--gc-text);
   background: var(--gc-bg);
-  font-family: Inter, 'Segoe UI', sans-serif;
+  font-family: Lexend, 'Segoe UI', sans-serif;
 }
 
 .stage *,
@@ -866,9 +868,9 @@
   inset: 0;
   pointer-events: none;
   background: linear-gradient(90deg,
-    rgba(4, 10, 19, 0.31) 0%, rgba(4, 10, 19, 0.24) 19.8%,
+    rgba(4, 10, 19, 0.34) 0%, rgba(4, 10, 19, 0.12) 19.8%,
     transparent 20.15%, transparent 79.85%,
-    rgba(4, 10, 19, 0.24) 80.2%, rgba(4, 10, 19, 0.31) 100%);
+    rgba(4, 10, 19, 0.12) 80.2%, rgba(4, 10, 19, 0.34) 100%);
 }
 .topHud {
   padding: 0 clamp(16px, 1.4vw, 26px);
@@ -934,7 +936,7 @@
 }
 .panel {
   margin: 0;
-  background: transparent;
+  background: linear-gradient(90deg, rgba(3, 9, 19, 0.1), rgba(3, 9, 19, 0.02));
   border: 0;
   clip-path: none;
   box-shadow: none;
@@ -953,10 +955,10 @@
   display: none;
 }
 .panelHead {
-  min-height: 76px;
+  min-height: 64px;
   padding: 16px;
   align-items: center;
-  border-bottom: 1px solid rgba(180, 209, 221, 0.1);
+  border-bottom: 1px solid rgba(180, 209, 221, 0.07);
 }
 .panelTitle {
   text-transform: uppercase;
@@ -1054,18 +1056,21 @@
 }
 .categoryPool {
   position: absolute;
-  z-index: 3;
-  left: 20%;
-  right: 20%;
+  z-index: 8;
+  left: 0;
+  right: 0;
   bottom: 0;
-  min-height: clamp(68px, 7vh, 80px);
+  min-height: clamp(46px, 5vh, 58px);
   padding: 0 clamp(12px, 1.4vw, 26px);
-  background: linear-gradient(180deg, rgba(3, 7, 18, 0.14), rgba(3, 7, 18, 0.8));
+  background: linear-gradient(180deg, rgba(3, 7, 18, 0.28), rgba(3, 7, 18, 0.82));
+  border-top: 1px solid rgba(180, 209, 221, 0.08);
   grid-template-columns: 1fr 1.5fr 1fr;
 }
 .categoryPill,
 .emptyPill {
-  font-size: clamp(10px, 0.72vw, 14px);
+  font-size: clamp(9px, 0.66vw, 12px);
+  border-color: rgba(97, 231, 255, 0.08);
+  background: rgba(9, 21, 37, 0.22);
 }
 .categoryPill {
   color: var(--gc-cyan);

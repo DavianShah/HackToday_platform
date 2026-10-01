@@ -95,16 +95,14 @@ function CameraDirector({
     camera.lookAt(0, 0.2, 0)
     camera.updateProjectionMatrix()
   }, [camera, size])
-  useFrame(({ clock }, dt) => {
+  useFrame((_, dt) => {
     const age = eventAge(event)
     const prestige = event?.kind === 'firstBlood' && targetAvailable && age < config.timing.firstBlood
     const accent = reducedMotion ? 0 : prestige ? Math.sin(Math.min(1, age / config.timing.firstBlood) * Math.PI) : 0
     const focus = prestige ? (age < 1 ? age : Math.max(0, 1 - Math.max(0, age - 5.5) / 2.1)) : 0
     const ease = 1 - Math.exp(-Math.min(dt, 0.05) * 3)
-    camera.position.x +=
-      (config.camera.x + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.09) * 0.08) + source.x * focus * 0.22 - camera.position.x) * ease
-    camera.position.y +=
-      (config.camera.y + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.07) * 0.09) + source.y * focus * 0.14 - camera.position.y) * ease
+    camera.position.x += (config.camera.x + source.x * focus * 0.12 - camera.position.x) * ease
+    camera.position.y += (config.camera.y + source.y * focus * 0.08 - camera.position.y) * ease
     camera.position.z += (base.current - accent * 1.7 - camera.position.z) * ease
     camera.lookAt(source.x * focus * 0.2, 0.2 + source.y * focus * 0.12, 0)
   })
