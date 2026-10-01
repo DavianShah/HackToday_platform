@@ -46,8 +46,9 @@ try {
     `window.galactic.override({config:{title:'fixture',enabled:true,soundEnabled:true,volume:.17,sounds:{firstBlood:'/src/assets/audio/live-scoreboard/correct-submit.wav'}}})`
   )
   await pause(200)
+  const playsBeforeOverride = await evaluate('window.audioAudit.plays.length')
   await action('firstBlood')
-  await waitFor('window.audioAudit.plays.length > 0')
+  await waitFor(`window.audioAudit.plays.length > ${playsBeforeOverride}`)
   const custom = await evaluate('window.audioAudit.plays.at(-1)')
   assert.match(custom.src, /correct-submit.wav$/)
   assert.equal(custom.volume, 0.17)

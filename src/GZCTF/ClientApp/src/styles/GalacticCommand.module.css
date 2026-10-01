@@ -932,10 +932,11 @@
 .audioButton {
   pointer-events: auto;
   position: fixed;
-  z-index: 6;
-  left: 12px;
+  z-index: 9;
+  top: clamp(54px, 5.8vh, 66px);
+  left: 14px;
   right: auto;
-  bottom: 12px;
+  bottom: auto;
   clip-path: none;
   border: 0;
   border-radius: 0;
