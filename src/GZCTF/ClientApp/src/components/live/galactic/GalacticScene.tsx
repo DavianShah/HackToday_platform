@@ -32,6 +32,14 @@ function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boo
   })
   return (
     <group>
+      <mesh position={[12, 7, -42]} scale={[13, 13, 2.4]}>
+        <sphereGeometry args={[1, 32, 20]} />
+        <meshStandardMaterial color="#122a3c" emissive="#0c2335" emissiveIntensity={0.4} metalness={0.05} roughness={1} />
+      </mesh>
+      <mesh position={[12, 7, -39.4]} scale={[13.35, 13.35, 0.15]}>
+        <sphereGeometry args={[1, 32, 20]} />
+        <meshBasicMaterial color="#5598ad" transparent opacity={0.085} depthWrite={false} />
+      </mesh>
       <group ref={haze}>
         {[
           [-23, 8, -31, 17, '#17344b', 0.14],

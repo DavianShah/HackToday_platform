@@ -27,9 +27,10 @@ export function BossVisual({ reducedMotion, overtime, event, targetAvailable = f
   }, [])
   const reactor = useRef<MeshStandardMaterial>(null)
   const root = useRef<Group>(null)
-  useFrame(({ clock }) => {
+  const armor = useRef<Group>(null)
+  useFrame(({ clock }, delta) => {
     if (!root.current) return
-    root.current.rotation.y = reducedMotion ? -0.22 : -0.22 + Math.sin(clock.elapsedTime * 0.16) * 0.06
+    if (armor.current && !reducedMotion) armor.current.rotation.y -= Math.min(delta, 0.05) * 0.018
     const hitAge = event ? eventAge(event) - impactTime(event) : 100
     const hit =
       targetAvailable && attackKind(event) && event?.kind !== 'wrong' && hitAge > 0 && hitAge < 1 ? Math.sin(hitAge * Math.PI) : 0
@@ -42,11 +43,12 @@ export function BossVisual({ reducedMotion, overtime, event, targetAvailable = f
         hit * 3 +
         (event?.kind === 'start' ? Math.max(0, 2 - eventAge(event)) : 0)
     root.current.scale.setScalar(1 + (reducedMotion ? 0 : hit * 0.035))
-    root.current.position.y = reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.4) * 0.08
+    root.current.position.y = 0
   })
   const glow = overtime ? config.colors.danger : config.colors.amber
   return (
-    <group ref={root} rotation={[0.16, -0.22, -0.08]}>
+    <group ref={root}>
+      <group ref={armor} rotation={[0, -0.12, 0]}>
       <mesh position={[0.25, 0.18, -1.25]} rotation={[0, -0.13, 0]} scale={[4.7, 2.15, 1.05]}>
         <boxGeometry />
         <meshStandardMaterial color="#111d2a" metalness={0.55} roughness={0.7} />
@@ -190,6 +192,7 @@ export function BossVisual({ reducedMotion, overtime, event, targetAvailable = f
           <meshBasicMaterial color={i % 3 ? glow : config.colors.recess} />
         </mesh>
       ))}
+      </group>
     </group>
   )
 }
