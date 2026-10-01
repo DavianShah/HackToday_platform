@@ -222,7 +222,8 @@ export const useLivePresentation = (
           challengeTitle: event.challengeTitle ?? undefined,
           sound: 'secondBlood',
           sceneKind: 'blood',
-          duration: 3600,
+          popupDelay: sceneConfig.timing.recognition * 1000,
+          duration: sceneConfig.timing.attack * 1000,
         })
       else if (event.type === NoticeType.ThirdBlood)
         enqueue({
@@ -237,7 +238,8 @@ export const useLivePresentation = (
           challengeTitle: event.challengeTitle ?? undefined,
           sound: 'thirdBlood',
           sceneKind: 'blood',
-          duration: 3600,
+          popupDelay: sceneConfig.timing.recognition * 1000,
+          duration: sceneConfig.timing.attack * 1000,
         })
       else if (event.type === NoticeType.NewHint || event.message?.startsWith('Hint #'))
         enqueue({
@@ -267,7 +269,6 @@ export const useLivePresentation = (
       ) {
         scoreChangedTeamIds.push(team.id)
         nextScoreDeltas.set(team.id, team.score - oldScore)
-        if (!freshBloodTeamIds.has(team.id)) play('correctSubmit')
       }
       const oldRank = previousRanks.current.get(team.id)
       if (oldRank !== undefined && team.rank !== undefined && oldRank !== team.rank)
@@ -278,6 +279,21 @@ export const useLivePresentation = (
     }
     if (scoreChangedTeamIds.length || nextRankChanges.size) {
       const ordinaryChanges = new Set(withoutBloodScoreChanges(scoreChangedTeamIds, freshBloodTeamIds))
+      for (const teamId of ordinaryChanges) {
+        const team = (state.topTeams ?? []).find((item) => item.id === teamId)
+        enqueue({
+          key: `solve-${fingerprint}-${teamId}-${team?.score ?? 'unknown'}`,
+          kind: 'correct',
+          title: 'Verified solve',
+          teamId,
+          teamName: team?.name ?? undefined,
+          delta: nextScoreDeltas.get(teamId),
+          sound: 'correctSubmit',
+          soundDelay: 3300,
+          duration: sceneConfig.timing.attack * 1000,
+          showPopup: false,
+        })
+      }
       const bloodChanges = new Set(scoreChangedTeamIds.filter((teamId) => freshBloodTeamIds.has(teamId)))
       setChangedTeams(ordinaryChanges)
       setBloodAttackTeams(bloodChanges)

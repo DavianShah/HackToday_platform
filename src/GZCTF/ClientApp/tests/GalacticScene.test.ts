@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { announcementScene, attackBlend, positiveSolveEvents, SceneScheduler } from '../src/components/live/galactic/sceneEvents.ts'
+import { announcementScene, attackBlend, attackPhase, attackTimeline, positiveSolveEvents, SceneScheduler } from '../src/components/live/galactic/sceneEvents.ts'
 import { reconcileSlots, orbitPose, resolveTeamId, uniqueTeams } from '../src/components/live/galactic/teamSlots.ts'
 
 test('ranking and late entries preserve occupied lanes, exits release only after fade', () => {
@@ -95,9 +95,18 @@ test('visual backlog is bounded and coalesces score facts per team', () => {
   assert.ok(scheduler.pending[0].delta! > 1)
 })
 
-test('First Blood ship commits after acquisition and returns after recognition', () => {
-  assert.equal(attackBlend('firstBlood', 0.5), 0)
-  assert.ok(attackBlend('firstBlood', 2.5) > 0.99)
-  assert.ok(attackBlend('firstBlood', 5.5) > 0.99)
-  assert.equal(attackBlend('firstBlood', 7.6), 0)
+test('every attack uses the same arrival, hold and smooth return envelope', () => {
+  for (const kind of ['firstBlood', 'blood', 'correct', 'wrong'] as const) {
+    assert.equal(attackBlend(kind, 0.5), 0)
+    assert.ok(attackBlend(kind, attackTimeline.approach) > 0.99)
+    assert.ok(attackBlend(kind, attackTimeline.return) > 0.99)
+    assert.ok(attackBlend(kind, 7.2) > 0 && attackBlend(kind, 7.2) < 1)
+    assert.equal(attackBlend(kind, attackTimeline.duration), 0)
+  }
+  assert.equal(positiveSolveEvents(new Map([[1, 1]]), new Set([1]), 'poll')[0].duration, 7600)
+  assert.equal(announcementScene({ key: 'third', kind: 'blood', title: 'Third Blood', sound: 'thirdBlood' }, false, false)?.duration, 7600)
+  assert.deepEqual(
+    [0, 1, 2.6, 3.35, 3.55, 4.8, 6.8, 7.6].map((age) => attackPhase('correct', age)),
+    ['acquire', 'approach', 'charge', 'fire', 'impact', 'recognition', 'return', 'resume']
+  )
 })
