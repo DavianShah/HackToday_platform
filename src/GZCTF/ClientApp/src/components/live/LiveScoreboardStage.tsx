@@ -164,7 +164,6 @@ export const LiveScoreboardStage: FC<{
               teams={teams}
               changedTeams={frozen ? new Set() : presentation.changedTeams}
               bloodTeams={frozen ? new Set() : presentation.bloodAttackTeams}
-              scoreDeltas={frozen ? new Map() : presentation.scoreDeltas}
               rankChanges={frozen ? new Map() : presentation.rankChanges}
               frozen={frozen}
             />
@@ -173,7 +172,7 @@ export const LiveScoreboardStage: FC<{
             round={round}
             available={state.speedrunState?.remainingCategories ?? []}
             used={state.speedrunState?.usedCategories ?? []}
-            concealActive={frozen}
+            concealActive={frozen || presentation.spinPhase === 'spinning'}
             spinning={!frozen && presentation.spinPhase === 'spinning'}
           />
         </div>

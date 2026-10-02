@@ -72,8 +72,25 @@ try {
   assert.equal(await evaluate('document.querySelectorAll("aside")[1].querySelectorAll("[title]").length'), 1)
   assert.doesNotMatch(await evaluate('document.body.innerText'), /Duplicate|NaN|Infinity/)
   assert.deepEqual(c.errors, [])
+  for (const blood of ['secondBlood', 'thirdBlood']) {
+    const run = Date.now()
+    await call('Page.navigate', { url: `http://127.0.0.1:${process.env.GALACTIC_TEST_PORT ?? 63000}/tests/galactic-preview.html?audio=${blood}-${run}` })
+    await waitFor(`location.search.includes('audio=${blood}-${run}') && !!window.galactic`)
+    await call('Runtime.evaluate', { expression: 'document.querySelector("button").click()', userGesture: true })
+    await waitFor("!!document.querySelector('button[aria-label=\"Sound enabled\"]')")
+    await evaluate(`window.cueAudit=[]; const originalCuePlay=HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play=function(){window.cueAudit.push({at:performance.now(),src:this.src});return originalCuePlay.call(this)};`)
+    const started = await evaluate('performance.now()')
+    await action(blood)
+    await pause(2800)
+    assert.equal(await evaluate('window.cueAudit.length'), 0, `${blood} audio played before laser fire`)
+    await waitFor('window.cueAudit.length > 0', 2000)
+    const cue = await evaluate('window.cueAudit[0]')
+    assert.match(cue.src, new RegExp(`${blood === 'secondBlood' ? 'second' : 'third'}-blood\\.wav`))
+    assert.ok(cue.at - started >= 3200 && cue.at - started <= 3900, `${blood} cue delay: ${cue.at - started}ms`)
+  }
   console.log(
-    'PASS: explicit sound unlock, no replay, original synthesis, freeze stop, URL/volume override, disabled sound, invalid/missing optional data'
+    'PASS: sound unlock, no replay, freeze stop, overrides, invalid data, and Blood cues at laser fire'
   )
 } finally {
   c.close()

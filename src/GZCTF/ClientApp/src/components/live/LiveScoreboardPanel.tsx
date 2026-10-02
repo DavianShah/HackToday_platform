@@ -10,27 +10,20 @@ const podiumClass = (rank?: number) => {
   return ''
 }
 
-const teamLabel = (rank?: number) =>
-  rank === 1 ? 'Leading team' : rank && rank <= 3 ? 'Podium position' : 'Ranked team'
 const numeric = (value?: number) => (typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '—')
 
 export const LiveScoreboardPanel: FC<{
   teams: LiveScoreboardTeamModel[]
   changedTeams: Set<number>
   bloodTeams?: Set<number>
-  scoreDeltas: Map<number, number>
   rankChanges: Map<number, { from: number; to: number }>
   frozen?: boolean
-}> = ({ teams, changedTeams, bloodTeams = new Set(), scoreDeltas, rankChanges, frozen }) => (
+}> = ({ teams, changedTeams, bloodTeams = new Set(), rankChanges, frozen }) => (
   <aside className={`${classes.panel} ${classes.scoreboardPanel}`}>
     <header className={classes.panelHead}>
       <div>
         <span className={classes.eyebrow}>Live standings · top 10</span>
         <h2 className={classes.panelTitle}>Standings</h2>
-      </div>
-      <div className={classes.columnLabels}>
-        <span>Score</span>
-        <span>Solves</span>
       </div>
     </header>
     {frozen ? (
@@ -46,7 +39,6 @@ export const LiveScoreboardPanel: FC<{
           .slice(0, 10)
           .map((team) => {
             const id = team.id!
-            const delta = scoreDeltas.get(id)
             const movement = rankChanges.get(id)
             const rank = Number.isSafeInteger(team.rank) && team.rank! > 0 ? team.rank : undefined
             const name = typeof team.name === 'string' && team.name.trim() ? team.name : 'Unnamed team'
@@ -63,18 +55,9 @@ export const LiveScoreboardPanel: FC<{
                 <strong>{rank === undefined ? '--' : String(rank).padStart(2, '0')}</strong>
                 <div className={classes.teamIdentity}>
                   <b title={name}>{name}</b>
-                  <small>
-                    {numeric(team.solvedCount)} solves / {teamLabel(rank)}
-                  </small>
+                  <small>{numeric(team.solvedCount)} solves</small>
                 </div>
                 <span className={classes.scoreValue}>{numeric(team.score)}</span>
-                <em className={classes.solveValue}>{team.solvedCount ?? 0}</em>
-                {movement && (
-                  <div className={classes.rankShift}>
-                    {movement.to < movement.from ? '↑' : '↓'} {movement.from} → {movement.to}
-                  </div>
-                )}
-                {delta !== undefined && <div className={classes.scoreDelta}>+{delta.toLocaleString()}</div>}
               </div>
             )
           })}

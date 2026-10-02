@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { resolveTeamId, uniqueTeams } from '@Components/live/galactic/teamSlots'
 import { sceneConfig } from '@Components/live/galactic/sceneConfig'
+import { attackTimeline } from '@Components/live/galactic/sceneEvents'
 import { LiveAnnouncement, LiveSpinPhase } from '@Components/live/types'
 import { crossedReminderPoints, withoutBloodScoreChanges } from '@Utils/LiveEventQueue'
 import { formatDurationSeconds } from '@Utils/Shared'
@@ -96,7 +97,7 @@ export const useLivePresentation = (
       markSeen(eventIds)
       eventIds.forEach((id) => processedEvents.current.add(id))
       previousRound.current = fingerprint
-      setSpinPhase(round?.status === SpeedrunRoundStatus.Ready ? 'revealed' : 'idle')
+      setSpinPhase('idle')
       wasFrozen.current = false
       return
     }
@@ -112,7 +113,7 @@ export const useLivePresentation = (
         if (team.rank !== undefined) previousRanks.current.set(team.id, team.rank)
       })
       previousRound.current = fingerprint
-      setSpinPhase(round?.status === SpeedrunRoundStatus.Ready ? 'revealed' : 'idle')
+      setSpinPhase('idle')
       initialized.current = true
       return
     }
@@ -134,10 +135,12 @@ export const useLivePresentation = (
               title: 'Category selected',
               text: round.category,
               sound: 'categorySelected',
+              showPopup: false,
               duration: REVEAL_DURATION_MS,
             })
           }, SPIN_DURATION_MS)
         )
+        spinTimers.current.push(window.setTimeout(() => setSpinPhase('idle'), SPIN_DURATION_MS + REVEAL_DURATION_MS))
       } else if (round?.status === SpeedrunRoundStatus.Running) {
         setSpinPhase('idle')
         enqueue({
@@ -221,6 +224,7 @@ export const useLivePresentation = (
           teamId: event.teamId ?? undefined,
           challengeTitle: event.challengeTitle ?? undefined,
           sound: 'secondBlood',
+          soundDelay: attackTimeline.fire * 1000,
           sceneKind: 'blood',
           popupDelay: sceneConfig.timing.recognition * 1000,
           duration: sceneConfig.timing.attack * 1000,
@@ -237,6 +241,7 @@ export const useLivePresentation = (
           teamId: event.teamId ?? undefined,
           challengeTitle: event.challengeTitle ?? undefined,
           sound: 'thirdBlood',
+          soundDelay: attackTimeline.fire * 1000,
           sceneKind: 'blood',
           popupDelay: sceneConfig.timing.recognition * 1000,
           duration: sceneConfig.timing.attack * 1000,

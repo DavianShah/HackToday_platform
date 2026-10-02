@@ -129,7 +129,6 @@
 .statusLabel,
 .clockModule span,
 .poolLabel,
-.columnLabels,
 .eventBadge {
   color: var(--gc-muted);
   font-size: clamp(8px, 0.58vw, 10px);
@@ -417,12 +416,6 @@
   rotate: 45deg;
 }
 
-.columnLabels {
-  display: grid;
-  grid-template-columns: 58px 44px;
-  gap: 8px;
-  text-align: right;
-}
 .scoreRows {
   display: flex;
   flex-direction: column;
@@ -440,8 +433,7 @@
   transition: background 0.25s ease;
 }
 .scoreRow > strong,
-.scoreValue,
-.solveValue {
+.scoreValue {
   font-variant-numeric: tabular-nums;
 }
 .scoreRow > strong {
@@ -477,12 +469,6 @@
   font-weight: 800;
   text-align: right;
 }
-.solveValue {
-  color: var(--gc-muted);
-  font-size: 10px;
-  font-style: normal;
-  text-align: right;
-}
 .podium1 {
   background: linear-gradient(90deg, rgba(255, 209, 102, 0.12), transparent 82%);
 }
@@ -502,18 +488,6 @@
 .scorePulse {
   animation: scorePulse 0.72s var(--gc-ease) 3;
 }
-.scoreDelta,
-.rankShift {
-  position: absolute;
-  right: 12px;
-  bottom: 2px;
-  color: var(--gc-cyan);
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 .rankMoved .teamIdentity {
   animation: rankMove 0.55s var(--gc-ease) both;
 }
@@ -526,11 +500,6 @@
     transform: translateY(0);
     opacity: 1;
   }
-}
-.rankShift {
-  left: 52px;
-  right: auto;
-  color: var(--gc-amber);
 }
 .sealedRows {
   flex: 1;
@@ -576,10 +545,10 @@
 .vortexIdentity {
   position: absolute;
   z-index: 3;
-  top: 48%;
+  top: 50%;
   left: 50%;
-  width: clamp(210px, 28vw, 320px);
-  aspect-ratio: 1;
+  width: min(100%, 600px);
+  height: min(100%, 500px);
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -588,39 +557,62 @@
   inset: 0;
   animation: vortexIdentityOrbit 6.5s cubic-bezier(0.18, 0.7, 0.2, 1) both;
 }
-.vortexLogo,
-.vortexCategory {
+.vortexItem {
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(var(--sector-angle)) translateY(calc(0px - min(20vw, 34vh, 235px))) rotate(var(--sector-angle-negative));
+}
+.vortexCategory {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: clamp(96px, 9vw, 150px);
+  min-height: 34px;
+  padding: 6px 8px;
+  color: #fff;
+  background: rgba(3, 7, 18, 0.9);
+  border: 1px solid var(--category-color, var(--gc-cyan));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--category-color, var(--gc-cyan)) 55%, transparent);
+  font-size: clamp(9px, 0.68vw, 12px);
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  animation: vortexIdentityCounter 6.5s cubic-bezier(0.18, 0.7, 0.2, 1) both;
+}
+.vortexCategory svg { flex: 0 0 auto; color: var(--category-color, var(--gc-cyan)); }
+.vortexCategory span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes vortexIdentityOrbit { to { transform: rotate(1080deg); } }
+@keyframes vortexIdentityCounter {
+  to { transform: rotate(-1080deg); }
+}
+.categoryReveal {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
   left: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translate(-50%, -50%);
-  animation: vortexIdentityCounter 6.5s cubic-bezier(0.18, 0.7, 0.2, 1) both;
-}
-.vortexLogo {
-  top: 20%;
-  width: clamp(58px, 6vw, 86px);
-  aspect-ratio: 1;
-  color: var(--category-color, var(--gc-cyan));
-  filter: drop-shadow(0 0 18px var(--category-color, var(--gc-cyan)));
-}
-.vortexCategory {
-  top: 80%;
-  width: min(260px, 68vw);
-  padding: 8px 14px;
+  gap: 14px;
+  max-width: 90%;
+  padding: 18px 24px;
   color: #fff;
-  background: rgba(3, 7, 18, 0.94);
-  border: 2px solid var(--category-color, var(--gc-cyan));
-  box-shadow: 0 0 26px var(--category-color, var(--gc-cyan)), inset 0 0 18px rgba(255, 255, 255, 0.1);
-  font-size: clamp(12px, 1.2vw, 18px);
-  line-height: 1.2;
+  background: rgba(3, 7, 18, 0.88);
+  border-block: 1px solid var(--category-color, var(--gc-cyan));
+  box-shadow: 0 0 50px color-mix(in srgb, var(--category-color, var(--gc-cyan)) 35%, transparent);
+  font-size: clamp(22px, 2.7vw, 44px);
+  line-height: 1;
   text-align: center;
   text-transform: uppercase;
+  transform: translate(-50%, -50%);
+  animation: categoryRevealIn 0.35s ease-out both;
 }
-@keyframes vortexIdentityOrbit { to { transform: rotate(360deg); } }
-@keyframes vortexIdentityCounter {
-  to { transform: translate(-50%, -50%) rotate(-360deg); }
+.categoryReveal svg { flex: 0 0 auto; color: var(--category-color, var(--gc-cyan)); }
+.categoryReveal strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes categoryRevealIn {
+  from { opacity: 0; scale: 0.88; }
 }
 .roundWave {
   position: absolute;
@@ -960,7 +952,7 @@
 }
 .shell {
   padding: 0;
-  grid-template-rows: clamp(76px, 8vh, 90px) minmax(0, 1fr);
+  grid-template-rows: clamp(64px, 7vh, 80px) minmax(0, 1fr);
   pointer-events: none;
   isolation: isolate;
 }
@@ -980,6 +972,7 @@
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   background: transparent;
   border: 0;
+  border-bottom: 1px solid rgba(180, 209, 221, 0.14);
 }
 .topHud::after {
   display: none;
@@ -992,6 +985,9 @@
 .topHud .clockCopy {
   align-items: center;
   text-align: center;
+}
+.topHud .clockModule strong {
+  font-size: clamp(36px, 3.6vw, 56px);
 }
 .topHud .statusCluster {
   grid-column: 3;
@@ -1021,7 +1017,7 @@
   top: auto;
   left: 14px;
   right: auto;
-  bottom: calc(clamp(46px, 5vh, 58px) + 10px + env(safe-area-inset-bottom));
+  bottom: calc(clamp(58px, 6vh, 72px) + 10px + env(safe-area-inset-bottom));
   clip-path: none;
   border: 1px solid rgba(97, 231, 255, 0.18);
   border-radius: 3px;
@@ -1029,7 +1025,8 @@
 }
 .content {
   position: relative;
-  display: block;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
 }
 .mainGrid {
   grid-template-columns: 20% 60% 20%;
@@ -1074,9 +1071,6 @@
 .poolLabel {
   font-size: clamp(10px, 0.65vw, 13px);
 }
-.panelHead .columnLabels {
-  display: none;
-}
 .eventRows {
   display: flex;
   flex-direction: column;
@@ -1105,10 +1099,10 @@
   overflow: auto;
 }
 .scoreRow {
-  min-height: 52px;
-  flex: 1 0 auto;
-  grid-template-columns: 25px minmax(0, 1fr) minmax(42px, auto) 27px;
-  padding: 9px 12px;
+  min-height: 36px;
+  flex: 1 1 0;
+  grid-template-columns: 25px minmax(0, 1fr) minmax(42px, auto);
+  padding: clamp(4px, 0.7vh, 9px) 12px;
   gap: 7px;
   border-bottom-color: rgba(180, 209, 221, 0.07);
 }
@@ -1123,19 +1117,8 @@
 .scoreValue {
   font-size: clamp(14px, 1vw, 20px);
 }
-.solveValue {
-  display: block;
-}
 .scoreRow > strong {
   font-size: 14px;
-}
-.scoreDelta,
-.rankShift {
-  font-size: 10px;
-  bottom: 1px;
-}
-.rankShift {
-  left: 43px;
 }
 .arena {
   background: none;
@@ -1159,13 +1142,13 @@
   font-size: 12px;
 }
 .categoryPool {
-  position: absolute;
+  position: relative;
   z-index: 8;
   left: 0;
   right: 0;
   bottom: 0;
-  min-height: clamp(46px, 5vh, 58px);
-  padding: 0 clamp(12px, 1.4vw, 26px);
+  min-height: clamp(58px, 6vh, 72px);
+  padding: 6px clamp(12px, 1.4vw, 26px);
   background: linear-gradient(180deg, rgba(3, 7, 18, 0.28), rgba(3, 7, 18, 0.82));
   border-top: 1px solid rgba(180, 209, 221, 0.08);
   grid-template-columns: 1fr 1.5fr 1fr;
@@ -1498,13 +1481,13 @@
 .stageFrozen .shipLabel { display: none; }
 .shipLabel span {
   display: block;
-  max-width: 128px;
+  max-width: 108px;
   overflow: hidden;
   padding: 2px 6px;
   color: #d6f3f7;
   background: rgba(3, 10, 21, 0.63);
   border-bottom: 1px solid rgba(97, 231, 255, 0.5);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-align: center;
@@ -1513,7 +1496,7 @@
   white-space: nowrap;
 }
 .shipLabel .shipLabelActive {
-  max-width: 180px;
+  max-width: 140px;
   color: #fff2c8;
   border-color: var(--gc-amber);
   box-shadow: 0 3px 18px rgba(255, 209, 102, 0.3);
