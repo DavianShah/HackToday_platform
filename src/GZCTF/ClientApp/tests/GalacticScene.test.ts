@@ -35,11 +35,16 @@ test('ship targeting uses an exact ID or an unambiguous name', () => {
 })
 
 test('orbit envelope stays inside camera world bounds for top ten', () => {
-  for (let lane = 0; lane < 10; lane++)
+  for (let lane = 0; lane < 10; lane++) {
+    const height = orbitPose(lane, 0).y
     for (let time = 0; time < 400; time += 2) {
       const pose = orbitPose(lane, time)
       assert.ok(Math.abs(pose.x) < 6.5 && Math.abs(pose.y) < 3.8)
+      assert.equal(pose.y, height)
     }
+  }
+  assert.ok(orbitPose(0, 0).x > 0)
+  assert.ok(orbitPose(0, Math.PI / 0.045).x < 0)
 })
 
 test('only genuine positive ordinary deltas produce solve attacks', () => {

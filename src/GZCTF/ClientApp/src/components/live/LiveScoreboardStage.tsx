@@ -66,6 +66,12 @@ export const LiveScoreboardStage: FC<{
     () => (state?.scoreboardFrozen ? [] : uniqueTeams(state?.topTeams ?? [])),
     [state?.scoreboardFrozen, state?.topTeams]
   )
+  const orbitTeams = useMemo(
+    () => state?.scoreboardFrozen
+      ? uniqueTeams(state.topTeams ?? []).map((team) => ({ id: team.id }))
+      : safeTeams,
+    [state?.scoreboardFrozen, state?.topTeams, safeTeams]
+  )
   const sceneAnnouncement = useMemo(() => {
     const announcement = presentation.announcement
     if (!announcement || !['firstBlood', 'blood', 'correct', 'wrong'].includes(announcement.kind)) return announcement
@@ -114,7 +120,7 @@ export const LiveScoreboardStage: FC<{
           <GalacticScene
             intensity={state.config?.visualIntensity}
             overtime={overtime}
-            teams={teams}
+            teams={orbitTeams}
             frozen={frozen}
             event={sceneEvent}
             spinPhase={presentation.spinPhase}
@@ -167,7 +173,8 @@ export const LiveScoreboardStage: FC<{
             round={round}
             available={state.speedrunState?.remainingCategories ?? []}
             used={state.speedrunState?.usedCategories ?? []}
-            concealActive={presentation.spinPhase === 'spinning'}
+            concealActive={frozen}
+            spinning={!frozen && presentation.spinPhase === 'spinning'}
           />
         </div>
       </div>

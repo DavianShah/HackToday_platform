@@ -46,11 +46,12 @@ try {
   // Discard errors from an old document/hot-reload; every following assertion uses a fresh page.
   client.errors.length = 0
   await invoke('spin')
-  await waitFor(`!!document.querySelector('[aria-label="Central battlefield"] img')`)
+  await waitFor(`!!document.querySelector('[class*=vortexLogo] svg')`)
   assert.match(await evaluate(`document.querySelector('[aria-label="Central battlefield"]').innerText`), /Web/i)
+  assert.match(await evaluate(`document.querySelector('[class*=vortexCategory]').innerText`), /Web/i)
   await pause(6600)
   assert.equal(await evaluate('document.querySelector("h1").innerText'), 'WEB')
-  assert.equal(await evaluate(`!!document.querySelector('[aria-label="Central battlefield"] img')`), false)
+  assert.equal(await evaluate(`!!document.querySelector('[class*=vortexLogo] svg')`), false)
   for (const size of [
     [1366, 768],
     [1920, 1080],

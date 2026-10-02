@@ -602,17 +602,17 @@
   top: 20%;
   width: clamp(58px, 6vw, 86px);
   aspect-ratio: 1;
-  filter: drop-shadow(0 0 18px rgba(97, 231, 255, 0.75));
+  color: var(--category-color, var(--gc-cyan));
+  filter: drop-shadow(0 0 18px var(--category-color, var(--gc-cyan)));
 }
-.vortexLogo img { width: 100%; height: 100%; object-fit: contain; }
 .vortexCategory {
   top: 80%;
   width: min(260px, 68vw);
   padding: 8px 14px;
-  color: var(--gc-text);
-  background: rgba(3, 7, 18, 0.82);
-  border: 1px solid var(--gc-line-strong);
-  box-shadow: 0 0 24px rgba(97, 231, 255, 0.22);
+  color: #fff;
+  background: rgba(3, 7, 18, 0.94);
+  border: 2px solid var(--category-color, var(--gc-cyan));
+  box-shadow: 0 0 26px var(--category-color, var(--gc-cyan)), inset 0 0 18px rgba(255, 255, 255, 0.1);
   font-size: clamp(12px, 1.2vw, 18px);
   line-height: 1.2;
   text-align: center;
@@ -732,6 +732,16 @@
   color: var(--gc-text);
   border-color: var(--gc-line-strong);
   box-shadow: inset 0 0 12px rgba(97, 231, 255, 0.08);
+}
+.spinningPill {
+  color: #fff;
+  border-color: var(--category-color, var(--gc-cyan));
+  background: rgba(17, 37, 54, 0.96);
+  box-shadow: 0 0 16px var(--category-color, var(--gc-cyan)), inset 0 0 12px rgba(255, 255, 255, 0.15);
+  animation: selectedSectorPulse 1s ease-in-out infinite alternate;
+}
+@keyframes selectedSectorPulse {
+  to { box-shadow: 0 0 28px var(--category-color, var(--gc-cyan)), inset 0 0 18px rgba(255, 255, 255, 0.28); }
 }
 .availablePill {
   color: var(--category-color, var(--gc-cyan));
