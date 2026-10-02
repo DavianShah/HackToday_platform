@@ -9,7 +9,12 @@ import { sceneConfig as config } from './sceneConfig'
 import { attackBlend, SceneEvent } from './sceneEvents'
 import { orbitPose, reconcileSlots, TeamSlot, teamAccent } from './teamSlots'
 
-const headingToBoss = (x: number, y: number) => Math.atan2(-x, y)
+const shipForward = new Vector3(0, 1, 0)
+const bossDirection = new Vector3()
+const faceBoss = (ship: Group, x: number, y: number, z: number) => {
+  bossDirection.set(-x, 0.2 - y, -z).normalize()
+  ship.quaternion.setFromUnitVectors(shipForward, bossDirection)
+}
 
 export interface TeamShipVisualProps {
   id: number
@@ -19,7 +24,7 @@ export function TeamShipVisual({ id, accent }: TeamShipVisualProps) {
   const variant = id % 3
   return (
     <group scale={0.55}>
-      <mesh scale={[0.55, 1.25 + variant * 0.14, 0.44]} rotation={[0, 0, Math.PI]}>
+      <mesh scale={[0.55, 1.25 + variant * 0.14, 0.44]}>
         <coneGeometry args={[0.7, 1.7, 4]} />
         <meshStandardMaterial color="#667888" metalness={0.58} roughness={0.48} />
       </mesh>
@@ -73,6 +78,7 @@ function Ship({
   source,
   highlighted,
   phase,
+  frozen,
 }: {
   highlighted: Set<number>
   event?: SceneEvent
@@ -81,6 +87,7 @@ function Ship({
   reducedMotion: boolean
   ShipVisual: ComponentType<TeamShipVisualProps>
   phase: RefObject<number>
+  frozen: boolean
 }) {
   const root = useRef<Group>(null)
   const orbit = useRef({ x: 0, y: 0, z: 0, angle: 0 })
@@ -117,7 +124,7 @@ function Ship({
       const hidden = !active && root.current.position.z < -0.8 && Math.abs(root.current.position.x) < 3.6 && Math.abs(root.current.position.y) < 2.8
       setLabelVisible(!hidden)
     }
-    root.current.rotation.set(0, 0, headingToBoss(x, y))
+    faceBoss(root.current, x, y, z)
     root.current.scale.setScalar(scale * (1 + Math.max(0, pose.z) * 0.025) * (active ? 1 : attackKind(event) ? 0.78 : 1))
     if (active) {
       root.current.updateWorldMatrix(true, false)
@@ -133,30 +140,14 @@ function Ship({
         <ringGeometry args={[0.65, 0.675, 32]} />
         <meshBasicMaterial color={config.colors.amber} transparent opacity={0.75} />
       </mesh>
-      <ShipVisual id={slot.id} accent={teamAccent(slot.id)} />
-      <Html center position={[0, -0.72, 0.2]} distanceFactor={17} className={classes.shipLabel} style={{ visibility: labelVisible ? 'visible' : 'hidden' }}>
+      <ShipVisual id={frozen ? 0 : slot.id} accent={frozen ? config.colors.cyan : teamAccent(slot.id)} />
+      {!frozen && <Html center position={[0, -0.72, 0.2]} distanceFactor={17} className={classes.shipLabel} style={{ visibility: labelVisible ? 'visible' : 'hidden' }}>
         <span className={event?.teamId === slot.id ? classes.shipLabelActive : ''} title={slot.team.name ?? undefined}>
           {slot.team.name?.trim() || `Team ${slot.id}`}
         </span>
-      </Html>
+      </Html>}
     </group>
   )
-}
-
-function FrozenOrbitShip({ phase, reducedMotion, ShipVisual }: {
-  phase: RefObject<number>
-  reducedMotion: boolean
-  ShipVisual: ComponentType<TeamShipVisualProps>
-}) {
-  const root = useRef<Group>(null)
-  useFrame(() => {
-    if (!root.current) return
-    const pose = orbitPose(0, reducedMotion ? 0 : phase.current)
-    root.current.position.set(pose.x, pose.y, pose.z)
-    root.current.rotation.z = headingToBoss(pose.x, pose.y)
-    root.current.scale.setScalar(1 + Math.max(0, pose.z) * 0.025)
-  })
-  return <group ref={root}><ShipVisual id={0} accent={config.colors.cyan} /></group>
 }
 
 export function TeamFleet({
@@ -183,11 +174,11 @@ export function TeamFleet({
     if (!reducedMotion && !attacking) phase.current += Math.min(delta, 0.05) * config.orbit.speed
   })
   useEffect(() => {
-    if (frozen) {
-      setSlots([])
-      return
-    }
-    setSlots((current) => reconcileSlots(current, teams, performance.now()))
+    setSlots((current) => reconcileSlots(
+      frozen ? current.map((slot) => ({ ...slot, team: { id: slot.id } })) : current,
+      teams,
+      performance.now()
+    ))
     const cleanup = window.setTimeout(
       () => setSlots((current) => reconcileSlots(current, teams, performance.now())),
       config.orbit.transition * 1000 + 30
@@ -196,7 +187,7 @@ export function TeamFleet({
   }, [teams, frozen])
   return (
     <group>
-      {frozen ? <FrozenOrbitShip phase={phase} reducedMotion={reducedMotion} ShipVisual={ShipVisual} /> : slots.map((slot) => (
+      {slots.map((slot) => (
         <Ship
           key={slot.id}
           slot={slot}
@@ -206,6 +197,7 @@ export function TeamFleet({
           source={source}
           highlighted={highlighted}
           phase={phase}
+          frozen={frozen}
         />
       ))}
     </group>

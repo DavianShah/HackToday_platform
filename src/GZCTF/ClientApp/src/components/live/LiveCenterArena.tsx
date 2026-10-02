@@ -1,10 +1,9 @@
-import { FC } from 'react'
+import { CSSProperties, FC } from 'react'
 import { Icon } from '@mdi/react'
 import { useChallengeCategoryLabelMap } from '@Utils/Shared'
 import { ChallengeCategory, LiveScoreboardTeamModel, SpeedrunRoundModel } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
 import { LiveSpinPhase } from './types'
-import logo from '../../assets/logo.png'
 
 export const LiveCenterArena: FC<{
   round?: SpeedrunRoundModel | null
@@ -18,14 +17,15 @@ export const LiveCenterArena: FC<{
   frozen?: boolean
 }> = ({ round, spinPhase, frozen }) => {
   const categoryMap = useChallengeCategoryLabelMap()
-  const categoryVisual = spinPhase !== 'spinning' && round?.category ? categoryMap.get(round.category) : undefined
+  const categoryVisual = round?.category ? categoryMap.get(round.category) : undefined
+  const categoryStyle = categoryVisual ? ({ '--category-color': categoryVisual.colors[4] } as CSSProperties) : undefined
   return (
   <section className={classes.arena} aria-label="Central battlefield">
     {!frozen && spinPhase === 'spinning' && (
-      <div className={classes.vortexIdentity} aria-label={`Selecting ${round?.category ?? 'category'}`}>
+      <div className={classes.vortexIdentity} style={categoryStyle} aria-label={`Selecting ${categoryVisual?.name ?? round?.category ?? 'category'}`}>
         <div className={classes.vortexOrbit}>
-          <div className={classes.vortexLogo}><img src={logo} alt="HackToday logo" /></div>
-          <strong className={classes.vortexCategory}>{round?.category ?? 'Selecting category'}</strong>
+          <div className={classes.vortexLogo}>{categoryVisual && <Icon path={categoryVisual.icon} size={3.3} aria-hidden />}</div>
+          <strong className={classes.vortexCategory}>{categoryVisual?.name ?? round?.category ?? 'Selecting category'}</strong>
         </div>
       </div>
     )}
@@ -33,7 +33,7 @@ export const LiveCenterArena: FC<{
       <span className={classes.eyebrow}>Orbital command</span>
       <h1 className={classes.arenaTitle}>
         {categoryVisual && <Icon path={categoryVisual.icon} size={1.2} aria-hidden />}
-        {round?.category ?? 'Awaiting sector'}
+        {categoryVisual?.name ?? round?.category ?? 'Awaiting sector'}
       </h1>
       <p className={classes.arenaDetail}>Live Speedrun transmission</p>
     </div>}

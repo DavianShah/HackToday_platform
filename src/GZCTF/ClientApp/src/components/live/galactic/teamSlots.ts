@@ -64,9 +64,9 @@ export const orbitPose = (lane: number, time: number, speed = 0.045, target = { 
   const angle = lane * 2.399963229728653 + time * speed
   const radius = 5.2 + (lane % 3) * 0.34
   target.x = Math.cos(angle) * radius
-  // Parallel screen and depth axes form a level, front-facing projected ellipse.
-  target.y = Math.sin(angle) * (2.35 + (lane % 2) * 0.28) - 0.2
-  target.z = Math.sin(angle) * 3.4 + (lane % 3 - 1) * 0.2
+  // Circle around the boss in the horizontal X/Z plane, with a fixed flight height.
+  target.y = -0.35 + (lane % 3 - 1) * 0.22
+  target.z = Math.sin(angle) * (3.4 + (lane % 2) * 0.28)
   target.angle = angle
   return target
 }

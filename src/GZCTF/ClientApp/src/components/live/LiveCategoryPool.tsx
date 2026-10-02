@@ -36,13 +36,14 @@ export const LiveCategoryPool: FC<{
   available: ChallengeCategory[]
   used: ChallengeCategory[]
   concealActive?: boolean
-}> = ({ round, available, used, concealActive }) => (
+  spinning?: boolean
+}> = ({ round, available, used, concealActive, spinning }) => (
   <footer className={classes.categoryPool}>
     <div className={classes.poolGroup}>
       <b className={classes.poolLabel}>Galactic sectors / Current</b>
       <CategoryList
         values={!concealActive && round?.category ? [round.category] : []}
-        className={round?.status === SpeedrunRoundStatus.Ready ? classes.selectedPill : classes.activePill}
+        className={`${round?.status === SpeedrunRoundStatus.Ready ? classes.selectedPill : classes.activePill} ${spinning ? classes.spinningPill : ''}`}
       />
     </div>
     <div className={classes.poolGroup}>
