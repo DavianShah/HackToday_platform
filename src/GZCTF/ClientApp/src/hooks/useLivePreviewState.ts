@@ -271,12 +271,12 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
       title: 'Incorrect submission',
       teamName,
       teamId: selectedTeamId,
+      challengeTitle: `${selectedCategory} — Tidal Lock`,
       sound: 'wrongSubmit',
       sceneKind: 'wrong',
-      showPopup: false,
       duration: sceneConfig.timing.solve * 1000,
     })
-  }, [selectedTeamId, state.topTeams])
+  }, [selectedCategory, selectedTeamId, state.topTeams])
 
   const toggleFreeze = useCallback(() => {
     setState((current) => ({ ...current, scoreboardFrozen: !current.scoreboardFrozen }))

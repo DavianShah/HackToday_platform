@@ -15,7 +15,7 @@ const announcementClasses: Partial<Record<LiveAnnouncement['kind'], string>> = {
 
 const eyebrow: Partial<Record<LiveAnnouncement['kind'], string>> = {
   firstBlood: 'Priority transmission', blood: 'Solve transmission', hint: 'Data packet received',
-  overtime: 'Critical round status', correct: 'Verified score update', wrong: 'Preview simulation',
+  overtime: 'Critical round status', correct: 'Verified score update', wrong: 'Submission update',
   category: 'Sector acquired', start: 'Round synchronization', finished: 'Round status',
   reminder: 'Time remaining', countdown: 'Final countdown',
 }
@@ -36,15 +36,15 @@ export const LiveAnnouncementOverlay: FC<{ event?: LiveAnnouncement }> = ({ even
     return () => observer.disconnect()
   }, [event?.kind, event?.key, event?.title])
   return event ? <div key={event.key}
-  className={`${classes.announcement} ${announcementClasses[event.kind] ?? ''} ${event.sound === 'thirdBlood' ? classes.announcement_thirdBlood : ''}`} role="status" aria-live="assertive">
+  className={`${classes.announcement} ${announcementClasses[event.kind] ?? ''} ${event.kind === 'correct' || event.kind === 'wrong' ? classes.announcement_submission : ''} ${event.sound === 'thirdBlood' ? classes.announcement_thirdBlood : ''}`} role="status" aria-live="assertive">
   <div className={classes.announcementFrame} aria-hidden />
   <div className={classes.announcementCopy}>
     {eyebrow[event.kind] && <small>{eyebrow[event.kind]}</small>}
     <strong ref={event.kind === 'firstBlood' || event.kind === 'blood' ? titleRef : undefined} data-blood-title={event.kind === 'firstBlood' || event.kind === 'blood' ? '' : undefined}>{event.title}</strong>
-    {event.kind === 'firstBlood' || event.kind === 'blood' ? (
+    {['firstBlood', 'blood', 'correct', 'wrong'].includes(event.kind) ? (
       <>
-        {event.teamName && <span className={classes.bloodTeam}>{event.teamName}</span>}
-        {event.challengeTitle && <span className={classes.bloodChallenge}>{event.challengeTitle}</span>}
+        {event.teamName && <span className={event.kind === 'correct' || event.kind === 'wrong' ? classes.submissionTeam : classes.bloodTeam}>{event.teamName}</span>}
+        {event.challengeTitle && <span className={event.kind === 'correct' || event.kind === 'wrong' ? classes.submissionChallenge : classes.bloodChallenge}>{event.challengeTitle}</span>}
         {!event.teamName && !event.challengeTitle && event.text && <span>{event.text}</span>}
       </>
     ) : event.text && <span>{event.text}</span>}
