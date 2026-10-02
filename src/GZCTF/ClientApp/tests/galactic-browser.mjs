@@ -29,12 +29,21 @@ const checkLayout = async (width, height) => {
   const size = await evaluate(`({ canvas: document.querySelectorAll('canvas').length,
     page: [document.documentElement.scrollWidth,document.documentElement.scrollHeight],
     panels: [...document.querySelectorAll('aside')].map(e=>[e.clientWidth,e.clientHeight]),
-    timer: document.querySelector('[data-live-timer]').getBoundingClientRect().toJSON() })`)
+    timer: document.querySelector('[data-live-timer]').getBoundingClientRect().toJSON(),
+    header: document.querySelector('main header').getBoundingClientRect().toJSON(),
+    footer: document.querySelector('footer').getBoundingClientRect().toJSON(),
+    standings: document.querySelectorAll('aside')[1].getBoundingClientRect().toJSON(),
+    rows: document.querySelectorAll('aside')[1].querySelector('[class*=scoreRows]').children.length,
+    rowOverflow: (() => { const e = document.querySelectorAll('aside')[1].querySelector('[class*=scoreRows]'); return e.scrollHeight > e.clientHeight + 1 })() })`)
   assert.equal(size.canvas, 1)
   assert.deepEqual(size.page, [width, height])
   assert.deepEqual(size.panels[0], size.panels[1])
   assert.ok(size.timer.x > 0 && size.timer.right < width && size.timer.bottom < 90)
   assert.ok(Math.abs(size.timer.x + size.timer.width / 2 - width / 2) < 2)
+  assert.ok(size.header.bottom <= size.standings.top + 1)
+  assert.ok(size.standings.bottom <= size.footer.top + 1)
+  assert.equal(size.rows, 10)
+  assert.equal(size.rowOverflow, false)
   await screenshot(client, `layout-${width}`)
   console.log('Layout passed', width, height, size.panels)
 }
@@ -46,12 +55,17 @@ try {
   // Discard errors from an old document/hot-reload; every following assertion uses a fresh page.
   client.errors.length = 0
   await invoke('spin')
-  await waitFor(`!!document.querySelector('[class*=vortexLogo] svg')`)
-  assert.match(await evaluate(`document.querySelector('[aria-label="Central battlefield"]').innerText`), /Web/i)
-  assert.match(await evaluate(`document.querySelector('[class*=vortexCategory]').innerText`), /Web/i)
+  await waitFor(`document.querySelectorAll('[class*=vortexItem]').length === 6`)
+  assert.equal(await evaluate(`document.querySelectorAll('[class*=vortexItem] svg').length`), 6)
+  assert.match(await evaluate(`document.querySelector('[class*=vortexOrbit]').innerText`), /Web.*Pwn.*Crypto.*Reverse.*Forensics.*Misc/is)
+  assert.doesNotMatch(await evaluate(`document.querySelector('footer').innerText`), /Current\s+Web/i)
+  await screenshot(client, 'spin-all-categories')
   await pause(6600)
+  assert.equal(await evaluate(`document.querySelector('[class*=categoryReveal] strong')?.innerText`), 'WEB')
+  assert.equal(await evaluate(`document.querySelectorAll('[class*=vortexItem]').length`), 0)
+  await screenshot(client, 'selected-category')
+  await pause(2600)
   assert.equal(await evaluate('document.querySelector("h1").innerText'), 'WEB')
-  assert.equal(await evaluate(`!!document.querySelector('[class*=vortexLogo] svg')`), false)
   for (const size of [
     [1366, 768],
     [1920, 1080],
@@ -59,8 +73,9 @@ try {
     await checkLayout(...size)
   await invoke('start')
   await pause(4100)
+  const scoreBeforeSolve = await evaluate(`document.querySelectorAll('aside')[1].querySelector('[class*=scoreValue]').innerText`)
   await invoke('solve')
-  await waitFor('document.body.innerText.includes("+150")', 3000)
+  await waitFor(`document.querySelectorAll('aside')[1].querySelector('[class*=scoreValue]').innerText !== ${JSON.stringify(scoreBeforeSolve)}`, 3000)
   await pause(1600)
   await invoke('firstBlood')
   // The ordinary solve owns its full 7.6-second foreground before the queued Blood starts.
@@ -90,8 +105,9 @@ try {
   await waitFor('[...document.querySelectorAll("[role=status]")].some(e=>e.innerText.toLowerCase().includes("target deflected"))')
   assert.match(await statuses(), /Preview.*Target deflected/i)
   await pause(3500)
+  const scoreBeforeSimultaneous = await evaluate(`document.querySelectorAll('aside')[1].querySelector('[class*=scoreValue]').innerText`)
   await invoke('simultaneousSolves')
-  await waitFor('document.body.innerText.includes("+100")', 3000)
+  await waitFor(`document.querySelectorAll('aside')[1].querySelector('[class*=scoreValue]').innerText !== ${JSON.stringify(scoreBeforeSimultaneous)}`, 3000)
   await waitFor('[...document.querySelectorAll("[role=status]")].some(e=>e.innerText.includes("ByteBenders"))', 20000)
   assert.match(await statuses(), /ByteBenders/)
   await invoke('lateTeam')
@@ -176,7 +192,7 @@ try {
   await pause(2300)
   assert.doesNotMatch(await statuses(), /\+500|Priority strike/)
   state.topTeams[0].score += 120
-  await waitFor('document.body.innerText.includes("+120")', 4000)
+  await waitFor(`Number(document.querySelectorAll('aside')[1].querySelector('[class*=scoreValue]').innerText.replace(/[^0-9]/g,'')) === ${state.topTeams[0].score}`, 4000)
   await evaluate('document.querySelector("canvas").dispatchEvent(new Event("webglcontextlost",{cancelable:true}))')
   await pause(300)
   assert.match(await text(), /3D unavailable/)

@@ -141,7 +141,7 @@ function Ship({
         <meshBasicMaterial color={config.colors.amber} transparent opacity={0.75} />
       </mesh>
       <ShipVisual id={frozen ? 0 : slot.id} accent={frozen ? config.colors.cyan : teamAccent(slot.id)} />
-      {!frozen && <Html center position={[0, -0.72, 0.2]} distanceFactor={17} className={classes.shipLabel} style={{ visibility: labelVisible ? 'visible' : 'hidden' }}>
+      {!frozen && <Html center position={[0, -0.82, 0.2]} distanceFactor={12} className={classes.shipLabel} style={{ visibility: labelVisible ? 'visible' : 'hidden' }}>
         <span className={event?.teamId === slot.id ? classes.shipLabelActive : ''} title={slot.team.name ?? undefined}>
           {slot.team.name?.trim() || `Team ${slot.id}`}
         </span>
