@@ -15,6 +15,24 @@ import { SceneEvent } from './sceneEvents'
 function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boolean }) {
   const stars = useRef<Points>(null)
   const haze = useRef<Group>(null)
+  const debris = useRef<Group[]>([])
+  const comets = useRef<Group[]>([])
+  const cometTracks = useMemo(() => [
+    { y: 6.8, z: -11, period: 10.5, phase: 0.12 },
+    { y: -2.8, z: -17, period: 13, phase: 0.58 },
+    { y: 3.4, z: -23, period: 11.5, phase: 0.83 },
+    { y: -6.2, z: -14, period: 15, phase: 0.35 },
+  ].slice(0, calm ? 2 : 4), [calm])
+  const debrisFields = useMemo(() => Array.from({ length: calm ? 8 : 16 }, (_, i) => {
+    const angle = i * 2.39996323
+    const radius = 10 + (i % 4) * 2.5
+    return {
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius * 0.65,
+      z: -8 - (i % 5) * 3,
+      angle,
+    }
+  }), [calm])
   const positions = useMemo(() => {
     const array = new Float32Array((calm ? config.quality.calmStars : config.quality.stars) * 3)
     let seed = 76
@@ -27,8 +45,35 @@ function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boo
     return array
   }, [calm])
   useFrame(({ clock }) => {
-    if (stars.current && !reducedMotion) stars.current.rotation.z = Math.sin(clock.elapsedTime * 0.025) * 0.025
-    if (haze.current && !reducedMotion) haze.current.position.x = Math.sin(clock.elapsedTime * 0.022) * 0.42
+    if (reducedMotion) return
+    const time = clock.elapsedTime
+    if (stars.current) {
+      stars.current.rotation.z = Math.sin(time * 0.035) * 0.035
+      stars.current.position.x = Math.sin(time * 0.08) * 0.65
+      stars.current.position.y = Math.cos(time * 0.055) * 0.32
+    }
+    if (haze.current) {
+      haze.current.position.x = Math.sin(time * 0.05) * 0.8
+      haze.current.position.y = Math.cos(time * 0.04) * 0.35
+    }
+    debrisFields.forEach((field, i) => {
+      const rock = debris.current[i]
+      if (!rock) return
+      rock.position.set(
+        field.x + Math.sin(time * 0.18 + i) * 0.6,
+        field.y + Math.cos(time * 0.14 + i) * 0.3,
+        field.z
+      )
+      rock.rotation.y = field.angle + time * (i % 2 ? 0.12 : -0.1)
+      rock.rotation.z = field.angle * 0.4 + time * 0.08
+    })
+    cometTracks.forEach((track, i) => {
+      const comet = comets.current[i]
+      if (!comet) return
+      const progress = (time / track.period + track.phase) % 1
+      comet.position.set(-22 + progress * 44, track.y - progress * 6, track.z)
+      comet.visible = progress > 0.08 && progress < 0.92
+    })
   })
   return (
     <group>
@@ -65,21 +110,41 @@ function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boo
         </bufferGeometry>
         <pointsMaterial size={0.035} color="#b6cdd9" transparent opacity={0.6} sizeAttenuation />
       </points>
-      {Array.from({ length: calm ? 8 : 16 }, (_, i) => {
-        const angle = i * 2.39996323
-        const radius = 10 + (i % 4) * 2.5
-        return (
-          <mesh
-            key={i}
-            position={[Math.cos(angle) * radius, Math.sin(angle) * radius * 0.65, -8 - (i % 5) * 3]}
-            rotation={[angle * 0.2, angle, angle * 0.4]}
-            scale={[0.5 + (i % 3) * 0.4, 0.22 + (i % 4) * 0.15, 0.35]}
-          >
+      {debrisFields.map((field, i) => (
+        <group
+          key={i}
+          ref={(node) => { if (node) debris.current[i] = node }}
+          position={[field.x, field.y, field.z]}
+          rotation={[field.angle * 0.2, field.angle, field.angle * 0.4]}
+        >
+          <mesh scale={[0.5 + (i % 3) * 0.4, 0.22 + (i % 4) * 0.15, 0.35]}>
             <icosahedronGeometry args={[1, 0]} />
             <meshStandardMaterial color={i % 3 ? '#152a38' : '#294153'} roughness={1} metalness={0.1} />
           </mesh>
-        )
-      })}
+        </group>
+      ))}
+      {cometTracks.map((track, i) => (
+        <group
+          key={track.period}
+          ref={(node) => { if (node) comets.current[i] = node }}
+          position={[-22, track.y, track.z]}
+          rotation={[0, 0, -0.135]}
+          visible={!reducedMotion}
+        >
+          <mesh>
+            <sphereGeometry args={[0.075, 8, 6]} />
+            <meshBasicMaterial color={i % 2 ? '#a9d4eb' : '#e7d0a1'} />
+          </mesh>
+          <mesh position={[-1.1, 0, 0]} scale={[2.2, 0.027, 0.027]}>
+            <boxGeometry />
+            <meshBasicMaterial color={i % 2 ? '#7cb8d5' : '#d9a776'} transparent opacity={0.48} depthWrite={false} />
+          </mesh>
+          <mesh position={[-0.45, 0, 0]} scale={[0.9, 0.065, 0.065]}>
+            <boxGeometry />
+            <meshBasicMaterial color={i % 2 ? '#9bd5ed' : '#f2c487'} transparent opacity={0.25} depthWrite={false} />
+          </mesh>
+        </group>
+      ))}
     </group>
   )
 }
