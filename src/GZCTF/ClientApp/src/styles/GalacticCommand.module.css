@@ -1217,6 +1217,24 @@
 .announcementCopy span {
   overflow-wrap: anywhere;
 }
+.announcement_submission .announcementCopy {
+  inset: auto 0 31%;
+}
+.announcement_submission .announcementCopy strong {
+  font-size: clamp(28px, 3vw, 54px);
+  line-height: 1.1;
+}
+.announcement_submission .submissionTeam {
+  margin-top: 12px;
+  color: #f5f8fb;
+  font-size: clamp(19px, 1.7vw, 30px);
+  font-weight: 700;
+}
+.announcement_submission .submissionChallenge {
+  margin-top: 5px;
+  color: #d7dfe4;
+  font-size: clamp(14px, 1.1vw, 20px);
+}
 .announcement_firstBlood .announcementCopy,
 .announcement_blood .announcementCopy {
   position: fixed;

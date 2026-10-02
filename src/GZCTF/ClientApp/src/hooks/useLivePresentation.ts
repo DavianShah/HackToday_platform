@@ -260,9 +260,9 @@ export const useLivePresentation = (
           teamName: event.teamName ?? undefined,
           teamId: event.teamId ?? undefined,
           challengeTitle: event.challengeTitle ?? undefined,
+          text: event.message,
           sound: event.type === NoticeType.WrongAnswer ? 'wrongSubmit' : 'correctSubmit',
           duration: sceneConfig.timing.solve * 1000,
-          showPopup: false,
           verified: true,
         })
       else if (event.type === NoticeType.NewHint || event.message?.startsWith('Hint #'))
