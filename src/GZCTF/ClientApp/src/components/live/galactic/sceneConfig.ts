@@ -1,5 +1,5 @@
 /** Original procedural assets. Replace visual components without changing event/data adapters. */
-import { attackTimeline } from './sceneEvents'
+import { attackTimeline, solveTimeline } from './sceneEvents'
 export const sceneConfig = {
   colors: {
     hull: '#293746',
@@ -14,10 +14,11 @@ export const sceneConfig = {
   bossY: 0.35,
   quality: { dpr: 1.5, stars: 650, sparks: 24, calmDpr: 1, calmStars: 240 },
   orbit: { speed: 0.045, radius: 6.4, height: 3.3, transition: 1.2 },
-  // One clock governs every strike, including preview deflections.
+  // Blood strikes retain their full timeline; ordinary solves and deflections use the scaled one.
   timing: {
     firstBlood: attackTimeline.duration,
     attack: attackTimeline.duration,
+    solve: solveTimeline.duration,
     impact: attackTimeline.impact,
     recognition: attackTimeline.recognition,
     return: attackTimeline.return,

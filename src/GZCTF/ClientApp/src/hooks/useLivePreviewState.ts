@@ -167,7 +167,14 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
           teamName,
           challengeTitle: `${selectedCategory} — Tidal Lock`,
         })
-      else addEvent({ type: NoticeType.Normal, message: `${teamName} solved a ${selectedCategory} challenge` })
+      else
+        addEvent({
+          type: NoticeType.CorrectAnswer,
+          message: `${teamName} solved a ${selectedCategory} challenge`,
+          teamId: selectedTeamId,
+          teamName,
+          challengeTitle: `${selectedCategory} — Tidal Lock`,
+        })
     },
     [addEvent, selectedCategory, selectedTeamId]
   )
@@ -267,7 +274,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
       sound: 'wrongSubmit',
       sceneKind: 'wrong',
       showPopup: false,
-      duration: sceneConfig.timing.attack * 1000,
+      duration: sceneConfig.timing.solve * 1000,
     })
   }, [selectedTeamId, state.topTeams])
 

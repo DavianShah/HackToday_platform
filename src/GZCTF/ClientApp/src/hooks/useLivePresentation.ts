@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { resolveTeamId, uniqueTeams } from '@Components/live/galactic/teamSlots'
 import { sceneConfig } from '@Components/live/galactic/sceneConfig'
-import { attackTimeline } from '@Components/live/galactic/sceneEvents'
+import { frameSyncedStrike } from '@Components/live/galactic/sceneEvents'
 import { LiveAnnouncement, LiveSpinPhase } from '@Components/live/types'
 import { crossedReminderPoints, withoutBloodScoreChanges } from '@Utils/LiveEventQueue'
 import { formatDurationSeconds } from '@Utils/Shared'
@@ -26,7 +26,10 @@ export const useLivePresentation = (
     enqueue,
     markSeen,
     clear,
-  } = useLiveEventQueue(useCallback((event: LiveAnnouncement) => play(event.sound), [play]))
+  } = useLiveEventQueue(useCallback((event: LiveAnnouncement) => {
+    // Strike cues play from the laser-fire render frame, using the same path for built-in and admin sounds.
+    if (!frameSyncedStrike(event.kind)) play(event.sound)
+  }, [play]))
   const initialized = useRef(false)
   const wasFrozen = useRef(false)
   const previousRound = useRef<string | undefined>(undefined)
@@ -229,7 +232,6 @@ export const useLivePresentation = (
           teamId: event.teamId ?? undefined,
           challengeTitle: event.challengeTitle ?? undefined,
           sound: 'secondBlood',
-          soundDelay: attackTimeline.fire * 1000,
           sceneKind: 'blood',
           popupDelay: sceneConfig.timing.recognition * 1000,
           duration: sceneConfig.timing.attack * 1000,
@@ -246,7 +248,6 @@ export const useLivePresentation = (
           teamId: event.teamId ?? undefined,
           challengeTitle: event.challengeTitle ?? undefined,
           sound: 'thirdBlood',
-          soundDelay: attackTimeline.fire * 1000,
           sceneKind: 'blood',
           popupDelay: sceneConfig.timing.recognition * 1000,
           duration: sceneConfig.timing.attack * 1000,
@@ -260,8 +261,7 @@ export const useLivePresentation = (
           teamId: event.teamId ?? undefined,
           challengeTitle: event.challengeTitle ?? undefined,
           sound: event.type === NoticeType.WrongAnswer ? 'wrongSubmit' : 'correctSubmit',
-          soundDelay: attackTimeline.fire * 1000,
-          duration: sceneConfig.timing.attack * 1000,
+          duration: sceneConfig.timing.solve * 1000,
           showPopup: false,
           verified: true,
         })
@@ -357,6 +357,7 @@ export const useLivePresentation = (
     visibleAnnouncement,
     audioEnabled,
     unlockAudio,
+    playSceneSound: play,
     spinPhase,
     changedTeams,
     bloodAttackTeams,

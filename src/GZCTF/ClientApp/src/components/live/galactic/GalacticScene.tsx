@@ -4,13 +4,13 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { Group, Points, Vector3 } from 'three'
 import { LiveScoreboardTeamModel, LiveScoreboardVisualIntensity } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
-import { LiveSpinPhase } from '../types'
+import { LiveSpinPhase, StageSoundName } from '../types'
 import { BossVisual, BossVisualProps } from './BossVisual'
 import { EventVFX, eventAge } from './EventVFX'
 import { SectorWheel } from './SectorWheel'
 import { TeamFleet, TeamShipVisual, TeamShipVisualProps } from './TeamFleet'
 import { sceneConfig as config } from './sceneConfig'
-import { SceneEvent } from './sceneEvents'
+import { attackTimelineFor, SceneEvent } from './sceneEvents'
 
 function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boolean }) {
   const stars = useRef<Points>(null)
@@ -176,20 +176,25 @@ function CameraDirector({
   }, [camera, size])
   useFrame((_, dt) => {
     const age = eventAge(event)
+    const timeline = attackTimelineFor(event?.kind)
     const strike = Boolean(
       event &&
       ['firstBlood', 'blood', 'correct', 'wrong'].includes(event.kind) &&
       targetAvailable &&
-      age < config.timing.attack
+      age < timeline.duration
     )
     const accent = reducedMotion
       ? 0
       : strike
-        ? Math.sin(Math.min(1, age / config.timing.attack) * Math.PI)
+        ? Math.sin(Math.min(1, age / timeline.duration) * Math.PI)
         : event?.kind === 'start'
           ? Math.max(0, 1 - age / 3.8) * 0.6
           : 0
-    const focus = strike ? (age < 1 ? age : Math.max(0, 1 - Math.max(0, age - config.timing.return) / 0.8)) : 0
+    const focus = strike
+      ? age < timeline.acquire
+        ? age / timeline.acquire
+        : Math.max(0, 1 - Math.max(0, age - timeline.return) / (timeline.duration - timeline.return))
+      : 0
     const ease = 1 - Math.exp(-Math.min(dt, 0.05) * 3)
     camera.position.x += (config.camera.x + source.x * focus * 0.12 - camera.position.x) * ease
     camera.position.y += (config.camera.y + source.y * focus * 0.08 - camera.position.y) * ease
@@ -234,6 +239,7 @@ export default function GalacticScene({
   teams,
   frozen,
   event,
+  onStrikeFire,
   spinPhase,
   categoryCount,
   highlighted,
@@ -244,6 +250,7 @@ export default function GalacticScene({
   intensity?: LiveScoreboardVisualIntensity
   overtime?: boolean
   event?: SceneEvent
+  onStrikeFire: (sound: StageSoundName) => void
   spinPhase: LiveSpinPhase
   categoryCount: number
   highlighted: Set<number>
@@ -314,6 +321,7 @@ export default function GalacticScene({
           {!frozen && (
             <EventVFX
               event={event}
+              onStrikeFire={onStrikeFire}
               source={source}
               reducedMotion={reducedMotion || calm}
               targetAvailable={targetAvailable}

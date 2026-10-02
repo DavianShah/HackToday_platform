@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { announcementScene, attackBlend, attackPhase, attackTimeline, positiveSolveEvents, SceneScheduler } from '../src/components/live/galactic/sceneEvents.ts'
+import { announcementScene, attackBlend, attackPhase, attackTimeline, attackTimelineFor, frameSyncedStrike, positiveSolveEvents, SceneScheduler, solveTimeline, strikeCueReady } from '../src/components/live/galactic/sceneEvents.ts'
 import { reconcileSlots, orbitPose, resolveTeamId, uniqueTeams } from '../src/components/live/galactic/teamSlots.ts'
 
 test('ranking and late entries preserve occupied lanes, exits release only after fade', () => {
@@ -102,18 +102,62 @@ test('visual backlog is bounded and coalesces score facts per team', () => {
   assert.ok(scheduler.pending[0].delta! > 1)
 })
 
-test('every attack uses the same arrival, hold and smooth return envelope', () => {
-  for (const kind of ['firstBlood', 'blood', 'correct', 'wrong'] as const) {
+test('Blood strikes retain their full timeline and smooth return', () => {
+  assert.equal(attackTimeline.duration, 7.6)
+  for (const kind of ['firstBlood', 'blood'] as const) {
+    assert.equal(attackTimelineFor(kind), attackTimeline)
     assert.equal(attackBlend(kind, 0.5), 0)
     assert.ok(attackBlend(kind, attackTimeline.approach) > 0.99)
     assert.ok(attackBlend(kind, attackTimeline.return) > 0.99)
     assert.ok(attackBlend(kind, 7.2) > 0 && attackBlend(kind, 7.2) < 1)
     assert.equal(attackBlend(kind, attackTimeline.duration), 0)
   }
-  assert.equal(positiveSolveEvents(new Map([[1, 1]]), new Set([1]), 'poll')[0].duration, 7600)
+  assert.equal(announcementScene({ key: 'first', kind: 'firstBlood', title: 'First Blood', sound: 'firstBlood' }, false, false)?.duration, 7600)
+  assert.equal(announcementScene({ key: 'second', kind: 'blood', title: 'Second Blood', sound: 'secondBlood' }, false, false)?.duration, 7600)
   assert.equal(announcementScene({ key: 'third', kind: 'blood', title: 'Third Blood', sound: 'thirdBlood' }, false, false)?.duration, 7600)
+})
+
+test('solve and wrong-submit strikes finish three seconds earlier with aligned phases', () => {
+  assert.equal(solveTimeline.duration, 4.6)
+  assert.ok(solveTimeline.fire < solveTimeline.impact)
+  assert.ok(solveTimeline.impact < solveTimeline.return)
   assert.deepEqual(
-    [0, 1, 2.6, 3.35, 3.55, 4.8, 6.8, 7.6].map((age) => attackPhase('correct', age)),
+    [0, 1, 2.6, 3.35, 3.55, 4.8, 6.8, 7.6].map((age) => attackPhase('firstBlood', age)),
     ['acquire', 'approach', 'charge', 'fire', 'impact', 'recognition', 'return', 'resume']
   )
+  for (const kind of ['firstBlood', 'blood', 'correct', 'wrong'] as const) {
+    const timeline = attackTimelineFor(kind)
+    assert.ok(attackBlend(kind, timeline.approach) > 0.99)
+    assert.ok(attackBlend(kind, timeline.return) > 0.99)
+    assert.ok(attackBlend(kind, (timeline.return + timeline.duration) / 2) > 0)
+    assert.equal(attackBlend(kind, timeline.duration), 0)
+  }
+  for (const kind of ['correct', 'wrong'] as const) {
+    assert.equal(attackTimelineFor(kind), solveTimeline)
+    assert.equal(attackBlend(kind, solveTimeline.acquire / 2), 0)
+    assert.deepEqual(
+      [0, solveTimeline.acquire, solveTimeline.approach, solveTimeline.fire, solveTimeline.impact, solveTimeline.recognition, solveTimeline.return, solveTimeline.duration].map((age) => attackPhase(kind, age)),
+      ['acquire', 'approach', 'charge', 'fire', 'impact', 'recognition', 'return', 'resume']
+    )
+  }
+  assert.equal(positiveSolveEvents(new Map([[1, 1]]), new Set([1]), 'poll')[0].duration, 4600)
+  assert.equal(announcementScene({ key: 'solve', kind: 'correct', title: 'Solve', sound: 'correctSubmit' }, false, false)?.duration, 4600)
+  assert.equal(announcementScene({ key: 'wrong', kind: 'wrong', title: 'Wrong', sound: 'wrongSubmit' }, false, true)?.duration, 4600)
+})
+
+test('strike sounds cue on the laser-fire frame once', () => {
+  assert.equal(frameSyncedStrike('firstBlood'), false)
+  for (const [kind, sound] of [['blood', 'secondBlood'], ['correct', 'correctSubmit'], ['wrong', 'wrongSubmit']] as const) {
+    assert.equal(frameSyncedStrike(kind), true)
+    const timeline = attackTimelineFor(kind)
+    const mapped = announcementScene({ key: kind, kind, title: kind, sound }, false, true)!
+    const event = { ...mapped, started: 0 }
+    assert.equal(strikeCueReady(event, timeline.fire - 0.001), false)
+    assert.equal(strikeCueReady(event, timeline.fire), true)
+    assert.equal(strikeCueReady(event, timeline.fire, event.key), false)
+    assert.equal(strikeCueReady(event, timeline.duration), false)
+    assert.equal(event.sound, sound)
+  }
+  const first = announcementScene({ key: 'first', kind: 'firstBlood', title: 'First', sound: 'firstBlood' }, false, false)!
+  assert.equal(strikeCueReady({ ...first, started: 0 }, attackTimeline.fire), false)
 })

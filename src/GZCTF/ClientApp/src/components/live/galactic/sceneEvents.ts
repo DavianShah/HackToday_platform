@@ -1,17 +1,32 @@
-import type { LiveAnnouncement } from '../types'
+import type { LiveAnnouncement, StageSoundName } from '../types'
 
-/** Seconds from the start of the authoritative First Blood announcement. */
+/** Seconds from the start of the authoritative Blood announcements. */
 export const attackTimeline = { duration: 7.6, acquire: 1, approach: 2.6, fire: 3.35, impact: 3.55, recognition: 4.8, return: 6.8 } as const
+const solveScale = (attackTimeline.duration - 3) / attackTimeline.duration
+export const solveTimeline = {
+  duration: attackTimeline.duration - 3,
+  acquire: attackTimeline.acquire * solveScale,
+  approach: attackTimeline.approach * solveScale,
+  fire: attackTimeline.fire * solveScale,
+  impact: attackTimeline.impact * solveScale,
+  recognition: attackTimeline.recognition * solveScale,
+  return: attackTimeline.return * solveScale,
+} as const
+export const attackTimelineFor = (kind: LiveAnnouncement['kind'] | undefined) =>
+  kind === 'correct' || kind === 'wrong' ? solveTimeline : attackTimeline
+export const frameSyncedStrike = (kind: LiveAnnouncement['kind']) =>
+  kind === 'blood' || kind === 'correct' || kind === 'wrong'
 export type AttackPhase = 'idle' | 'acquire' | 'approach' | 'charge' | 'fire' | 'impact' | 'recognition' | 'return' | 'resume'
 export function attackPhase(kind: SceneEvent['kind'] | undefined, age: number): AttackPhase {
   if (!kind || !['firstBlood', 'blood', 'correct', 'wrong'].includes(kind)) return 'idle'
-  if (age < attackTimeline.acquire) return 'acquire'
-  if (age < attackTimeline.approach) return 'approach'
-  if (age < attackTimeline.fire) return 'charge'
-  if (age < attackTimeline.impact) return 'fire'
-  if (age < attackTimeline.recognition) return 'impact'
-  if (age < attackTimeline.return) return 'recognition'
-  if (age < attackTimeline.duration) return 'return'
+  const timeline = attackTimelineFor(kind)
+  if (age < timeline.acquire) return 'acquire'
+  if (age < timeline.approach) return 'approach'
+  if (age < timeline.fire) return 'charge'
+  if (age < timeline.impact) return 'fire'
+  if (age < timeline.recognition) return 'impact'
+  if (age < timeline.return) return 'recognition'
+  if (age < timeline.duration) return 'return'
   return 'resume'
 }
 
@@ -24,6 +39,7 @@ export interface SceneEvent {
   duration: number
   started: number
   bloodTier?: 2 | 3
+  sound?: StageSoundName
 }
 
 const smooth = (value: number) => {
@@ -34,8 +50,20 @@ const smooth = (value: number) => {
 /** Motion envelope in seconds, shared by the ship and camera choreography. */
 export function attackBlend(kind: SceneEvent['kind'], age: number) {
   if (!['firstBlood', 'blood', 'correct', 'wrong'].includes(kind)) return 0
-  return smooth((age - attackTimeline.acquire) / (attackTimeline.approach - attackTimeline.acquire)) *
-    (1 - smooth((age - attackTimeline.return) / (attackTimeline.duration - attackTimeline.return)))
+  const timeline = attackTimelineFor(kind)
+  return smooth((age - timeline.acquire) / (timeline.approach - timeline.acquire)) *
+    (1 - smooth((age - timeline.return) / (timeline.duration - timeline.return)))
+}
+
+export function strikeCueReady(event: SceneEvent | undefined, age: number, playedKey?: string) {
+  return Boolean(
+    event &&
+    frameSyncedStrike(event.kind) &&
+    event.sound &&
+    event.key !== playedKey &&
+    age >= attackTimelineFor(event.kind).fire &&
+    age < attackTimelineFor(event.kind).duration
+  )
 }
 
 export function announcementScene(
@@ -51,7 +79,10 @@ export function announcementScene(
     teamName: event.teamName,
     delta: event.delta,
     bloodTier: event.kind === 'blood' ? (event.sound === 'thirdBlood' ? 3 : 2) : undefined,
-    duration: ['firstBlood', 'blood', 'wrong'].includes(event.kind) ? attackTimeline.duration * 1000 : event.duration ?? 3200,
+    sound: event.sound,
+    duration: ['firstBlood', 'blood', 'correct', 'wrong'].includes(event.kind)
+      ? attackTimelineFor(event.kind).duration * 1000
+      : event.duration ?? 3200,
   }
 }
 
@@ -95,5 +126,5 @@ export function positiveSolveEvents(deltas: ReadonlyMap<number, number>, changed
     .filter(
       ([id, value]) => Number.isSafeInteger(id) && id > 0 && Number.isFinite(value) && value > 0 && changed.has(id)
     )
-    .map(([teamId, delta]) => ({ key: `${epoch}-${teamId}`, kind: 'correct' as const, teamId, delta, duration: attackTimeline.duration * 1000 }))
+    .map(([teamId, delta]) => ({ key: `${epoch}-${teamId}`, kind: 'correct' as const, teamId, delta, duration: solveTimeline.duration * 1000 }))
 }
