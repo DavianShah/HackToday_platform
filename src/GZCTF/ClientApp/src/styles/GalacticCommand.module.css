@@ -219,12 +219,12 @@
   color: var(--gc-danger);
 }
 
-.audioButton {
+.stage .audioButton {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 5px;
   flex: 0 0 auto;
-  padding: 8px 10px;
+  padding: 5px 7px;
   color: var(--gc-muted);
   border: 1px solid var(--gc-line);
   background: rgba(9, 21, 37, 0.72);
@@ -929,18 +929,18 @@
   font-size: clamp(18px, 1.45vw, 28px);
   letter-spacing: -0.025em;
 }
-.audioButton {
+.stage .audioButton {
   pointer-events: auto;
   position: fixed;
   z-index: 9;
-  top: clamp(54px, 5.8vh, 66px);
+  top: auto;
   left: 14px;
   right: auto;
-  bottom: auto;
+  bottom: calc(clamp(46px, 5vh, 58px) + 10px + env(safe-area-inset-bottom));
   clip-path: none;
-  border: 0;
-  border-radius: 0;
-  background: rgba(4, 12, 24, 0.26);
+  border: 1px solid rgba(97, 231, 255, 0.18);
+  border-radius: 3px;
+  background: rgba(4, 12, 24, 0.72);
 }
 .content {
   position: relative;
@@ -1264,27 +1264,68 @@
 .worldFallback {
   position: absolute;
   inset: 0;
+  z-index: 16777272;
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 35px;
+  background: radial-gradient(ellipse 35% 36% at 50% 46%, rgba(30, 80, 105, 0.5), transparent 100%), #02070f;
   color: #9aafc2;
 }
+.worldFallback::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(48vw, 850px);
+  height: min(30vh, 310px);
+  border: 1px solid rgba(140, 227, 231, 0.34);
+  border-radius: 50%;
+  box-shadow: 0 0 50px rgba(97, 231, 255, 0.08), inset 0 0 35px rgba(97, 231, 255, 0.06);
+  transform: translate(-50%, -50%);
+}
 .worldFallback span {
-  margin-top: 20vh;
-  font-size: 12px;
+  position: absolute;
+  top: calc(46% + min(17vh, 170px));
+  left: 50%;
+  width: min(56vw, 560px);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 2px 12px #02050c;
+  transform: translateX(-50%);
 }
 .fallbackFortress {
   position: absolute;
-  left: 44%;
-  top: 30%;
-  width: 12%;
-  height: 27%;
-  border: 12px double #536a77;
-  transform: rotate(-12deg);
+  left: 50%;
+  top: 46%;
+  width: clamp(84px, 8vw, 150px);
+  aspect-ratio: 1;
+  border: 14px solid #536a77;
+  border-radius: 50%;
+  background: radial-gradient(circle, #eab66b 0 17%, #112331 18% 48%, #8ce3e7 49% 52%, #132636 53%);
+  transform: translate(-50%, -50%);
   box-shadow:
     0 0 90px #61e7ff25,
-    inset 0 0 50px #61e7ff20;
+    inset 0 0 40px #61e7ff20;
+}
+.fallbackFortress::before,
+.fallbackFortress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  border: 2px solid #536a77;
+  background: linear-gradient(145deg, #425667, #182c3c 65%, #0b1825);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.36);
+}
+.fallbackFortress::before {
+  right: 112%;
+  transform: skewY(-12deg);
+}
+.fallbackFortress::after {
+  left: 112%;
+  transform: skewY(12deg);
 }
 @media (max-height: 800px) {
   .panelHead {

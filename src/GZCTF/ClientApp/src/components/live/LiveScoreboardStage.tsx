@@ -1,5 +1,7 @@
 import { FC, lazy, Suspense, useMemo } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 import { LiveAnnouncementOverlay } from '@Components/live/LiveAnnouncementOverlay'
+import { LiveArenaFallback } from '@Components/live/LiveArenaFallback'
 import { LiveCategoryPool } from '@Components/live/LiveCategoryPool'
 import { LiveCenterArena } from '@Components/live/LiveCenterArena'
 import { LiveEventStream } from '@Components/live/LiveEventStream'
@@ -13,6 +15,11 @@ import { resolveTeamId, uniqueTeams } from './galactic/teamSlots'
 import { useSceneDirector } from './galactic/useSceneDirector'
 
 const GalacticScene = lazy(() => import('./galactic/GalacticScene'))
+const WorldFallback = () => (
+  <div className={classes.world} aria-label="Orbital battlefield">
+    <LiveArenaFallback message="Arena unavailable · Live broadcast data continues" />
+  </div>
+)
 
 const EVENT_TITLE = 'HackToday 2026 Final'
 
@@ -72,24 +79,34 @@ export const LiveScoreboardStage: FC<{
   const events = frozen ? [] : (state.recentEvents ?? [])
 
   return (
-    <main className={`${classes.stage} ${overtime ? classes.stageOvertime : ''} ${frozen ? classes.stageFrozen : ''} ${!frozen && presentation.visibleAnnouncement?.kind === 'firstBlood' ? classes.stageBlood : ''}`}>
-      <Suspense fallback={null}>
-        <GalacticScene
-          intensity={state.config?.visualIntensity}
-          overtime={overtime}
-          teams={teams}
-          frozen={frozen}
-          event={sceneEvent}
-          spinPhase={presentation.spinPhase}
-          highlighted={new Set(presentation.rankChanges.keys())}
-          categoryCount={
-            new Set([
-              ...(state.speedrunState?.remainingCategories ?? []),
-              ...(state.speedrunState?.usedCategories ?? []),
-            ]).size
+    <main
+      className={`${classes.stage} ${overtime ? classes.stageOvertime : ''} ${frozen ? classes.stageFrozen : ''} ${!frozen && presentation.visibleAnnouncement?.kind === 'firstBlood' ? classes.stageBlood : ''}`}
+    >
+      <ErrorBoundary FallbackComponent={WorldFallback}>
+        <Suspense
+          fallback={
+            <div className={classes.world} aria-label="Orbital battlefield">
+              <LiveArenaFallback message="Loading arena" />
+            </div>
           }
-        />
-      </Suspense>
+        >
+          <GalacticScene
+            intensity={state.config?.visualIntensity}
+            overtime={overtime}
+            teams={teams}
+            frozen={frozen}
+            event={sceneEvent}
+            spinPhase={presentation.spinPhase}
+            highlighted={new Set(presentation.rankChanges.keys())}
+            categoryCount={
+              new Set([
+                ...(state.speedrunState?.remainingCategories ?? []),
+                ...(state.speedrunState?.usedCategories ?? []),
+              ]).size
+            }
+          />
+        </Suspense>
+      </ErrorBoundary>
       <div className={classes.shell}>
         <LiveTopHud
           round={round}
@@ -133,24 +150,26 @@ export const LiveScoreboardStage: FC<{
           />
         </div>
       </div>
-      {sceneEvent && !frozen && (sceneEvent.teamId || sceneEvent.teamName) &&
+      {sceneEvent &&
+        !frozen &&
+        (sceneEvent.teamId || sceneEvent.teamName) &&
         !['firstBlood', 'blood'].includes(presentation.visibleAnnouncement?.kind ?? '') && (
-        <div className={classes.sceneCallout} role="status">
-          <span>
-            {sceneEvent.kind === 'wrong'
-              ? 'Preview ? Target deflected'
-              : sceneEvent.kind === 'firstBlood'
-                ? 'Priority strike'
-                : 'Verified strike'}
-          </span>
-          <strong>
-            {teams.find((team) => team.id === sceneEvent.teamId)?.name ??
-              sceneEvent.teamName ??
-              'Incoming transmission'}
-          </strong>
-          {sceneEvent.delta !== undefined && <b>+{sceneEvent.delta.toLocaleString()}</b>}
-        </div>
-      )}
+          <div className={classes.sceneCallout} role="status">
+            <span>
+              {sceneEvent.kind === 'wrong'
+                ? 'Preview ? Target deflected'
+                : sceneEvent.kind === 'firstBlood'
+                  ? 'Priority strike'
+                  : 'Verified strike'}
+            </span>
+            <strong>
+              {teams.find((team) => team.id === sceneEvent.teamId)?.name ??
+                sceneEvent.teamName ??
+                'Incoming transmission'}
+            </strong>
+            {sceneEvent.delta !== undefined && <b>+{sceneEvent.delta.toLocaleString()}</b>}
+          </div>
+        )}
       <LiveAnnouncementOverlay event={frozen ? undefined : presentation.visibleAnnouncement} />
     </main>
   )
