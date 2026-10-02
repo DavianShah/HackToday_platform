@@ -175,6 +175,20 @@ public class FlagChecker(
                         await gameNoticeRepository.AddNotice(
                             GameNotice.FromSubmission(item, type, StaticLocalizer), token);
 
+                    if (item.Game.Mode == GameMode.Speedrun && item.Game.EndTimeUtc > DateTimeOffset.UtcNow)
+                    {
+                        var liveType = ans is AnswerResult.WrongAnswer or AnswerResult.CheatDetected ? NoticeType.WrongAnswer
+                            : ans == AnswerResult.Accepted && type == SubmissionType.Normal && firstSolveRank > 0
+                                ? NoticeType.CorrectAnswer : (NoticeType?)null;
+                        if (liveType is { } noticeType)
+                            await gameNoticeRepository.AddNotice(new()
+                            {
+                                GameId = item.GameId,
+                                Type = noticeType,
+                                Values = [item.TeamName, item.ChallengeName]
+                            }, token);
+                    }
+
                     item.Status = ans;
                     await submissionRepository.SendSubmission(item);
                     if (ans == AnswerResult.Accepted)

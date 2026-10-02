@@ -70,6 +70,8 @@ test('freeze and wrong-submit boundary are enforced before scheduling', () => {
   assert.equal(announcementScene(wrong, false, false), undefined)
   assert.equal(announcementScene(wrong, true, true), undefined)
   assert.equal(announcementScene(wrong, false, true)?.kind, 'wrong')
+  assert.equal(announcementScene({ ...wrong, verified: true }, false, false)?.kind, 'wrong')
+  assert.equal(announcementScene({ ...wrong, verified: true }, true, false), undefined)
 })
 
 test('cinematic starts at active event, deduplicates and interrupts solves, then recovers', () => {

@@ -180,7 +180,17 @@ public enum NoticeType : byte
     /// <summary>
     /// New challenge released
     /// </summary>
-    NewChallenge = 5
+    NewChallenge = 5,
+
+    /// <summary>
+    /// Correct Speedrun submission without a blood award
+    /// </summary>
+    CorrectAnswer = 6,
+
+    /// <summary>
+    /// Incorrect Speedrun submission
+    /// </summary>
+    WrongAnswer = 7
 }
 
 /// <summary>

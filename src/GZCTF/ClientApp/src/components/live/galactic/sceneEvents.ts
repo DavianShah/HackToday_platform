@@ -43,7 +43,7 @@ export function announcementScene(
   frozen: boolean,
   preview: boolean
 ): Omit<SceneEvent, 'started'> | undefined {
-  if (!event || frozen || (event.kind === 'wrong' && !preview)) return undefined
+  if (!event || frozen || (event.kind === 'wrong' && !preview && !event.verified)) return undefined
   return {
     key: event.key,
     kind: event.kind,
