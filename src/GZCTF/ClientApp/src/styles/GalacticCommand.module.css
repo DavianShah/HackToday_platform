@@ -963,9 +963,9 @@
   inset: 0;
   pointer-events: none;
   background: linear-gradient(90deg,
-    rgba(4, 10, 19, 0.34) 0%, rgba(4, 10, 19, 0.12) 19.8%,
-    transparent 20.15%, transparent 79.85%,
-    rgba(4, 10, 19, 0.12) 80.2%, rgba(4, 10, 19, 0.34) 100%);
+    rgba(4, 10, 19, 0.34) 0%, rgba(4, 10, 19, 0.12) 17.8%,
+    transparent 18.15%, transparent 81.85%,
+    rgba(4, 10, 19, 0.12) 82.2%, rgba(4, 10, 19, 0.34) 100%);
 }
 .topHud {
   padding: 0 clamp(16px, 1.4vw, 26px);
@@ -1029,7 +1029,7 @@
   grid-template-rows: minmax(0, 1fr) auto;
 }
 .mainGrid {
-  grid-template-columns: 20% 60% 20%;
+  grid-template-columns: 18% 64% 18%;
   gap: 0;
   width: 100%;
   height: 100%;
@@ -1131,7 +1131,7 @@
   display: none;
 }
 .arenaReadout {
-  bottom: calc(clamp(68px, 7vh, 80px) + 2vh);
+  bottom: clamp(68px, 8vh, 88px);
 }
 .stageBlood .arenaReadout { opacity: 0; }
 .arenaTitle {

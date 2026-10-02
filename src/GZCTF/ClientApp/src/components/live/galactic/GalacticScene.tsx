@@ -285,18 +285,22 @@ export default function GalacticScene({
             reducedMotion={reducedMotion}
           />
           <ambientLight intensity={0.58} />
-          <directionalLight position={[8, 8, 5]} intensity={2.45} color="#c4d3dc" />
+          <directionalLight position={[8, 8, 5]} intensity={2.8} color="#dfedf7" />
+          <spotLight position={[-3, 5, 9]} angle={0.5} penumbra={0.8} intensity={25} distance={22} color="#edf6ff" />
+          <directionalLight position={[5, -1, 7]} intensity={1.3} color="#83c7dc" />
           <directionalLight position={[-7, -3, -5]} intensity={2.05} color="#547d93" />
           <directionalLight position={[-2, 4, -8]} intensity={1.1} color="#a5b3c9" />
           <pointLight position={[0, 0, 3]} intensity={7} color={config.colors.amber} distance={10} />
           <Atmosphere reducedMotion={reducedMotion} calm={calm} />
-          <Boss
-            reducedMotion={reducedMotion}
-            overtime={!frozen && overtime}
-            spinning={!frozen && spinPhase === 'spinning'}
-            event={frozen ? undefined : event}
-            targetAvailable={!frozen && targetAvailable}
-          />
+          <group position={[0, config.bossY, 0]}>
+            <Boss
+              reducedMotion={reducedMotion}
+              overtime={!frozen && overtime}
+              spinning={!frozen && spinPhase === 'spinning'}
+              event={frozen ? undefined : event}
+              targetAvailable={!frozen && targetAvailable}
+            />
+          </group>
           <TeamFleet
             teams={teams}
             frozen={frozen}
