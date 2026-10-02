@@ -47,6 +47,7 @@ export function EventVFX({
       const travel = Math.max(0, Math.min(1, (age - attackTimeline.fire) / 0.2))
       beam.current.visible = attack && !reducedMotion && ['fire', 'impact'].includes(phase)
       direction.copy(source).multiplyScalar(-1)
+      direction.y += config.bossY
       if (event?.kind === 'wrong') direction.set(-source.x * 0.4, 2.5 - source.y, -source.z)
       beam.current.position.copy(source).addScaledVector(direction, travel * 0.5)
       beam.current.scale.set(event?.kind === 'firstBlood' ? 0.13 : 0.07, Math.max(0.01, direction.length() * travel), 0.09)
@@ -61,7 +62,7 @@ export function EventVFX({
     if (wave.current) {
       const pulse = attack ? impact : age - 0.2
       wave.current.visible = Boolean(event) && event?.kind !== 'start' && event?.kind !== 'finished' && pulse > 0 && pulse < 1.5
-      wave.current.position.set(event?.kind === 'wrong' ? source.x : 0, event?.kind === 'wrong' ? source.y : 0, 1.8)
+      wave.current.position.set(event?.kind === 'wrong' ? source.x : 0, event?.kind === 'wrong' ? source.y : config.bossY, 1.8)
       wave.current.scale.setScalar(reducedMotion ? 1.7 : 0.5 + pulse * (event?.kind === 'firstBlood' ? 4.4 : 2.4))
       wave.current.rotation.z = event?.kind === 'hint' ? age * 0.7 : 0
       wave.current.rotation.x = 0
@@ -80,7 +81,7 @@ export function EventVFX({
   })
   return (
     <group>
-      <pointLight ref={flash} position={[0, 0, 2.2]} color={color} distance={9} intensity={0} />
+      <pointLight ref={flash} position={[0, config.bossY, 2.2]} color={color} distance={9} intensity={0} />
       <mesh ref={beam} visible={false}>
         <cylinderGeometry args={[1, 1, 1, 6]} />
         <meshBasicMaterial color={color} transparent opacity={0.85} depthWrite={false} />
@@ -93,7 +94,7 @@ export function EventVFX({
         <ringGeometry args={[0.98, 1, event?.kind === 'hint' ? 6 : 80]} />
         <meshBasicMaterial color={color} transparent opacity={0.6} depthWrite={false} />
       </mesh>
-      <group ref={sparks} visible={false}>
+      <group ref={sparks} position={[0, config.bossY, 0]} visible={false}>
         {Array.from({ length: config.quality.sparks }, (_, i) => (
           <mesh
             key={i}

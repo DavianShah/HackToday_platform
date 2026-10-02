@@ -11,6 +11,7 @@ export const sceneConfig = {
   },
   // Level broadcast camera; world fills the middle while the HUD wings remain transparent.
   camera: { fov: 42, x: 0, y: 1.1, z: 17.5, safeWidth: 0.64, worldWidth: 14, worldHeight: 9.8 },
+  bossY: 0.35,
   quality: { dpr: 1.5, stars: 650, sparks: 24, calmDpr: 1, calmStars: 240 },
   orbit: { speed: 0.045, radius: 6.4, height: 3.3, transition: 1.2 },
   // One clock governs every strike, including preview deflections.
