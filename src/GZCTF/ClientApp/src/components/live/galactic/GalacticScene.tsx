@@ -34,7 +34,13 @@ function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boo
     <group>
       <mesh position={[12, 7, -42]} scale={[13, 13, 2.4]}>
         <sphereGeometry args={[1, 32, 20]} />
-        <meshStandardMaterial color="#122a3c" emissive="#0c2335" emissiveIntensity={0.4} metalness={0.05} roughness={1} />
+        <meshStandardMaterial
+          color="#122a3c"
+          emissive="#0c2335"
+          emissiveIntensity={0.4}
+          metalness={0.05}
+          roughness={1}
+        />
       </mesh>
       <mesh position={[12, 7, -39.4]} scale={[13.35, 13.35, 0.15]}>
         <sphereGeometry args={[1, 32, 20]} />
@@ -105,19 +111,35 @@ function CameraDirector({
   }, [camera, size])
   useFrame((_, dt) => {
     const age = eventAge(event)
-    const strike = Boolean(event && ['firstBlood', 'blood', 'correct', 'wrong'].includes(event.kind) && targetAvailable && age < config.timing.attack)
-    const accent = reducedMotion ? 0 : strike ? Math.sin(Math.min(1, age / config.timing.attack) * Math.PI) : event?.kind === 'start' ? Math.max(0, 1 - age / 3.8) * 0.6 : 0
+    const strike = Boolean(
+      event &&
+      ['firstBlood', 'blood', 'correct', 'wrong'].includes(event.kind) &&
+      targetAvailable &&
+      age < config.timing.attack
+    )
+    const accent = reducedMotion
+      ? 0
+      : strike
+        ? Math.sin(Math.min(1, age / config.timing.attack) * Math.PI)
+        : event?.kind === 'start'
+          ? Math.max(0, 1 - age / 3.8) * 0.6
+          : 0
     const focus = strike ? (age < 1 ? age : Math.max(0, 1 - Math.max(0, age - config.timing.return) / 0.8)) : 0
     const ease = 1 - Math.exp(-Math.min(dt, 0.05) * 3)
     camera.position.x += (config.camera.x + source.x * focus * 0.12 - camera.position.x) * ease
     camera.position.y += (config.camera.y + source.y * focus * 0.08 - camera.position.y) * ease
-    camera.position.z += (base.current - accent * 1.1 + (event?.kind === 'finished' ? Math.max(0, 1 - age / 3.5) * 1.2 : 0) - camera.position.z) * ease
+    camera.position.z +=
+      (base.current -
+        accent * 1.1 +
+        (event?.kind === 'finished' ? Math.max(0, 1 - age / 3.5) * 1.2 : 0) -
+        camera.position.z) *
+      ease
     camera.lookAt(source.x * focus * 0.2, 0.2 + source.y * focus * 0.12, 0)
   })
   return null
 }
 
-function ContextGuard({ onLost }: { onLost: () => void }) {
+function ContextGuard({ onLost, onRestored }: { onLost: () => void; onRestored: () => void }) {
   const { gl } = useThree()
   useEffect(() => {
     const canvas = gl.domElement
@@ -126,8 +148,12 @@ function ContextGuard({ onLost }: { onLost: () => void }) {
       onLost()
     }
     canvas.addEventListener('webglcontextlost', lost)
-    return () => canvas.removeEventListener('webglcontextlost', lost)
-  }, [gl, onLost])
+    canvas.addEventListener('webglcontextrestored', onRestored)
+    return () => {
+      canvas.removeEventListener('webglcontextlost', lost)
+      canvas.removeEventListener('webglcontextrestored', onRestored)
+    }
+  }, [gl, onLost, onRestored])
   return null
 }
 
@@ -179,52 +205,55 @@ export default function GalacticScene({
   }, [])
   return (
     <div className={classes.world} aria-label="Orbital battlefield">
-      {lost ? (
-        <Fallback />
-      ) : (
-        <ErrorBoundary FallbackComponent={Fallback}>
-          <Canvas
-            dpr={[1, calm ? config.quality.calmDpr : config.quality.dpr]}
-            camera={{ position: [config.camera.x, config.camera.y, config.camera.z], fov: config.camera.fov }}
-            gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-            fallback={<Fallback />}
-          >
-            <ContextGuard onLost={() => setLost(true)} />
-            <CameraDirector
+      <ErrorBoundary FallbackComponent={Fallback}>
+        <Canvas
+          dpr={[1, calm ? config.quality.calmDpr : config.quality.dpr]}
+          camera={{ position: [config.camera.x, config.camera.y, config.camera.z], fov: config.camera.fov }}
+          gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+          fallback={<Fallback />}
+        >
+          <ContextGuard onLost={() => setLost(true)} onRestored={() => setLost(false)} />
+          <CameraDirector
+            event={event}
+            source={source}
+            targetAvailable={targetAvailable}
+            reducedMotion={reducedMotion}
+          />
+          <ambientLight intensity={0.58} />
+          <directionalLight position={[8, 8, 5]} intensity={2.45} color="#c4d3dc" />
+          <directionalLight position={[-7, -3, -5]} intensity={2.05} color="#547d93" />
+          <directionalLight position={[-2, 4, -8]} intensity={1.1} color="#a5b3c9" />
+          <pointLight position={[0, 0, 3]} intensity={7} color={config.colors.amber} distance={10} />
+          <Atmosphere reducedMotion={reducedMotion} calm={calm} />
+          <Boss
+            reducedMotion={reducedMotion}
+            overtime={overtime}
+            spinning={spinPhase === 'spinning'}
+            event={event}
+            targetAvailable={targetAvailable}
+          />
+          {!frozen && (
+            <TeamFleet
+              teams={teams}
+              reducedMotion={reducedMotion}
+              ShipVisual={Ship}
               event={event}
               source={source}
-              targetAvailable={targetAvailable}
-              reducedMotion={reducedMotion}
+              highlighted={highlighted}
             />
-            <ambientLight intensity={0.58} />
-            <directionalLight position={[8, 8, 5]} intensity={2.45} color="#c4d3dc" />
-            <directionalLight position={[-7, -3, -5]} intensity={2.05} color="#547d93" />
-            <directionalLight position={[-2, 4, -8]} intensity={1.1} color="#a5b3c9" />
-            <pointLight position={[0, 0, 3]} intensity={7} color={config.colors.amber} distance={10} />
-            <Atmosphere reducedMotion={reducedMotion} calm={calm} />
-            <Boss reducedMotion={reducedMotion} overtime={overtime} spinning={spinPhase === 'spinning'} event={event} targetAvailable={targetAvailable} />
-            {!frozen && (
-              <TeamFleet
-                teams={teams}
-                reducedMotion={reducedMotion}
-                ShipVisual={Ship}
-                event={event}
-                source={source}
-                highlighted={highlighted}
-              />
-            )}
-            <SectorWheel phase={spinPhase} count={categoryCount} reducedMotion={reducedMotion} />
-            {!frozen && (
-              <EventVFX
-                event={event}
-                source={source}
-                reducedMotion={reducedMotion || calm}
-                targetAvailable={targetAvailable}
-              />
-            )}
-          </Canvas>
-        </ErrorBoundary>
-      )}
+          )}
+          <SectorWheel phase={spinPhase} count={categoryCount} reducedMotion={reducedMotion} />
+          {!frozen && (
+            <EventVFX
+              event={event}
+              source={source}
+              reducedMotion={reducedMotion || calm}
+              targetAvailable={targetAvailable}
+            />
+          )}
+        </Canvas>
+      </ErrorBoundary>
+      {lost && <Fallback />}
     </div>
   )
 }
