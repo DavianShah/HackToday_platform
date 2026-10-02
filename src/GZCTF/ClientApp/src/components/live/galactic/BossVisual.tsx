@@ -8,12 +8,13 @@ import { SceneEvent } from './sceneEvents'
 export interface BossVisualProps {
   reducedMotion: boolean
   overtime?: boolean
+  spinning?: boolean
   event?: SceneEvent
   targetAvailable?: boolean
 }
 
 /** Split-citadel silhouette: two armored bastions around a suspended axial reactor. */
-export function BossVisual({ reducedMotion, overtime, event, targetAvailable = false }: BossVisualProps) {
+export function BossVisual({ reducedMotion, overtime, spinning, event, targetAvailable = false }: BossVisualProps) {
   const plate = useMemo(() => {
     const shape = new Shape()
     shape.moveTo(-0.5, -0.4)
@@ -27,12 +28,20 @@ export function BossVisual({ reducedMotion, overtime, event, targetAvailable = f
   }, [])
   const reactor = useRef<MeshStandardMaterial>(null)
   const root = useRef<Group>(null)
-  useFrame(({ clock }) => {
+  const armor = useRef<Group>(null)
+  const wings = useRef<Group[]>([])
+  useFrame(({ clock }, delta) => {
     if (!root.current) return
-    root.current.rotation.y = reducedMotion ? -0.22 : -0.22 + Math.sin(clock.elapsedTime * 0.16) * 0.06
+    if (armor.current && !reducedMotion) armor.current.rotation.y -= Math.min(delta, 0.05) * 0.018
     const hitAge = event ? eventAge(event) - impactTime(event) : 100
     const hit =
       targetAvailable && attackKind(event) && event?.kind !== 'wrong' && hitAge > 0 && hitAge < 1 ? Math.sin(hitAge * Math.PI) : 0
+    const split = event?.kind === 'firstBlood' && targetAvailable
+      ? Math.min(1, Math.max(0, hitAge / 0.42)) * (1 - Math.min(1, Math.max(0, (hitAge - 1.4) / 1.2)))
+      : 0
+    wings.current.forEach((wing, index) => {
+      wing.position.x = (index === 0 ? -1 : 1) * (1.6 + (reducedMotion ? 0 : split * 0.32))
+    })
     root.current.rotation.z = -0.08 + (reducedMotion ? 0 : hit * 0.07)
     root.current.position.z = -hit * 0.16
     if (reactor.current)
@@ -40,13 +49,16 @@ export function BossVisual({ reducedMotion, overtime, event, targetAvailable = f
         1.4 +
         (reducedMotion ? 0 : Math.sin(clock.elapsedTime * (overtime ? 2 : 0.8)) * 0.3) +
         hit * 3 +
-        (event?.kind === 'start' ? Math.max(0, 2 - eventAge(event)) : 0)
+        (spinning ? 0.7 + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 6) * 0.35) : 0) +
+        (event?.kind === 'start' ? Math.max(0, 2 - eventAge(event)) : 0) -
+        (event?.kind === 'finished' ? Math.max(0, 1 - eventAge(event) / 3.5) * 0.9 : 0)
     root.current.scale.setScalar(1 + (reducedMotion ? 0 : hit * 0.035))
-    root.current.position.y = reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.4) * 0.08
+    root.current.position.y = 0
   })
   const glow = overtime ? config.colors.danger : config.colors.amber
   return (
-    <group ref={root} rotation={[0.16, -0.22, -0.08]}>
+    <group ref={root}>
+      <group ref={armor} rotation={[0, -0.12, 0]}>
       <mesh position={[0.25, 0.18, -1.25]} rotation={[0, -0.13, 0]} scale={[4.7, 2.15, 1.05]}>
         <boxGeometry />
         <meshStandardMaterial color="#111d2a" metalness={0.55} roughness={0.7} />
@@ -67,8 +79,8 @@ export function BossVisual({ reducedMotion, overtime, event, targetAvailable = f
         <octahedronGeometry args={[1.2, 0]} />
         <meshStandardMaterial color={config.colors.hull} metalness={0.7} roughness={0.36} />
       </mesh>
-      {[-1, 1].map((side) => (
-        <group key={side} position={[side * 1.6, 0, 0]} rotation={[0, 0, side * -0.18]}>
+      {[-1, 1].map((side, index) => (
+        <group key={side} ref={(node) => { if (node) wings.current[index] = node }} position={[side * 1.6, 0, 0]} rotation={[0, 0, side * -0.18]}>
           <mesh scale={[1.05, 2.8, 1.55]}>
             <boxGeometry />
             <meshStandardMaterial color={config.colors.hull} metalness={0.65} roughness={0.4} />
@@ -190,6 +202,7 @@ export function BossVisual({ reducedMotion, overtime, event, targetAvailable = f
           <meshBasicMaterial color={i % 3 ? glow : config.colors.recess} />
         </mesh>
       ))}
+      </group>
     </group>
   )
 }

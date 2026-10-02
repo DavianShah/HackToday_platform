@@ -40,7 +40,7 @@ export const LiveScoreboardStage: FC<{
   )
   const sceneAnnouncement = useMemo(() => {
     const announcement = presentation.announcement
-    if (!announcement || !['firstBlood', 'blood', 'wrong'].includes(announcement.kind)) return announcement
+    if (!announcement || !['firstBlood', 'blood', 'correct', 'wrong'].includes(announcement.kind)) return announcement
     return {
       ...announcement,
       teamId: resolveTeamId(safeTeams, announcement.teamId, announcement.teamName),
@@ -49,8 +49,6 @@ export const LiveScoreboardStage: FC<{
 
   const sceneEvent = useSceneDirector({
     announcement: sceneAnnouncement,
-    deltas: presentation.scoreDeltas,
-    changed: presentation.changedTeams,
     frozen: Boolean(state?.scoreboardFrozen),
     preview: Boolean(preview),
     roundKey: `${round?.id ?? 'standby'}:${round?.status ?? 'none'}`,

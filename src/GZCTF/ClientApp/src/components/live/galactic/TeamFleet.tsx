@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
-import { ComponentType, useEffect, useRef, useState } from 'react'
+import { ComponentType, RefObject, useEffect, useRef, useState } from 'react'
 import { Group, Vector3 } from 'three'
 import { LiveScoreboardTeamModel } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
@@ -70,6 +70,7 @@ function Ship({
   event,
   source,
   highlighted,
+  phase,
 }: {
   highlighted: Set<number>
   event?: SceneEvent
@@ -77,14 +78,15 @@ function Ship({
   slot: TeamSlot
   reducedMotion: boolean
   ShipVisual: ComponentType<TeamShipVisualProps>
+  phase: RefObject<number>
 }) {
   const root = useRef<Group>(null)
   const orbit = useRef({ x: 0, y: 0, z: 0, angle: 0 })
   const [labelVisible, setLabelVisible] = useState(true)
   const labelCheckedAt = useRef(0)
-  useFrame(({ clock }, dt) => {
+  useFrame((_, dt) => {
     if (!root.current) return
-    const pose = orbitPose(slot.lane, reducedMotion ? 0 : clock.elapsedTime, config.orbit.speed, orbit.current)
+    const pose = orbitPose(slot.lane, reducedMotion ? 0 : phase.current, 1, orbit.current)
     const now = performance.now()
     const transition = reducedMotion
       ? 1
@@ -98,20 +100,27 @@ function Ship({
     const active = attackKind(event) && event?.teamId === slot.id
     const age = eventAge(event)
     const attack = active && event ? attackBlend(event.kind, age) : 0
-    const mix = reducedMotion ? 0 : event?.kind === 'wrong' ? attack * 0.55 : attack
-    root.current.position.set(pose.x * (1 - mix) - 2.4 * mix, pose.y * (1 - mix) - 1.1 * mix, pose.z + mix * 1.5)
+    const mix = reducedMotion ? 0 : attack
+    // The first leg clears the boss's projected silhouette before entering the firing lane.
+    const clearance = Math.sign(pose.x || 1) * Math.max(4.5, Math.abs(pose.x) + 0.7)
+    const exit = Math.min(1, mix * 2)
+    const lane = Math.max(0, mix * 2 - 1)
+    const x = pose.x + (clearance - pose.x) * exit + (-2.25 - clearance) * lane
+    const y = pose.y + (-1.55 - pose.y) * exit
+    const z = pose.z + (5.2 - pose.z) * exit + (4.5 - 5.2) * lane
+    root.current.position.set(x, y, z)
     if (now - labelCheckedAt.current > 240) {
       labelCheckedAt.current = now
       // The rear pass disappears behind the fortress instead of projecting its DOM label through armor.
       const hidden = !active && root.current.position.z < -0.8 && Math.abs(root.current.position.x) < 3.6 && Math.abs(root.current.position.y) < 2.8
       setLabelVisible(!hidden)
     }
-    if (active) source.copy(root.current.position)
-    root.current.rotation.set(0.18 + Math.cos(pose.angle) * 0.2, Math.sin(pose.angle) * 0.38, pose.angle + Math.PI / 2)
-    if (active && !reducedMotion) root.current.rotation.z = -1.2
-    root.current.scale.setScalar(scale)
-    // Clamp catch-up after suspended tabs; no React writes in the render loop.
-    root.current.rotation.x += Math.min(dt, 0.05) * 0.1
+    root.current.rotation.set(0.05, Math.sin(pose.angle) * 0.16, -Math.sin(pose.angle) * 0.14 - mix * 0.72)
+    root.current.scale.setScalar(scale * (1 + Math.max(0, pose.z) * 0.025) * (active ? 1 : attackKind(event) ? 0.78 : 1))
+    if (active) {
+      root.current.updateWorldMatrix(true, false)
+      source.set(0, 0.65, 0.22).applyMatrix4(root.current.matrixWorld)
+    }
   })
   return (
     <group ref={root}>
@@ -148,6 +157,11 @@ export function TeamFleet({
   ShipVisual?: ComponentType<TeamShipVisualProps>
 }) {
   const [slots, setSlots] = useState<TeamSlot[]>([])
+  const phase = useRef(0)
+  const attacking = Boolean(attackKind(event) && slots.some((slot) => slot.id === event?.teamId))
+  useFrame((_, delta) => {
+    if (!reducedMotion && !attacking) phase.current += Math.min(delta, 0.05) * config.orbit.speed
+  })
   useEffect(() => {
     setSlots((current) => reconcileSlots(current, teams, performance.now()))
     const cleanup = window.setTimeout(
@@ -167,6 +181,7 @@ export function TeamFleet({
           event={event}
           source={source}
           highlighted={highlighted}
+          phase={phase}
         />
       ))}
     </group>

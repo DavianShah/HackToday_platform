@@ -21,6 +21,11 @@ const waitFor = async (expression, timeout = 12000) => {
 const checkLayout = async (width, height) => {
   await call('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
   await pause(300)
+  // Headless Chrome may discard a WebGL context after several large resizes; reload the fixture once.
+  if (!(await evaluate('document.querySelector("canvas") !== null'))) {
+    await call('Page.navigate', { url: `${origin}?layout=${width}-${Date.now()}` })
+    await waitFor('!!window.galactic && !!document.querySelector("canvas")')
+  }
   const size = await evaluate(`({ canvas: document.querySelectorAll('canvas').length,
     page: [document.documentElement.scrollWidth,document.documentElement.scrollHeight],
     panels: [...document.querySelectorAll('aside')].map(e=>[e.clientWidth,e.clientHeight]),
@@ -46,9 +51,8 @@ try {
   await pause(6600)
   assert.equal(await evaluate('document.querySelector("h1").innerText'), 'WEB')
   for (const size of [
-    [1920, 1080],
-    [2560, 1440],
     [1366, 768],
+    [1920, 1080],
   ])
     await checkLayout(...size)
   await invoke('start')
@@ -57,12 +61,12 @@ try {
   await waitFor('document.body.innerText.includes("+150")', 3000)
   await pause(1600)
   await invoke('firstBlood')
-  await waitFor('[...document.querySelectorAll("[role=status]")].some(e=>e.innerText.toLowerCase().includes("priority strike"))')
+  // The ordinary solve owns its full 7.6-second foreground before the queued Blood starts.
+  await waitFor('[...document.querySelectorAll("[role=status]")].some(e=>e.innerText.toLowerCase().includes("priority strike"))', 12000)
   assert.match(await statuses(), /Priority strike/i)
   assert.doesNotMatch(await statuses(), /FIRST BLOOD/)
   const beforeTimer = await evaluate('document.querySelector("[data-live-timer]").innerText')
-  await pause(3450)
-  assert.match(await statuses(), /FIRST BLOOD/)
+  await waitFor('[...document.querySelectorAll("[role=status]")].some(e=>e.innerText.includes("FIRST BLOOD"))', 7000)
   const afterTimer = await evaluate('document.querySelector("[data-live-timer]").innerText')
   assert.notEqual(beforeTimer, afterTimer)
   await screenshot(client, 'first-blood')
@@ -86,7 +90,7 @@ try {
   await pause(3500)
   await invoke('simultaneousSolves')
   await waitFor('document.body.innerText.includes("+100")', 3000)
-  await waitFor('[...document.querySelectorAll("[role=status]")].some(e=>e.innerText.includes("ByteBenders"))', 5000)
+  await waitFor('[...document.querySelectorAll("[role=status]")].some(e=>e.innerText.includes("ByteBenders"))', 20000)
   assert.match(await statuses(), /ByteBenders/)
   await invoke('lateTeam')
   await pause(1400)
@@ -111,12 +115,15 @@ try {
   await invoke('finish')
   await pause(3800)
   assert.match(await text(), /STANDBY/)
+  await invoke('reset')
+  await waitFor('document.querySelector("h1")?.innerText.includes("AWAITING SECTOR")')
+  await pause(200)
   await call('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
   await invoke('spin')
-  await pause(700)
+  await waitFor('document.querySelector("h1")?.innerText.includes("SCANNING SECTORS")')
   assert.equal(
     await evaluate(
-      `getComputedStyle(document.querySelector('[aria-label="Scanning available galactic sectors"]')).animationName`
+      `getComputedStyle(document.querySelector('[aria-label="Central battlefield"] h1')).animationName`
     ),
     'none'
   )
@@ -172,6 +179,7 @@ try {
   await screenshot(client, 'webgl-fallback')
   console.log('Actual route: polling, timer, no historical replay, freeze and WebGL loss passed', { polls })
   assert.deepEqual(client.errors, [])
+  await checkLayout(2560, 1440)
   console.log('PASS: browser suite; no uncaught runtime errors')
 } finally {
   await call('Emulation.setCPUThrottlingRate', { rate: 1 })

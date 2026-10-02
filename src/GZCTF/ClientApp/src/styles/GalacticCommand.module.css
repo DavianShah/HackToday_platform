@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&display=swap');
+
 .stage,
 .fallback {
   --gc-bg: #030712;
@@ -19,7 +21,7 @@
   overflow: hidden;
   color: var(--gc-text);
   background: var(--gc-bg);
-  font-family: Inter, 'Segoe UI', sans-serif;
+  font-family: Lexend, 'Segoe UI', sans-serif;
 }
 
 .stage *,
@@ -755,6 +757,24 @@
 .announcement_category .announcementCopy strong {
   color: var(--gc-cyan);
 }
+.announcement_start .announcementCopy strong {
+  color: #e5faff;
+  animation: roundIgnition 3.8s both;
+}
+.announcement_finished .announcementCopy strong {
+  color: #d5e2ea;
+  animation: roundClosure 3.5s both;
+}
+@keyframes roundIgnition {
+  0% { opacity: 0; scale: 0.7; filter: blur(14px); }
+  28%, 72% { opacity: 1; scale: 1; filter: blur(0); }
+  100% { opacity: 0; scale: 1.1; }
+}
+@keyframes roundClosure {
+  0% { opacity: 0; scale: 1.12; letter-spacing: 0.02em; }
+  30%, 72% { opacity: 1; scale: 1; letter-spacing: -0.06em; }
+  100% { opacity: 0; scale: 0.9; }
+}
 
 .fallback {
   display: grid;
@@ -866,9 +886,9 @@
   inset: 0;
   pointer-events: none;
   background: linear-gradient(90deg,
-    rgba(4, 10, 19, 0.31) 0%, rgba(4, 10, 19, 0.24) 19.8%,
+    rgba(4, 10, 19, 0.34) 0%, rgba(4, 10, 19, 0.12) 19.8%,
     transparent 20.15%, transparent 79.85%,
-    rgba(4, 10, 19, 0.24) 80.2%, rgba(4, 10, 19, 0.31) 100%);
+    rgba(4, 10, 19, 0.12) 80.2%, rgba(4, 10, 19, 0.34) 100%);
 }
 .topHud {
   padding: 0 clamp(16px, 1.4vw, 26px);
@@ -912,10 +932,11 @@
 .audioButton {
   pointer-events: auto;
   position: fixed;
-  z-index: 6;
-  left: 12px;
+  z-index: 9;
+  top: clamp(54px, 5.8vh, 66px);
+  left: 14px;
   right: auto;
-  bottom: 12px;
+  bottom: auto;
   clip-path: none;
   border: 0;
   border-radius: 0;
@@ -934,7 +955,7 @@
 }
 .panel {
   margin: 0;
-  background: transparent;
+  background: linear-gradient(90deg, rgba(3, 9, 19, 0.1), rgba(3, 9, 19, 0.02));
   border: 0;
   clip-path: none;
   box-shadow: none;
@@ -953,10 +974,10 @@
   display: none;
 }
 .panelHead {
-  min-height: 76px;
+  min-height: 64px;
   padding: 16px;
   align-items: center;
-  border-bottom: 1px solid rgba(180, 209, 221, 0.1);
+  border-bottom: 1px solid rgba(180, 209, 221, 0.07);
 }
 .panelTitle {
   text-transform: uppercase;
@@ -1054,18 +1075,21 @@
 }
 .categoryPool {
   position: absolute;
-  z-index: 3;
-  left: 20%;
-  right: 20%;
+  z-index: 8;
+  left: 0;
+  right: 0;
   bottom: 0;
-  min-height: clamp(68px, 7vh, 80px);
+  min-height: clamp(46px, 5vh, 58px);
   padding: 0 clamp(12px, 1.4vw, 26px);
-  background: linear-gradient(180deg, rgba(3, 7, 18, 0.14), rgba(3, 7, 18, 0.8));
+  background: linear-gradient(180deg, rgba(3, 7, 18, 0.28), rgba(3, 7, 18, 0.82));
+  border-top: 1px solid rgba(180, 209, 221, 0.08);
   grid-template-columns: 1fr 1.5fr 1fr;
 }
 .categoryPill,
 .emptyPill {
-  font-size: clamp(10px, 0.72vw, 14px);
+  font-size: clamp(9px, 0.66vw, 12px);
+  border-color: rgba(97, 231, 255, 0.08);
+  background: rgba(9, 21, 37, 0.22);
 }
 .categoryPill {
   color: var(--gc-cyan);
@@ -1073,13 +1097,8 @@
 .categoryPill img {
   display: none;
 }
-.sectorScanLabels span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
 .announcement {
-  position: absolute;
+  position: fixed;
   z-index: 20;
   inset: 0;
   width: 100%;
@@ -1123,96 +1142,83 @@
 .announcementCopy span {
   overflow-wrap: anywhere;
 }
-.announcement_firstBlood .announcementCopy {
-  inset: auto 0 19%;
+.announcement_firstBlood .announcementCopy,
+.announcement_blood .announcementCopy {
+  position: fixed;
+  inset: 0;
+  max-width: none;
   padding: 0;
   animation: bloodCopy 4.4s ease-out both;
 }
-.announcement_firstBlood .announcementCopy strong {
+.announcement_firstBlood .announcementCopy strong,
+.announcement_blood .announcementCopy strong {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: block;
   width: max-content;
   max-width: none;
-  margin: 0 auto;
-  font-family: 'Arial Black', Impact, 'Segoe UI Black', sans-serif;
-  font-size: clamp(112px, 13vw, 330px);
-  font-weight: 900;
-  line-height: 0.9;
-  letter-spacing: -0.07em;
-  white-space: nowrap;
-  color: #f7e7be;
-  background: linear-gradient(170deg, #fff7df 12%, #f1cb83 64%, #be8956 98%);
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin: 0;
+  translate: -50% -50%;
   transform: scaleX(var(--blood-fit, 1));
   transform-origin: center;
-  -webkit-text-stroke: 1px rgba(255, 244, 215, 0.12);
-  text-shadow: 0 4px 18px rgba(0, 3, 10, 0.7);
+  font-family: Lexend, 'Segoe UI', sans-serif;
+  font-size: clamp(80px, 12vw, 250px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.07em;
+  white-space: nowrap;
+  background: linear-gradient(175deg, #fff8e3 12%, #e8bc70 53%, #976333 98%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 244, 215, 0.18);
+  filter: drop-shadow(0 6px 14px rgba(0, 3, 10, 0.85));
   animation: bloodMask 4.4s cubic-bezier(.2,.7,.25,1) both;
 }
-.announcement_firstBlood .announcementCopy small {
-  margin-bottom: clamp(8px, 1vh, 16px);
-  color: #f7dfa8;
-  letter-spacing: .34em;
+.announcement_blood .announcementCopy strong {
+  background-image: linear-gradient(175deg, #fff 10%, #cbd5e2 54%, #738799 100%);
+  -webkit-text-stroke-color: rgba(240, 248, 255, 0.2);
+}
+.announcement_thirdBlood .announcementCopy strong {
+  background-image: linear-gradient(175deg, #ffe7c9 9%, #c79571 51%, #82543d 100%);
+  -webkit-text-stroke-color: rgba(255, 219, 183, 0.2);
+}
+.announcement_firstBlood .announcementCopy small,
+.announcement_blood .announcementCopy small {
+  position: absolute;
+  top: calc(50% - clamp(72px, 10vw, 168px));
+  left: 0;
+  width: 100%;
+  color: #ead1a2;
+  letter-spacing: .3em;
   animation: bloodSignal 4.4s both;
 }
-.announcement_firstBlood .bloodTeam {
-  max-width: min(82vw, 1500px);
-  margin-top: clamp(15px, 2.2vh, 28px);
-  color: #fff;
-  font-size: clamp(25px, 2.4vw, 52px);
-  line-height: 1.06;
+.announcement_blood .announcementCopy small { color: #dce5f0; }
+.announcement_thirdBlood .announcementCopy small { color: #e4b49b; }
+.announcement_firstBlood .bloodTeam,
+.announcement_blood .bloodTeam {
+  position: absolute;
+  top: calc(50% + clamp(54px, 7vw, 130px));
+  left: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  color: #f5f8fb;
+  font-size: clamp(22px, 2.2vw, 42px);
   font-weight: 800;
   animation: bloodIdentity 4.4s both;
 }
-.announcement_firstBlood .bloodChallenge {
-  max-width: min(75vw, 1200px);
-  margin-top: 9px;
-  color: #d7dfe4;
-  font-size: clamp(14px, 1vw, 22px);
-  animation: bloodIdentity 4.4s .12s both;
-}
-.announcement_firstBlood .announcementFrame::before {
-  display: block;
-  top: 54%;
-  left: 2%;
-  width: 96%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(246,218,158,.46) 20%, rgba(246,218,158,.62) 80%, transparent);
-  animation: bloodRule 4.4s both;
-}
-.announcement_blood .announcementCopy {
-  inset: auto 20% 41%;
-  width: 60%;
-  padding: 0;
-  align-items: flex-start;
-  text-align: left;
-  animation: silverSweep 3.6s both;
-}
-.announcement_blood .announcementCopy strong {
-  color: #e4e9ed;
-  font-family: 'Arial Black', Impact, sans-serif;
-  font-size: clamp(44px, 5vw, 96px);
-  letter-spacing: -.06em;
-}
-.announcement_blood .bloodTeam,
+.announcement_firstBlood .bloodChallenge,
 .announcement_blood .bloodChallenge {
-  margin-top: 8px;
-  max-width: 100%;
-  color: #e2e9ee;
-  font-size: clamp(16px, 1.35vw, 27px);
-}
-.announcement_thirdBlood .announcementCopy {
-  align-items: flex-end;
-  text-align: right;
-  animation: bronzeTransmit 3.6s both;
-}
-.announcement_thirdBlood .announcementCopy small { color: #d7a894; }
-.announcement_thirdBlood .announcementCopy strong {
-  color: #e1b7a0;
-  font-family: 'Segoe UI', sans-serif;
-  font-size: clamp(39px, 4.3vw, 78px);
-  font-weight: 700;
-  letter-spacing: .04em;
+  position: absolute;
+  top: calc(50% + clamp(91px, 10vw, 184px));
+  left: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  color: #d7dfe4;
+  font-size: clamp(13px, 1vw, 21px);
+  animation: bloodIdentity 4.4s .12s both;
 }
 @keyframes bloodCopy {
   0%, 5% { opacity: 0; translate: 0 16px; }
@@ -1333,6 +1339,12 @@
   text-align: center;
   text-shadow: 0 2px 10px #000;
   pointer-events: none;
+  animation: strikeCallout 7.6s both;
+}
+@keyframes strikeCallout {
+  0%, 61% { opacity: 0; translate: 0 10px; }
+  69%, 87% { opacity: 1; translate: 0 0; }
+  100% { opacity: 0; translate: 0 -8px; }
 }
 .sceneCallout span {
   color: var(--gc-amber);
@@ -1353,21 +1365,6 @@
   font-size: 25px;
 }
 
-.sectorScanLabels {
-  position: absolute;
-  top: 19%;
-  left: 14%;
-  right: 14%;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 18px;
-  color: var(--gc-cyan);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
-  animation: sectorDecelerate 6.5s cubic-bezier(0.1, 0.8, 0.25, 1) both;
-}
 .shipLabel {
   pointer-events: none;
   z-index: 2;

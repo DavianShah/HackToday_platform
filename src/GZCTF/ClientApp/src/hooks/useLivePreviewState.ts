@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { LiveAnnouncement } from '@Components/live/types'
+import { sceneConfig } from '@Components/live/galactic/sceneConfig'
 import {
   ChallengeCategory,
   GameMode,
@@ -266,7 +267,7 @@ export const useLivePreviewState = (gameId: number, config: LiveScoreboardConfig
       sound: 'wrongSubmit',
       sceneKind: 'wrong',
       showPopup: false,
-      duration: 3400,
+      duration: sceneConfig.timing.attack * 1000,
     })
   }, [selectedTeamId, state.topTeams])
 

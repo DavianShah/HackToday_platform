@@ -1,7 +1,7 @@
 import { writeFile, mkdir } from 'node:fs/promises'
 
 export async function connect() {
-  const pages = await (await fetch('http://127.0.0.1:9226/json/list')).json()
+  const pages = await (await fetch(`http://127.0.0.1:${process.env.GALACTIC_CDP_PORT ?? 9226}/json/list`)).json()
   const page = pages.find((p) => p.type === 'page' && !p.url.startsWith('chrome:'))
   const ws = new WebSocket(page.webSocketDebuggerUrl)
   await new Promise((resolve) => {

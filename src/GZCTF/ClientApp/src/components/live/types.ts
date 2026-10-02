@@ -19,6 +19,8 @@ export interface LiveAnnouncement {
   sound: StageSoundName
   duration?: number
   popupDelay?: number
+  soundDelay?: number
+  delta?: number
   showPopup?: boolean
   sceneKind?: LiveSceneKind
 }

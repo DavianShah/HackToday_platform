@@ -51,10 +51,12 @@ export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => 
     setVisible(undefined)
     if (!active) return
 
-    if (played.current !== active.key) {
-      played.current = active.key
-      playRef.current(active)
-    }
+    const soundTimer = window.setTimeout(() => {
+      if (played.current !== active.key) {
+        played.current = active.key
+        playRef.current(active)
+      }
+    }, active.soundDelay ?? (active.kind === 'wrong' ? 3300 : 0))
     const revealTimer =
       active.showPopup === false ? undefined : window.setTimeout(() => setVisible(active), active.popupDelay ?? 0)
     const advanceTimer = window.setTimeout(() => {
@@ -65,6 +67,7 @@ export const useLiveEventQueue = (onPlay: (event: LiveAnnouncement) => void) => 
 
     return () => {
       if (revealTimer !== undefined) window.clearTimeout(revealTimer)
+      window.clearTimeout(soundTimer)
       window.clearTimeout(advanceTimer)
     }
   }, [active])

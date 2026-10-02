@@ -2,13 +2,12 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import { Group, Mesh, PointLight, Vector3 } from 'three'
 import { sceneConfig as config } from './sceneConfig'
-import { SceneEvent } from './sceneEvents'
+import { attackPhase, attackTimeline, SceneEvent } from './sceneEvents'
 
 export const eventAge = (event?: SceneEvent) => (event ? Math.max(0, (performance.now() - event.started) / 1000) : 100)
 export const attackKind = (event?: SceneEvent) =>
   event && ['firstBlood', 'blood', 'correct', 'wrong'].includes(event.kind)
-export const impactTime = (event: SceneEvent) =>
-  event.kind === 'firstBlood' ? config.timing.impact : event.kind === 'blood' ? 1.3 : 0.55
+export const impactTime = (_event: SceneEvent) => config.timing.impact
 
 export function EventVFX({
   event,
@@ -40,32 +39,33 @@ export function EventVFX({
           : config.colors.cyan
   useFrame(() => {
     const age = eventAge(event)
+    const phase = attackPhase(event?.kind, age)
     const hit = event ? impactTime(event) : 0
     const attack = Boolean(attackKind(event) && targetAvailable)
     const impact = age - hit
     if (beam.current) {
-      const travel = Math.max(0, Math.min(1, (impact + 0.28) / 0.28))
-      beam.current.visible = attack && !reducedMotion && impact >= -0.28 && impact < 0.38
+      const travel = Math.max(0, Math.min(1, (age - attackTimeline.fire) / 0.2))
+      beam.current.visible = attack && !reducedMotion && ['fire', 'impact'].includes(phase)
       direction.copy(source).multiplyScalar(-1)
       if (event?.kind === 'wrong') direction.set(-source.x * 0.4, 2.5 - source.y, -source.z)
       beam.current.position.copy(source).addScaledVector(direction, travel * 0.5)
-      beam.current.scale.set(event?.kind === 'firstBlood' ? 0.085 : 0.04, Math.max(0.01, direction.length() * travel), 0.06)
+      beam.current.scale.set(event?.kind === 'firstBlood' ? 0.13 : 0.07, Math.max(0.01, direction.length() * travel), 0.09)
       beam.current.quaternion.setFromUnitVectors(axis, direction.normalize())
     }
     if (charge.current) {
-      charge.current.visible = (attack && age < hit && age > 0.2) || (event?.kind === 'hint' && age < 3)
+      charge.current.visible = (attack && phase === 'charge') || (event?.kind === 'hint' && age < 3)
       if (event?.kind === 'hint') charge.current.position.set(0, 2.5, 1)
       else charge.current.position.copy(source)
       charge.current.scale.setScalar(reducedMotion ? 0.2 : 0.1 + Math.min(age / hit, 1) * 0.4)
     }
     if (wave.current) {
       const pulse = attack ? impact : age - 0.2
-      wave.current.visible = Boolean(event) && pulse > 0 && pulse < 1.5
+      wave.current.visible = Boolean(event) && pulse > 0 && pulse < (event?.kind === 'finished' ? 2 : 1.5)
       wave.current.position.set(event?.kind === 'wrong' ? source.x : 0, event?.kind === 'wrong' ? source.y : 0, 1.8)
       wave.current.scale.setScalar(reducedMotion ? 1.7 : 0.5 + pulse * (event?.kind === 'firstBlood' ? 4.4 : 2.4))
       wave.current.rotation.z = event?.kind === 'hint' ? age * 0.7 : 0
       wave.current.rotation.x = event?.kind === 'start' ? 1.15 : 0
-      if (event?.kind === 'finished') wave.current.scale.setScalar(Math.max(0.1, 4 - age * 2))
+      if (event?.kind === 'finished') wave.current.scale.setScalar(0.5 + age * 2.5)
       if (event?.kind === 'countdown' || event?.kind === 'reminder') wave.current.scale.setScalar(1.4)
     }
     if (sparks.current) {

@@ -32,6 +32,14 @@ function Atmosphere({ reducedMotion, calm }: { reducedMotion: boolean; calm: boo
   })
   return (
     <group>
+      <mesh position={[12, 7, -42]} scale={[13, 13, 2.4]}>
+        <sphereGeometry args={[1, 32, 20]} />
+        <meshStandardMaterial color="#122a3c" emissive="#0c2335" emissiveIntensity={0.4} metalness={0.05} roughness={1} />
+      </mesh>
+      <mesh position={[12, 7, -39.4]} scale={[13.35, 13.35, 0.15]}>
+        <sphereGeometry args={[1, 32, 20]} />
+        <meshBasicMaterial color="#5598ad" transparent opacity={0.085} depthWrite={false} />
+      </mesh>
       <group ref={haze}>
         {[
           [-23, 8, -31, 17, '#17344b', 0.14],
@@ -95,17 +103,15 @@ function CameraDirector({
     camera.lookAt(0, 0.2, 0)
     camera.updateProjectionMatrix()
   }, [camera, size])
-  useFrame(({ clock }, dt) => {
+  useFrame((_, dt) => {
     const age = eventAge(event)
-    const prestige = event?.kind === 'firstBlood' && targetAvailable && age < config.timing.firstBlood
-    const accent = reducedMotion ? 0 : prestige ? Math.sin(Math.min(1, age / config.timing.firstBlood) * Math.PI) : 0
-    const focus = prestige ? (age < 1 ? age : Math.max(0, 1 - Math.max(0, age - 5.5) / 2.1)) : 0
+    const strike = Boolean(event && ['firstBlood', 'blood', 'correct', 'wrong'].includes(event.kind) && targetAvailable && age < config.timing.attack)
+    const accent = reducedMotion ? 0 : strike ? Math.sin(Math.min(1, age / config.timing.attack) * Math.PI) : event?.kind === 'start' ? Math.max(0, 1 - age / 3.8) * 0.6 : 0
+    const focus = strike ? (age < 1 ? age : Math.max(0, 1 - Math.max(0, age - config.timing.return) / 0.8)) : 0
     const ease = 1 - Math.exp(-Math.min(dt, 0.05) * 3)
-    camera.position.x +=
-      (config.camera.x + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.09) * 0.08) + source.x * focus * 0.22 - camera.position.x) * ease
-    camera.position.y +=
-      (config.camera.y + (reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.07) * 0.09) + source.y * focus * 0.14 - camera.position.y) * ease
-    camera.position.z += (base.current - accent * 1.7 - camera.position.z) * ease
+    camera.position.x += (config.camera.x + source.x * focus * 0.12 - camera.position.x) * ease
+    camera.position.y += (config.camera.y + source.y * focus * 0.08 - camera.position.y) * ease
+    camera.position.z += (base.current - accent * 1.1 + (event?.kind === 'finished' ? Math.max(0, 1 - age / 3.5) * 1.2 : 0) - camera.position.z) * ease
     camera.lookAt(source.x * focus * 0.2, 0.2 + source.y * focus * 0.12, 0)
   })
   return null
@@ -196,7 +202,7 @@ export default function GalacticScene({
             <directionalLight position={[-2, 4, -8]} intensity={1.1} color="#a5b3c9" />
             <pointLight position={[0, 0, 3]} intensity={7} color={config.colors.amber} distance={10} />
             <Atmosphere reducedMotion={reducedMotion} calm={calm} />
-            <Boss reducedMotion={reducedMotion} overtime={overtime} event={event} targetAvailable={targetAvailable} />
+            <Boss reducedMotion={reducedMotion} overtime={overtime} spinning={spinPhase === 'spinning'} event={event} targetAvailable={targetAvailable} />
             {!frozen && (
               <TeamFleet
                 teams={teams}
