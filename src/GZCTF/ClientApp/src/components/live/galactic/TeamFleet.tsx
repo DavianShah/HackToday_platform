@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
-import { ComponentType, RefObject, useEffect, useRef, useState } from 'react'
-import { Group, Vector3 } from 'three'
+import { ComponentType, RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { AdditiveBlending, CanvasTexture, Group, MeshBasicMaterial, PointLight, Sprite, Texture, Vector3 } from 'three'
 import { LiveScoreboardTeamModel } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
 import { attackKind, eventAge } from './EventVFX'
@@ -23,7 +23,7 @@ export interface TeamShipVisualProps {
 export function TeamShipVisual({ id, accent }: TeamShipVisualProps) {
   const variant = id % 3
   return (
-    <group scale={0.55}>
+    <group scale={0.68}>
       <mesh scale={[0.55, 1.25 + variant * 0.14, 0.44]}>
         <coneGeometry args={[0.7, 1.7, 4]} />
         <meshStandardMaterial color="#667888" metalness={0.58} roughness={0.48} />
@@ -79,6 +79,7 @@ function Ship({
   highlighted,
   phase,
   frozen,
+  focusTexture,
 }: {
   highlighted: Set<number>
   event?: SceneEvent
@@ -88,11 +89,17 @@ function Ship({
   ShipVisual: ComponentType<TeamShipVisualProps>
   phase: RefObject<number>
   frozen: boolean
+  focusTexture: Texture
 }) {
   const root = useRef<Group>(null)
+  const halo = useRef<Sprite>(null)
+  const corona = useRef<Sprite>(null)
+  const focusLight = useRef<PointLight>(null)
+  const focusRing = useRef<MeshBasicMaterial>(null)
   const orbit = useRef({ x: 0, y: 0, z: 0, angle: 0 })
   const [labelVisible, setLabelVisible] = useState(true)
   const labelCheckedAt = useRef(0)
+  const isTarget = Boolean(attackKind(event) && event?.teamId === slot.id)
   useFrame((_, dt) => {
     if (!root.current) return
     const pose = orbitPose(slot.lane, reducedMotion ? 0 : phase.current, 1, orbit.current)
@@ -106,8 +113,26 @@ function Ship({
         : reducedMotion
           ? 0
           : Math.max(0, 1 - (now - slot.leaving) / (config.orbit.transition * 1000))
-    const active = attackKind(event) && event?.teamId === slot.id
+    const active = isTarget
     const age = eventAge(event)
+    const focus = active && age < config.timing.attack
+      ? Math.min(1, age / 0.45) * Math.min(1, (config.timing.attack - age) / 0.65)
+      : 0
+    const firstBlood = event?.kind === 'firstBlood'
+    const impact = reducedMotion ? 0 : Math.exp(-Math.pow((age - config.timing.impact) / 0.35, 2))
+    const pulse = firstBlood ? 1 + impact * 0.9 : 1 + impact * 0.3
+    if (halo.current) {
+      halo.current.visible = focus > 0
+      halo.current.material.opacity = focus * (firstBlood ? 0.76 : 0.56)
+      halo.current.scale.setScalar((firstBlood ? 3.6 : 2.8) * pulse)
+    }
+    if (corona.current) {
+      corona.current.visible = focus > 0 && firstBlood
+      corona.current.material.opacity = focus * (0.24 + impact * 0.23)
+      corona.current.scale.setScalar(5.5 + impact * 1.8)
+    }
+    if (focusLight.current) focusLight.current.intensity = focus * (firstBlood ? 12 : 6) * pulse
+    if (focusRing.current) focusRing.current.opacity = 0.25 + focus * (firstBlood ? 0.7 : 0.45)
     const attack = active && event ? attackBlend(event.kind, age) : 0
     const mix = reducedMotion ? 0 : attack
     // The first leg clears the boss's projected silhouette before entering the firing lane.
@@ -125,7 +150,7 @@ function Ship({
       setLabelVisible(!hidden)
     }
     faceBoss(root.current, x, y, z)
-    root.current.scale.setScalar(scale * (1 + Math.max(0, pose.z) * 0.025) * (active ? 1 : attackKind(event) ? 0.78 : 1))
+    root.current.scale.setScalar(scale * (1 + Math.max(0, pose.z) * 0.025) * (active ? 1.15 : attackKind(event) ? 0.78 : 1))
     if (active) {
       root.current.updateWorldMatrix(true, false)
       source.set(0, 0.65, 0.22).applyMatrix4(root.current.matrixWorld)
@@ -133,12 +158,34 @@ function Ship({
   })
   return (
     <group ref={root}>
+      {isTarget && <>
+        <sprite ref={corona} position={[0, 0, -0.1]} visible={false}>
+          <spriteMaterial map={focusTexture} color={config.colors.amber} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} />
+        </sprite>
+        <sprite ref={halo} position={[0, 0, 0]} visible={false}>
+          <spriteMaterial
+            map={focusTexture}
+            color={event?.kind === 'wrong' ? config.colors.danger : event?.kind === 'firstBlood' ? config.colors.amber : config.colors.cyan}
+            transparent
+            opacity={0}
+            blending={AdditiveBlending}
+            depthWrite={false}
+          />
+        </sprite>
+        <pointLight
+          ref={focusLight}
+          position={[0, 0, 0.9]}
+          color={event?.kind === 'wrong' ? config.colors.danger : event?.kind === 'firstBlood' ? config.colors.amber : config.colors.cyan}
+          distance={5.5}
+          intensity={0}
+        />
+      </>}
       <mesh
         visible={highlighted.has(slot.id) || (Boolean(attackKind(event)) && event?.teamId === slot.id)}
         position={[0, 0, 0.3]}
       >
         <ringGeometry args={[0.65, 0.675, 32]} />
-        <meshBasicMaterial color={config.colors.amber} transparent opacity={0.75} />
+        <meshBasicMaterial ref={focusRing} color={config.colors.amber} transparent opacity={0.75} />
       </mesh>
       <ShipVisual id={frozen ? 0 : slot.id} accent={frozen ? config.colors.cyan : teamAccent(slot.id)} />
       {!frozen && <Html center position={[0, -0.82, 0.2]} distanceFactor={12} className={classes.shipLabel} style={{ visibility: labelVisible ? 'visible' : 'hidden' }}>
@@ -169,6 +216,20 @@ export function TeamFleet({
 }) {
   const [slots, setSlots] = useState<TeamSlot[]>([])
   const phase = useRef(0)
+  const focusTexture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 64
+    const context = canvas.getContext('2d')!
+    const gradient = context.createRadialGradient(32, 32, 2, 32, 32, 32)
+    gradient.addColorStop(0, 'rgba(255,255,255,0.85)')
+    gradient.addColorStop(0.18, 'rgba(255,255,255,0.52)')
+    gradient.addColorStop(0.48, 'rgba(255,255,255,0.18)')
+    gradient.addColorStop(1, 'rgba(255,255,255,0)')
+    context.fillStyle = gradient
+    context.fillRect(0, 0, 64, 64)
+    return new CanvasTexture(canvas)
+  }, [])
+  useEffect(() => () => focusTexture.dispose(), [focusTexture])
   const attacking = Boolean(attackKind(event) && slots.some((slot) => slot.id === event?.teamId))
   useFrame((_, delta) => {
     if (!reducedMotion && !attacking) phase.current += Math.min(delta, 0.05) * config.orbit.speed
@@ -198,6 +259,7 @@ export function TeamFleet({
           highlighted={highlighted}
           phase={phase}
           frozen={frozen}
+          focusTexture={focusTexture}
         />
       ))}
     </group>
