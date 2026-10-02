@@ -1,30 +1,34 @@
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import { Group, Mesh, PointLight, Vector3 } from 'three'
+import { StageSoundName } from '../types'
 import { sceneConfig as config } from './sceneConfig'
-import { attackPhase, attackTimeline, SceneEvent } from './sceneEvents'
+import { attackPhase, attackTimelineFor, SceneEvent, strikeCueReady } from './sceneEvents'
 
 export const eventAge = (event?: SceneEvent) => (event ? Math.max(0, (performance.now() - event.started) / 1000) : 100)
 export const attackKind = (event?: SceneEvent) =>
   event && ['firstBlood', 'blood', 'correct', 'wrong'].includes(event.kind)
-export const impactTime = (_event: SceneEvent) => config.timing.impact
+export const impactTime = (event: SceneEvent) => attackTimelineFor(event.kind).impact
 
 export function EventVFX({
   event,
   source,
   reducedMotion,
   targetAvailable,
+  onStrikeFire,
 }: {
   event?: SceneEvent
   source: Vector3
   reducedMotion: boolean
   targetAvailable: boolean
+  onStrikeFire: (sound: StageSoundName) => void
 }) {
   const beam = useRef<Mesh>(null)
   const wave = useRef<Mesh>(null)
   const charge = useRef<Mesh>(null)
   const sparks = useRef<Group>(null)
   const flash = useRef<PointLight>(null)
+  const playedSoundKey = useRef<string | undefined>(undefined)
   const axis = useMemo(() => new Vector3(0, 1, 0), [])
   const direction = useMemo(() => new Vector3(), [])
   const color =
@@ -40,11 +44,12 @@ export function EventVFX({
   useFrame(() => {
     const age = eventAge(event)
     const phase = attackPhase(event?.kind, age)
+    const timeline = attackTimelineFor(event?.kind)
     const hit = event ? impactTime(event) : 0
     const attack = Boolean(attackKind(event) && targetAvailable)
     const impact = age - hit
     if (beam.current) {
-      const travel = Math.max(0, Math.min(1, (age - attackTimeline.fire) / 0.2))
+      const travel = Math.max(0, Math.min(1, (age - timeline.fire) / (timeline.impact - timeline.fire)))
       beam.current.visible = attack && !reducedMotion && ['fire', 'impact'].includes(phase)
       direction.copy(source).multiplyScalar(-1)
       direction.y += config.bossY
@@ -78,6 +83,10 @@ export function EventVFX({
         attack && event?.kind !== 'wrong' && impact > 0 && impact < 0.8
           ? Math.sin((impact / 0.8) * Math.PI) * (event?.kind === 'firstBlood' ? 13 : 6)
           : 0
+    if (strikeCueReady(event, age, playedSoundKey.current) && event?.sound) {
+      playedSoundKey.current = event.key
+      onStrikeFire(event.sound)
+    }
   })
   return (
     <group>

@@ -6,7 +6,7 @@ import { LiveScoreboardTeamModel } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
 import { attackKind, eventAge } from './EventVFX'
 import { sceneConfig as config } from './sceneConfig'
-import { attackBlend, SceneEvent } from './sceneEvents'
+import { attackBlend, attackTimelineFor, SceneEvent } from './sceneEvents'
 import { orbitPose, reconcileSlots, TeamSlot, teamAccent } from './teamSlots'
 
 const shipForward = new Vector3(0, 1, 0)
@@ -115,11 +115,13 @@ function Ship({
           : Math.max(0, 1 - (now - slot.leaving) / (config.orbit.transition * 1000))
     const active = isTarget
     const age = eventAge(event)
-    const focus = active && age < config.timing.attack
-      ? Math.min(1, age / 0.45) * Math.min(1, (config.timing.attack - age) / 0.65)
+    const timeline = attackTimelineFor(event?.kind)
+    const focus = active && age < timeline.duration
+      ? Math.min(1, age / Math.min(0.45, timeline.acquire)) *
+        Math.min(1, (timeline.duration - age) / Math.min(0.65, timeline.duration - timeline.return))
       : 0
     const firstBlood = event?.kind === 'firstBlood'
-    const impact = reducedMotion ? 0 : Math.exp(-Math.pow((age - config.timing.impact) / 0.35, 2))
+    const impact = reducedMotion ? 0 : Math.exp(-Math.pow((age - timeline.impact) / 0.35, 2))
     const pulse = firstBlood ? 1 + impact * 0.9 : 1 + impact * 0.3
     if (halo.current) {
       halo.current.visible = focus > 0

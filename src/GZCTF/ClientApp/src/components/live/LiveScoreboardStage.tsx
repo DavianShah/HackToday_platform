@@ -123,6 +123,7 @@ export const LiveScoreboardStage: FC<{
             teams={orbitTeams}
             frozen={frozen}
             event={sceneEvent}
+            onStrikeFire={presentation.playSceneSound}
             spinPhase={presentation.spinPhase}
             highlighted={new Set(presentation.rankChanges.keys())}
             categoryCount={

@@ -72,10 +72,15 @@ const patterns: Record<StageSoundName, [number, number, OscillatorType][]> = {
   ],
 }
 
+const configuredSoundUrls = (config?: LiveScoreboardConfigModel) =>
+  Object.values(config?.sounds ?? {}).flatMap((url) =>
+    typeof url === 'string' && url.trim() ? [url.trim()] : []
+  )
+
 export const useStageSound = (config?: LiveScoreboardConfigModel, muted = false) => {
   const [enabled, setEnabled] = useState(false)
   const context = useRef<AudioContext | undefined>(undefined)
-  const preloaded = useRef<HTMLAudioElement[]>([])
+  const preloaded = useRef(new Map<string, HTMLAudioElement>())
   const configRef = useRef(config)
 
   const mutedRef = useRef(muted)
@@ -85,6 +90,23 @@ export const useStageSound = (config?: LiveScoreboardConfigModel, muted = false)
   const playing = useRef(new Set<HTMLAudioElement>())
   const pending = useRef(new Set<number>())
   const generation = useRef(0)
+  const preload = useCallback((urls: Iterable<string>) => {
+    for (const url of urls) {
+      if (preloaded.current.has(url)) continue
+      const audio = new Audio()
+      audio.preload = 'auto'
+      audio.src = url
+      audio.load()
+      preloaded.current.set(url, audio)
+    }
+  }, [])
+  useEffect(() => {
+    if (!enabled) return
+    preload([
+      ...Object.values(stageSoundPack),
+      ...configuredSoundUrls(config),
+    ])
+  }, [enabled, config?.sounds, preload])
   const stop = useCallback(() => {
     generation.current++
     pending.current.forEach(window.clearTimeout)
@@ -134,17 +156,10 @@ export const useStageSound = (config?: LiveScoreboardConfigModel, muted = false)
     const ctx = context.current ?? new AudioContext()
     context.current = ctx
     void ctx.resume()
-    if (!preloaded.current.length) {
-      preloaded.current = Object.values(stageSoundPack).map((url) => {
-        const audio = new Audio()
-        audio.preload = 'auto'
-        audio.src = url
-        audio.load()
-        return audio
-      })
-    }
+    preload(Object.values(stageSoundPack))
+    preload(configuredSoundUrls(configRef.current))
     setEnabled(true)
-  }, [])
+  }, [preload])
 
   const fallback = useCallback(
     (name: StageSoundName) => {
