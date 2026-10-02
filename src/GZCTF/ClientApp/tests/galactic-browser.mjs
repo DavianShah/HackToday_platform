@@ -46,10 +46,11 @@ try {
   // Discard errors from an old document/hot-reload; every following assertion uses a fresh page.
   client.errors.length = 0
   await invoke('spin')
-  await waitFor('document.body.innerText.toLowerCase().includes("scanning sectors")')
-  assert.match(await evaluate('document.querySelector("h1").innerText'), /Scanning sectors/i)
+  await waitFor(`!!document.querySelector('[aria-label="Central battlefield"] img')`)
+  assert.match(await evaluate(`document.querySelector('[aria-label="Central battlefield"]').innerText`), /Web/i)
   await pause(6600)
   assert.equal(await evaluate('document.querySelector("h1").innerText'), 'WEB')
+  assert.equal(await evaluate(`!!document.querySelector('[aria-label="Central battlefield"] img')`), false)
   for (const size of [
     [1366, 768],
     [1920, 1080],
@@ -98,8 +99,11 @@ try {
   await invoke('toggleFreeze')
   await waitFor('document.body.innerText.toLowerCase().includes("standings sealed")', 5000)
   assert.doesNotMatch(await text(), /NULL SECTOR|ByteBenders|Arrival Test Team|\+100/)
+  assert.equal(await evaluate(`document.querySelector('[aria-label="Central battlefield"]').innerText.trim()`), '')
+  assert.equal(await evaluate('document.querySelectorAll("[class*=shipLabel]").length'), 0)
   await invoke('firstBlood')
   await pause(300)
+  assert.equal(await evaluate(`document.querySelector('[aria-label="Central battlefield"]').innerText.trim()`), '')
   await invoke('toggleFreeze')
   await pause(300)
   assert.doesNotMatch(await statuses(), /Priority strike|FIRST BLOOD/)
@@ -120,10 +124,10 @@ try {
   await pause(200)
   await call('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
   await invoke('spin')
-  await waitFor('document.querySelector("h1")?.innerText.includes("SCANNING SECTORS")')
+  await waitFor('!!document.querySelector("[class*=vortexOrbit]")')
   assert.equal(
     await evaluate(
-      `getComputedStyle(document.querySelector('[aria-label="Central battlefield"] h1')).animationName`
+      `getComputedStyle(document.querySelector('[class*=vortexOrbit]')).animationName`
     ),
     'none'
   )

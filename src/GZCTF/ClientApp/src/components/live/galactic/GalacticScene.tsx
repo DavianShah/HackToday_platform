@@ -214,7 +214,7 @@ export default function GalacticScene({
         >
           <ContextGuard onLost={() => setLost(true)} onRestored={() => setLost(false)} />
           <CameraDirector
-            event={event}
+            event={frozen ? undefined : event}
             source={source}
             targetAvailable={targetAvailable}
             reducedMotion={reducedMotion}
@@ -227,22 +227,21 @@ export default function GalacticScene({
           <Atmosphere reducedMotion={reducedMotion} calm={calm} />
           <Boss
             reducedMotion={reducedMotion}
-            overtime={overtime}
-            spinning={spinPhase === 'spinning'}
-            event={event}
-            targetAvailable={targetAvailable}
+            overtime={!frozen && overtime}
+            spinning={!frozen && spinPhase === 'spinning'}
+            event={frozen ? undefined : event}
+            targetAvailable={!frozen && targetAvailable}
           />
-          {!frozen && (
-            <TeamFleet
-              teams={teams}
-              reducedMotion={reducedMotion}
-              ShipVisual={Ship}
-              event={event}
-              source={source}
-              highlighted={highlighted}
-            />
-          )}
-          <SectorWheel phase={spinPhase} count={categoryCount} reducedMotion={reducedMotion} />
+          <TeamFleet
+            teams={teams}
+            frozen={frozen}
+            reducedMotion={reducedMotion}
+            ShipVisual={Ship}
+            event={frozen ? undefined : event}
+            source={source}
+            highlighted={frozen ? new Set() : highlighted}
+          />
+          <SectorWheel phase={frozen ? 'idle' : spinPhase} count={categoryCount} reducedMotion={reducedMotion} />
           {!frozen && (
             <EventVFX
               event={event}
