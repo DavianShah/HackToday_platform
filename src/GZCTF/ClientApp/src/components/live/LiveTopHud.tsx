@@ -43,7 +43,7 @@ export const LiveTopHud: FC<{
       <div className={classes.brandLockup}>
         <img className={classes.brandLogo} src={logo} alt="HackToday logo" />
         <div className={classes.brandText}>
-          <strong>HackToday 2026 Final</strong>
+          <strong>HackToday Final</strong>
         </div>
       </div>
       <div className={classes.clockModule}>

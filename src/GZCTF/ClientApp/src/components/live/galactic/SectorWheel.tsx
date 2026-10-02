@@ -27,7 +27,7 @@ export function SectorWheel({
     if (inner.current) inner.current.rotation.z = reducedMotion || phase !== 'spinning' ? 0 : -Math.PI * 4 * (1 - Math.pow(1 - progress, 3))
   })
   return (
-    <group ref={root} visible={phase !== 'idle'} position={[0, 0.2, 1.2]} rotation={[0.16, 0.12, 0]}>
+    <group ref={root} visible={phase === 'spinning'} position={[0, 0.2, 1.2]} rotation={[0.16, 0.12, 0]}>
       <mesh rotation={[0.5, 0, 0]} position={[0, 0, -0.6]}>
         <torusGeometry args={[4.35, 0.045, 8, 96]} />
         <meshStandardMaterial color="#558ba4" emissive={sceneConfig.colors.cyan} emissiveIntensity={0.45} metalness={0.8} roughness={0.28} />

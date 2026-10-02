@@ -1,4 +1,4 @@
-import { FC, lazy, Suspense, useMemo } from 'react'
+import { FC, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { LiveAnnouncementOverlay } from '@Components/live/LiveAnnouncementOverlay'
 import { LiveArenaFallback } from '@Components/live/LiveArenaFallback'
@@ -41,6 +41,27 @@ export const LiveScoreboardStage: FC<{
 }> = ({ state, remainingSeconds, injectedAnnouncement, preview }) => {
   const presentation = useLivePresentation(state, remainingSeconds, injectedAnnouncement)
   const round = state?.speedrunState?.currentRound
+  const previousWaveRound = useRef<{ id?: number; status?: SpeedrunRoundStatus; frozen: boolean; present: boolean } | undefined>(undefined)
+  const [roundWave, setRoundWave] = useState<string>()
+  useEffect(() => {
+    const previous = previousWaveRound.current
+    const frozen = Boolean(state?.scoreboardFrozen)
+    if (!frozen && previous?.present && !previous.frozen &&
+      (previous.id !== round?.id || previous.status !== round?.status)) {
+      if (round?.status === SpeedrunRoundStatus.Running)
+        setRoundWave(`start-${round.id}-${performance.now()}`)
+      else if (round?.status === SpeedrunRoundStatus.Finished ||
+        (!round && previous.id !== undefined && previous.status !== SpeedrunRoundStatus.Finished))
+        setRoundWave(`finished-${previous.id}-${performance.now()}`)
+    }
+    if (frozen) setRoundWave(undefined)
+    previousWaveRound.current = { id: round?.id, status: round?.status, frozen, present: Boolean(state) }
+  }, [round?.id, round?.status, state, state?.scoreboardFrozen])
+  useEffect(() => {
+    if (!roundWave) return
+    const timer = window.setTimeout(() => setRoundWave(undefined), 3200)
+    return () => window.clearTimeout(timer)
+  }, [roundWave])
   const safeTeams = useMemo(
     () => (state?.scoreboardFrozen ? [] : uniqueTeams(state?.topTeams ?? [])),
     [state?.scoreboardFrozen, state?.topTeams]
@@ -150,6 +171,9 @@ export const LiveScoreboardStage: FC<{
           />
         </div>
       </div>
+      {!frozen && roundWave && (
+        <div key={roundWave} className={classes.roundWave} aria-hidden="true" />
+      )}
       {sceneEvent &&
         !frozen &&
         (sceneEvent.teamId || sceneEvent.teamName) &&

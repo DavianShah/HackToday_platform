@@ -60,12 +60,11 @@ export function EventVFX({
     }
     if (wave.current) {
       const pulse = attack ? impact : age - 0.2
-      wave.current.visible = Boolean(event) && pulse > 0 && pulse < (event?.kind === 'finished' ? 2 : 1.5)
+      wave.current.visible = Boolean(event) && event?.kind !== 'start' && event?.kind !== 'finished' && pulse > 0 && pulse < 1.5
       wave.current.position.set(event?.kind === 'wrong' ? source.x : 0, event?.kind === 'wrong' ? source.y : 0, 1.8)
       wave.current.scale.setScalar(reducedMotion ? 1.7 : 0.5 + pulse * (event?.kind === 'firstBlood' ? 4.4 : 2.4))
       wave.current.rotation.z = event?.kind === 'hint' ? age * 0.7 : 0
-      wave.current.rotation.x = event?.kind === 'start' ? 1.15 : 0
-      if (event?.kind === 'finished') wave.current.scale.setScalar(0.5 + age * 2.5)
+      wave.current.rotation.x = 0
       if (event?.kind === 'countdown' || event?.kind === 'reminder') wave.current.scale.setScalar(1.4)
     }
     if (sparks.current) {

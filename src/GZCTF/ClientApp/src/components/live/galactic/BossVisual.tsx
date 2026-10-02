@@ -30,9 +30,9 @@ export function BossVisual({ reducedMotion, overtime, spinning, event, targetAva
   const root = useRef<Group>(null)
   const armor = useRef<Group>(null)
   const wings = useRef<Group[]>([])
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock }) => {
     if (!root.current) return
-    if (armor.current && !reducedMotion) armor.current.rotation.y -= Math.min(delta, 0.05) * 0.018
+    if (armor.current && !reducedMotion) armor.current.rotation.y = -0.12 + Math.sin(clock.elapsedTime * 0.22) * 0.34
     const hitAge = event ? eventAge(event) - impactTime(event) : 100
     const hit =
       targetAvailable && attackKind(event) && event?.kind !== 'wrong' && hitAge > 0 && hitAge < 1 ? Math.sin(hitAge * Math.PI) : 0
@@ -59,22 +59,16 @@ export function BossVisual({ reducedMotion, overtime, spinning, event, targetAva
   return (
     <group ref={root}>
       <group ref={armor} rotation={[0, -0.12, 0]}>
-      <mesh position={[0.25, 0.18, -1.25]} rotation={[0, -0.13, 0]} scale={[4.7, 2.15, 1.05]}>
+      <mesh position={[0, 0.18, -1.25]} scale={[4.7, 2.15, 1.05]}>
         <boxGeometry />
         <meshStandardMaterial color="#111d2a" metalness={0.55} roughness={0.7} />
       </mesh>
-      <mesh position={[-1.15, 0.18, -1.94]} rotation={[0, 0.2, -0.13]} scale={[3.1, 1.22, 0.7]}>
-        <boxGeometry />
-        <meshStandardMaterial color="#293a49" metalness={0.65} roughness={0.51} />
-      </mesh>
-      <mesh position={[1.95, 1.25, -1.4]} rotation={[0.1, -0.34, 0.2]} scale={[1.7, 0.36, 1.45]}>
-        <boxGeometry />
-        <meshStandardMaterial color="#536579" metalness={0.66} roughness={0.44} />
-      </mesh>
-      <mesh position={[-2.45, -1.05, -1.25]} rotation={[0, 0.18, 0.3]} scale={[1.05, 0.65, 1.6]}>
-        <boxGeometry />
-        <meshStandardMaterial color="#344654" metalness={0.58} roughness={0.53} />
-      </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={`rear-shoulder-${side}`} position={[side * 1.7, 0.18, -1.86]} scale={[1.35, 1.8, 0.32]}>
+          <boxGeometry />
+          <meshStandardMaterial color={config.colors.hull} metalness={0.65} roughness={0.43} />
+        </mesh>
+      ))}
       <mesh scale={[1.1, 1.45, 0.7]}>
         <octahedronGeometry args={[1.2, 0]} />
         <meshStandardMaterial color={config.colors.hull} metalness={0.7} roughness={0.36} />
@@ -96,6 +90,18 @@ export function BossVisual({ reducedMotion, overtime, spinning, event, targetAva
               <meshStandardMaterial color={config.colors.plate} metalness={0.7} roughness={0.38} />
             </mesh>
           ))}
+          <group position={[0, 0, -0.52]} rotation={[0, Math.PI, 0]}>
+            {[0, 1, 2, 3].map((i) => (
+              <mesh key={`rear-plate-${i}`} position={[0, 1.1 - i * 0.7, 0]} rotation={[0.2, 0, 0]} scale={[1.3, 0.54, 0.36]}>
+                <extrudeGeometry args={[plate, { depth: 0.8, bevelEnabled: true, bevelSegments: 1, steps: 1, bevelSize: 0.06, bevelThickness: 0.07 }]} />
+                <meshStandardMaterial color={config.colors.plate} metalness={0.7} roughness={0.38} />
+              </mesh>
+            ))}
+            <mesh position={[side * 0.5, 0.1, 0.08]} scale={[0.035, 2.6, 0.05]}>
+              <boxGeometry />
+              <meshBasicMaterial color={glow} />
+            </mesh>
+          </group>
           <mesh position={[side * 0.5, 0.1, 0.6]} scale={[0.035, 2.6, 0.05]}>
             <boxGeometry />
             <meshBasicMaterial color={glow} />
@@ -130,6 +136,20 @@ export function BossVisual({ reducedMotion, overtime, spinning, event, targetAva
         <icosahedronGeometry />
         <meshStandardMaterial ref={reactor} color={glow} emissive={glow} emissiveIntensity={2} />
       </mesh>
+      <group position={[0, 0, -2.08]} rotation={[0, Math.PI, 0]}>
+        <mesh>
+          <torusGeometry args={[0.92, 0.16, 8, 48]} />
+          <meshStandardMaterial color={config.colors.plate} metalness={0.8} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0, 0.1]}>
+          <torusGeometry args={[0.63, 0.045, 8, 48]} />
+          <meshBasicMaterial color={glow} />
+        </mesh>
+        <mesh position={[0, 0, 0.14]} scale={[0.45, 0.45, 0.3]}>
+          <icosahedronGeometry />
+          <meshStandardMaterial color={glow} emissive={glow} emissiveIntensity={1.4} />
+        </mesh>
+      </group>
       {/* Bridging trusses, inset vents and asymmetrical communications spine. */}
       {[-1, 1].map((side) => (
         <group key={`array-${side}`}>

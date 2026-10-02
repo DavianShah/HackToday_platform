@@ -9,6 +9,8 @@ import { sceneConfig as config } from './sceneConfig'
 import { attackBlend, SceneEvent } from './sceneEvents'
 import { orbitPose, reconcileSlots, TeamSlot, teamAccent } from './teamSlots'
 
+const headingToBoss = (x: number, y: number) => Math.atan2(-x, y)
+
 export interface TeamShipVisualProps {
   id: number
   accent: string
@@ -115,7 +117,7 @@ function Ship({
       const hidden = !active && root.current.position.z < -0.8 && Math.abs(root.current.position.x) < 3.6 && Math.abs(root.current.position.y) < 2.8
       setLabelVisible(!hidden)
     }
-    root.current.rotation.set(0.05, Math.sin(pose.angle) * 0.16, -Math.sin(pose.angle) * 0.14 - mix * 0.72)
+    root.current.rotation.set(0, 0, headingToBoss(x, y))
     root.current.scale.setScalar(scale * (1 + Math.max(0, pose.z) * 0.025) * (active ? 1 : attackKind(event) ? 0.78 : 1))
     if (active) {
       root.current.updateWorldMatrix(true, false)
@@ -141,6 +143,22 @@ function Ship({
   )
 }
 
+function FrozenOrbitShip({ phase, reducedMotion, ShipVisual }: {
+  phase: RefObject<number>
+  reducedMotion: boolean
+  ShipVisual: ComponentType<TeamShipVisualProps>
+}) {
+  const root = useRef<Group>(null)
+  useFrame(() => {
+    if (!root.current) return
+    const pose = orbitPose(0, reducedMotion ? 0 : phase.current)
+    root.current.position.set(pose.x, pose.y, pose.z)
+    root.current.rotation.z = headingToBoss(pose.x, pose.y)
+    root.current.scale.setScalar(1 + Math.max(0, pose.z) * 0.025)
+  })
+  return <group ref={root}><ShipVisual id={0} accent={config.colors.cyan} /></group>
+}
+
 export function TeamFleet({
   teams,
   reducedMotion,
@@ -148,6 +166,7 @@ export function TeamFleet({
   event,
   source,
   highlighted,
+  frozen = false,
 }: {
   highlighted: Set<number>
   event?: SceneEvent
@@ -155,6 +174,7 @@ export function TeamFleet({
   teams: LiveScoreboardTeamModel[]
   reducedMotion: boolean
   ShipVisual?: ComponentType<TeamShipVisualProps>
+  frozen?: boolean
 }) {
   const [slots, setSlots] = useState<TeamSlot[]>([])
   const phase = useRef(0)
@@ -163,16 +183,20 @@ export function TeamFleet({
     if (!reducedMotion && !attacking) phase.current += Math.min(delta, 0.05) * config.orbit.speed
   })
   useEffect(() => {
+    if (frozen) {
+      setSlots([])
+      return
+    }
     setSlots((current) => reconcileSlots(current, teams, performance.now()))
     const cleanup = window.setTimeout(
       () => setSlots((current) => reconcileSlots(current, teams, performance.now())),
       config.orbit.transition * 1000 + 30
     )
     return () => window.clearTimeout(cleanup)
-  }, [teams])
+  }, [teams, frozen])
   return (
     <group>
-      {slots.map((slot) => (
+      {frozen ? <FrozenOrbitShip phase={phase} reducedMotion={reducedMotion} ShipVisual={ShipVisual} /> : slots.map((slot) => (
         <Ship
           key={slot.id}
           slot={slot}

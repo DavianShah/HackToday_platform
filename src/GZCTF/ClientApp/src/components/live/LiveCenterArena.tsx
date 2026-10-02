@@ -4,6 +4,7 @@ import { useChallengeCategoryLabelMap } from '@Utils/Shared'
 import { ChallengeCategory, LiveScoreboardTeamModel, SpeedrunRoundModel } from '@Api'
 import classes from '@Styles/GalacticCommand.module.css'
 import { LiveSpinPhase } from './types'
+import logo from '../../assets/logo.png'
 
 export const LiveCenterArena: FC<{
   round?: SpeedrunRoundModel | null
@@ -20,20 +21,22 @@ export const LiveCenterArena: FC<{
   const categoryVisual = spinPhase !== 'spinning' && round?.category ? categoryMap.get(round.category) : undefined
   return (
   <section className={classes.arena} aria-label="Central battlefield">
-    <div className={classes.arenaReadout}>
-      <span className={classes.eyebrow}>{frozen ? 'Standings sealed' : 'Orbital command'}</span>
+    {!frozen && spinPhase === 'spinning' && (
+      <div className={classes.vortexIdentity} aria-label={`Selecting ${round?.category ?? 'category'}`}>
+        <div className={classes.vortexOrbit}>
+          <div className={classes.vortexLogo}><img src={logo} alt="HackToday logo" /></div>
+          <strong className={classes.vortexCategory}>{round?.category ?? 'Selecting category'}</strong>
+        </div>
+      </div>
+    )}
+    {!frozen && spinPhase !== 'spinning' && <div className={classes.arenaReadout}>
+      <span className={classes.eyebrow}>Orbital command</span>
       <h1 className={classes.arenaTitle}>
         {categoryVisual && <Icon path={categoryVisual.icon} size={1.2} aria-hidden />}
-        {spinPhase === 'spinning' ? 'Scanning sectors' : (round?.category ?? 'Awaiting sector')}
+        {round?.category ?? 'Awaiting sector'}
       </h1>
-      <p className={classes.arenaDetail}>
-        {spinPhase === 'spinning'
-          ? 'Selection in progress'
-          : frozen
-            ? 'Team telemetry is hidden during the freeze.'
-            : 'Live Speedrun transmission'}
-      </p>
-    </div>
+      <p className={classes.arenaDetail}>Live Speedrun transmission</p>
+    </div>}
   </section>
   )
 }
