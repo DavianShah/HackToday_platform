@@ -336,8 +336,12 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(97, 231, 255, 0.28) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.eventRows::-webkit-scrollbar,
+.scoreRows::-webkit-scrollbar {
+  display: none;
 }
 .eventRow {
   position: relative;
