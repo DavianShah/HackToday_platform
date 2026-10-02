@@ -388,6 +388,9 @@
 .bloodEvent {
   --event-color: var(--gc-amber);
 }
+.wrongEvent {
+  --event-color: var(--gc-danger);
+}
 .hintEvent {
   --event-color: #a8a2ff;
 }

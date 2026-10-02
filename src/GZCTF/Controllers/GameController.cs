@@ -95,23 +95,24 @@ public class GameController(
                 Score = game.ScoreboardFrozen ? 0 : team.Score,
                 SolvedCount = game.ScoreboardFrozen ? 0 : team.SolvedCount
             }).ToArray(),
-            RecentEvents = notices.OrderByDescending(notice => notice.PublishTimeUtc).Take(20).Select(notice =>
+            RecentEvents = notices.OrderByDescending(notice => notice.PublishTimeUtc).Take(100).Select(notice =>
             {
                 var blood = notice.Type is NoticeType.FirstBlood or NoticeType.SecondBlood or NoticeType.ThirdBlood;
-                var teamName = blood ? notice.Values?.ElementAtOrDefault(0) : null;
-                var challengeTitle = blood ? notice.Values?.ElementAtOrDefault(1) : null;
-                var hideTeam = blood && ShouldMaskBloodNotice(game, notice);
+                var submission = blood || notice.Type is NoticeType.CorrectAnswer or NoticeType.WrongAnswer;
+                var teamName = submission ? notice.Values?.ElementAtOrDefault(0) : null;
+                var challengeTitle = submission ? notice.Values?.ElementAtOrDefault(1) : null;
+                var hideTeam = game.ScoreboardFrozen && (blood ? ShouldMaskBloodNotice(game, notice) : submission);
                 var displayedTeamName = hideTeam ? "????" : teamName;
                 return new LiveScoreboardEventModel
                 {
                     Id = $"notice-{notice.Id}",
                     Type = notice.Type,
                     CreatedAt = notice.PublishTimeUtc,
-                    TeamId = teamName is not null && teamIds.TryGetValue(teamName, out var teamId) ? teamId : null,
-                    TeamName = blood ? displayedTeamName : null,
-                    ChallengeTitle = challengeTitle,
-                    Message = blood
-                        ? $"{displayedTeamName} solved {challengeTitle}"
+                    TeamId = !hideTeam && teamName is not null && teamIds.TryGetValue(teamName, out var teamId) ? teamId : null,
+                    TeamName = submission ? displayedTeamName : null,
+                    ChallengeTitle = hideTeam ? null : challengeTitle,
+                    Message = submission
+                        ? $"{displayedTeamName} {(notice.Type == NoticeType.WrongAnswer ? "submitted an incorrect answer to" : "solved")} {(hideTeam ? "a challenge" : challengeTitle)}"
                         : notice.Values is { Count: > 0 }
                             ? string.Join(" ", notice.Values)
                             : notice.Type.ToString()
@@ -497,7 +498,8 @@ public class GameController(
         if (ContextHelper.IsNotModified(Request, Response, eTag, lastModified))
             return StatusCode(StatusCodes.Status304NotModified);
 
-        var notices = data.Skip(skip).Take(count);
+        var notices = data.Where(notice => notice.Type is not (NoticeType.CorrectAnswer or NoticeType.WrongAnswer))
+            .Skip(skip).Take(count);
         return Ok(game.ScoreboardFrozen
             ? notices.Select(notice => ShouldMaskBloodNotice(game, notice) ? MaskBloodNotice(notice) : notice)
             : notices);

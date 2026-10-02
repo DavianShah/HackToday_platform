@@ -21,6 +21,10 @@ public class GameNoticeRepository(
 
         await cacheHelper.RemoveAsync(CacheKey.GameNotice(notice.GameId), token);
 
+        // Submission telemetry is only consumed by the live scoreboard, not the game-wide notice hub.
+        if (notice.Type is NoticeType.CorrectAnswer or NoticeType.WrongAnswer)
+            return notice;
+
         var freeze = await Context.Games.AsNoTracking()
             .Where(game => game.Id == notice.GameId)
             .Select(game => new { game.ScoreboardFrozen, game.ScoreboardFreezeTimeUtc })
@@ -46,10 +50,14 @@ public class GameNoticeRepository(
         => cacheHelper.GetOrCreateAsync(logger, CacheKey.GameNotice(gameId), async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(30);
-            var notices = await Context.GameNotices.Where(e => e.GameId == gameId)
+            var notices = await Context.GameNotices.Where(e => e.GameId == gameId &&
+                    e.Type != NoticeType.CorrectAnswer && e.Type != NoticeType.WrongAnswer)
                 .OrderByDescending(e => e.Type == NoticeType.Normal ? DateTimeOffset.UtcNow : e.PublishTimeUtc)
                 .Take(300).ToArrayAsync(token);
-            return new DataWithModifiedTime<GameNotice[]>(notices, DateTimeOffset.UtcNow);
+            var submissions = await Context.GameNotices.Where(e => e.GameId == gameId &&
+                    (e.Type == NoticeType.CorrectAnswer || e.Type == NoticeType.WrongAnswer))
+                .OrderByDescending(e => e.PublishTimeUtc).Take(100).ToArrayAsync(token);
+            return new DataWithModifiedTime<GameNotice[]>([..notices, ..submissions], DateTimeOffset.UtcNow);
         }, token: token);
 
     private static GameNotice MaskBloodNotice(GameNotice notice)

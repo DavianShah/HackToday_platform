@@ -187,7 +187,7 @@ export const LiveScoreboardStage: FC<{
           <div className={classes.sceneCallout} role="status">
             <span>
               {sceneEvent.kind === 'wrong'
-                ? 'Preview ? Target deflected'
+                ? 'Target deflected'
                 : sceneEvent.kind === 'firstBlood'
                   ? 'Priority strike'
                   : 'Verified strike'}

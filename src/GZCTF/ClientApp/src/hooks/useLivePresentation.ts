@@ -30,6 +30,8 @@ export const useLivePresentation = (
   const initialized = useRef(false)
   const wasFrozen = useRef(false)
   const previousRound = useRef<string | undefined>(undefined)
+  const lastRoundId = useRef<number | undefined>(undefined)
+  const playedRoundCues = useRef(new Set<string>())
   const previousScores = useRef(new Map<number, number>())
   const previousRanks = useRef(new Map<number, number>())
   const processedEvents = useRef(new Set<string>())
@@ -56,6 +58,7 @@ export const useLivePresentation = (
     if (!state) return
     const eventIds = (state.recentEvents ?? []).flatMap((event) => (event.id ? [event.id] : []))
     const fingerprint = `${round?.id ?? 'none'}:${round?.status ?? 'none'}`
+    if (round?.id !== undefined) lastRoundId.current = round.id
     if (initialized.current && fingerprint !== previousRound.current) {
       clear()
       stop()
@@ -121,7 +124,8 @@ export const useLivePresentation = (
     if (fingerprint !== previousRound.current) {
       spinTimers.current.forEach((timer) => window.clearTimeout(timer))
       spinTimers.current = []
-      if (round?.status === SpeedrunRoundStatus.Ready) {
+      if (round?.status === SpeedrunRoundStatus.Ready && !playedRoundCues.current.has(`category-${round.id}`)) {
+        playedRoundCues.current.add(`category-${round.id}`)
         setSpinPhase('spinning')
         play('spin')
         for (const delay of [3600, 4400, 5100, 5650, 6100])
@@ -141,7 +145,8 @@ export const useLivePresentation = (
           }, SPIN_DURATION_MS)
         )
         spinTimers.current.push(window.setTimeout(() => setSpinPhase('idle'), SPIN_DURATION_MS + REVEAL_DURATION_MS))
-      } else if (round?.status === SpeedrunRoundStatus.Running) {
+      } else if (round?.status === SpeedrunRoundStatus.Running && !playedRoundCues.current.has(`start-${round.id}`)) {
+        playedRoundCues.current.add(`start-${round.id}`)
         setSpinPhase('idle')
         enqueue({
           key: `start-${round.id}`,
@@ -151,7 +156,8 @@ export const useLivePresentation = (
           sound: 'gameStart',
           duration: 3800,
         })
-      } else if (round?.status === SpeedrunRoundStatus.Overtime) {
+      } else if (round?.status === SpeedrunRoundStatus.Overtime && !playedRoundCues.current.has(`overtime-${round.id}`)) {
+        playedRoundCues.current.add(`overtime-${round.id}`)
         setSpinPhase('idle')
         enqueue({
           key: `overtime-${round.id}`,
@@ -161,13 +167,12 @@ export const useLivePresentation = (
           sound: 'overtime',
           duration: 4400,
         })
-      } else if (
-        round?.status === SpeedrunRoundStatus.Finished ||
-        (!round && previousRound.current && previousRound.current !== 'none:none')
-      ) {
+      } else if (!round && lastRoundId.current !== undefined &&
+        !playedRoundCues.current.has(`finished-${lastRoundId.current}`)) {
+        playedRoundCues.current.add(`finished-${lastRoundId.current}`)
         setSpinPhase('idle')
         enqueue({
-          key: `finished-${previousRound.current}`,
+          key: `finished-${lastRoundId.current}`,
           kind: 'finished',
           title: 'Round finished',
           text: 'Waiting for the next category',
@@ -246,6 +251,20 @@ export const useLivePresentation = (
           popupDelay: sceneConfig.timing.recognition * 1000,
           duration: sceneConfig.timing.attack * 1000,
         })
+      else if (event.type === NoticeType.CorrectAnswer || event.type === NoticeType.WrongAnswer)
+        enqueue({
+          key: event.id!,
+          kind: event.type === NoticeType.WrongAnswer ? 'wrong' : 'correct',
+          title: event.type === NoticeType.WrongAnswer ? 'Incorrect submission' : 'Verified solve',
+          teamName: event.teamName ?? undefined,
+          teamId: event.teamId ?? undefined,
+          challengeTitle: event.challengeTitle ?? undefined,
+          sound: event.type === NoticeType.WrongAnswer ? 'wrongSubmit' : 'correctSubmit',
+          soundDelay: attackTimeline.fire * 1000,
+          duration: sceneConfig.timing.attack * 1000,
+          showPopup: false,
+          verified: true,
+        })
       else if (event.type === NoticeType.NewHint || event.message?.startsWith('Hint #'))
         enqueue({
           key: event.id!,
@@ -284,21 +303,6 @@ export const useLivePresentation = (
     }
     if (scoreChangedTeamIds.length || nextRankChanges.size) {
       const ordinaryChanges = new Set(withoutBloodScoreChanges(scoreChangedTeamIds, freshBloodTeamIds))
-      for (const teamId of ordinaryChanges) {
-        const team = (state.topTeams ?? []).find((item) => item.id === teamId)
-        enqueue({
-          key: `solve-${fingerprint}-${teamId}-${team?.score ?? 'unknown'}`,
-          kind: 'correct',
-          title: 'Verified solve',
-          teamId,
-          teamName: team?.name ?? undefined,
-          delta: nextScoreDeltas.get(teamId),
-          sound: 'correctSubmit',
-          soundDelay: 3300,
-          duration: sceneConfig.timing.attack * 1000,
-          showPopup: false,
-        })
-      }
       const bloodChanges = new Set(scoreChangedTeamIds.filter((teamId) => freshBloodTeamIds.has(teamId)))
       setChangedTeams(ordinaryChanges)
       setBloodAttackTeams(bloodChanges)

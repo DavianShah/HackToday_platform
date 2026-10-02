@@ -6,6 +6,8 @@ const eventMeta = (event: LiveScoreboardEventModel) => {
   if (event.type === NoticeType.FirstBlood) return ['First Blood', classes.bloodEvent]
   if (event.type === NoticeType.SecondBlood) return ['Second Blood', classes.bloodEvent]
   if (event.type === NoticeType.ThirdBlood) return ['Third Blood', classes.bloodEvent]
+  if (event.type === NoticeType.CorrectAnswer) return ['Verified solve', '']
+  if (event.type === NoticeType.WrongAnswer) return ['Wrong answer', classes.wrongEvent]
   if (event.type === NoticeType.NewHint || event.message?.startsWith('Hint #'))
     return ['Hint released', classes.hintEvent]
   if (event.message?.toLowerCase().includes('overtime')) return ['Overtime', classes.overtimeEvent]

@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import api, { LiveScoreboardStateModel, SpeedrunRoundStatus } from '@Api'
 
 export const useLiveState = (gameId: number) => {
   const [state, setState] = useState<LiveScoreboardStateModel>()
   const [now, setNow] = useState(Date.now())
+  const latestRequest = useRef(0)
 
   const refresh = useCallback(async () => {
+    const request = ++latestRequest.current
     const next = (await api.game.gameLiveScoreboard(gameId)).data
-    setState(next)
+    if (request === latestRequest.current) setState(next)
   }, [gameId])
 
   useEffect(() => {
@@ -17,6 +19,7 @@ export const useLiveState = (gameId: number) => {
     const focus = () => void refresh()
     window.addEventListener('focus', focus)
     return () => {
+      latestRequest.current++
       window.clearInterval(poll)
       window.clearInterval(tick)
       window.removeEventListener('focus', focus)

@@ -87,6 +87,8 @@ export enum NoticeType {
   ThirdBlood = "ThirdBlood",
   NewHint = "NewHint",
   NewChallenge = "NewChallenge",
+  CorrectAnswer = "CorrectAnswer",
+  WrongAnswer = "WrongAnswer",
 }
 
 export enum SpeedrunRoundStatus {

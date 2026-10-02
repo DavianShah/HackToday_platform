@@ -23,6 +23,7 @@ export interface LiveAnnouncement {
   delta?: number
   showPopup?: boolean
   sceneKind?: LiveSceneKind
+  verified?: boolean
 }
 
 export interface LiveCategoryVisual {
